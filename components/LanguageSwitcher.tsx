@@ -13,7 +13,7 @@ export default function LanguageSwitcher() {
       href={href}
       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-all duration-200"
     >
-      {locale === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR'}
+      <span className="uppercase tracking-widest">{locale === 'fr' ? 'EN' : 'FR'}</span>
     </Link>
   );
 }
