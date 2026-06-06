@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: data.error ?? 'Login failed' }, { status: upstream.status });
   }
 
-  const response = NextResponse.redirect(new URL('/fr/wallet', request.url));
+  const response = NextResponse.json({
+    ok: true,
+    wallet_id: data.wallet_id,
+    phone: data.phone,
+  });
 
   response.cookies.set('wallet_token', data.access_token, {
     httpOnly: true,
