@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.redirect(new URL('/fr/wallet', request.url));
 
-  response.cookies.set('wallet_token', data.token, {
+  response.cookies.set('wallet_token', data.access_token, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
