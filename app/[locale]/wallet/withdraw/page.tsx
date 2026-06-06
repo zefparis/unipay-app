@@ -67,7 +67,7 @@ export default function WalletWithdrawPage() {
       const res = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator, phone_number: normalizePhone(phone), amount: amountNum }),
+        body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
