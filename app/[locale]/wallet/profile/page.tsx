@@ -364,12 +364,16 @@ export default function WalletProfilePage() {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 shrink-0"><IcBell /></div>
-            <span className="flex-1 text-sm font-medium text-gray-800 dark:text-slate-200">Notifications</span>
-            <button onClick={toggleNotifs} className={`relative w-12 h-6 rounded-full transition-colors ${notifs ? 'bg-[#00A651]' : 'bg-gray-300 dark:bg-slate-600'}`}>
-              <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notifs ? 'translate-x-6' : 'translate-x-0.5'}`} />
-            </button>
+          <div className="flex items-center justify-between w-full gap-2 px-4 py-3.5">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 shrink-0"><IcBell /></div>
+              <span className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">Notifications</span>
+            </div>
+            <div className="flex-shrink-0">
+              <button onClick={toggleNotifs} className={`relative w-12 h-6 rounded-full transition-colors ${notifs ? 'bg-[#00A651]' : 'bg-gray-300 dark:bg-slate-600'}`}>
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notifs ? 'translate-x-6' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
           </div>
         </Card>
 
