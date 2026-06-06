@@ -15,6 +15,15 @@ const OPERATORS = [
 const FEE_RATE = 0.03;
 const MIN_AMOUNT = 500;
 
+function formatPhoneForDeposit(phone: string, operator: string): string {
+  const normalized = normalizePhone(phone);
+  if (operator === 'airtel') {
+    const digits = normalized.replace(/\D/g, '');
+    return digits.startsWith('243') ? digits.slice(3) : digits;
+  }
+  return normalized;
+}
+
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(Math.round(n)); }
 
 function Spinner() {
@@ -59,7 +68,7 @@ export default function WalletDepositPage() {
       const res = await fetch('/api/wallet/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator, phone_number: normalizePhone(phone), amount: amountNum }),
+        body: JSON.stringify({ operator, phone: formatPhoneForDeposit(phone, operator), amount: amountNum }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }

@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  console.log('[deposit] body envoyé:', JSON.stringify(body));
   const upstream = await fetch(`${API_URL}/v1/wallet/deposit`, {
     method: 'POST',
     headers: {
