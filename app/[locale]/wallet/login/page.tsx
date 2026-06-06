@@ -62,7 +62,7 @@ export default function WalletLoginPage() {
         <LanguageSwitcher />
       </div>
 
-      <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
+      <div className="flex flex-col items-center justify-center flex-1 px-6 py-8 pb-safe">
         <div className="w-full max-w-sm">
           {/* Logo */}
           <div className="flex flex-col items-center gap-3 mb-8">
@@ -89,7 +89,7 @@ export default function WalletLoginPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+243 XXX XXX XXX"
                   required
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
 
@@ -105,7 +105,7 @@ export default function WalletLoginPage() {
                   placeholder="••••••"
                   maxLength={6}
                   required
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] tracking-widest text-center text-lg transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] tracking-widest text-center text-lg transition-all duration-200"
                 />
               </div>
 

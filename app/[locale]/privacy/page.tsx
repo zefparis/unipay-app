@@ -22,7 +22,7 @@ function H2({ children }: { children: React.ReactNode }) {
 }
 
 function P({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-2">{children}</p>;
+  return <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-2 break-words">{children}</p>;
 }
 
 function Li({ children }: { children: React.ReactNode }) {
@@ -32,7 +32,7 @@ function Li({ children }: { children: React.ReactNode }) {
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-lg mx-auto px-4 py-6">
         <BackButton />
 
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">

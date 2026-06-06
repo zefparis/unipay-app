@@ -99,13 +99,13 @@ export default function WalletDepositPage() {
         {/* Operator */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Opérateur Mobile Money</label>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             {OPERATORS.map((op) => (
               <button
                 key={op.key}
                 type="button"
                 onClick={() => setOperator(op.key)}
-                className={`flex-1 py-3 rounded-xl border-2 text-white text-xs font-bold transition ${op.color} ${
+                className={`flex-1 min-w-[90px] py-3 rounded-xl border-2 text-white text-xs font-bold transition ${op.color} ${
                   operator === op.key ? `ring-2 ring-offset-2 ${op.active} opacity-100` : 'opacity-60 hover:opacity-80'
                 }`}
               >
@@ -124,7 +124,7 @@ export default function WalletDepositPage() {
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+243 XXX XXX XXX"
             required
-            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
           />
         </div>
 
@@ -140,7 +140,7 @@ export default function WalletDepositPage() {
             placeholder="500"
             min={MIN_AMOUNT}
             required
-            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
           />
         </div>
 

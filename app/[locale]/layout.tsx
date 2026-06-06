@@ -19,6 +19,13 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   return (
     <html lang={params.locale}>
+      <head>
+        <meta name="theme-color" content="#00A651" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body className="bg-white dark:bg-[#0f172a] antialiased transition-colors duration-200">
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>

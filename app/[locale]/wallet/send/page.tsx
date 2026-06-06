@@ -98,7 +98,7 @@ export default function WalletSendPage() {
             onChange={(e) => setRecipientPhone(e.target.value)}
             placeholder="+243 XXX XXX XXX"
             required
-            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
           />
           <p className="text-xs text-gray-400 dark:text-slate-500">Le destinataire doit avoir un compte UniPay Wallet</p>
         </div>
@@ -112,7 +112,7 @@ export default function WalletSendPage() {
             placeholder="1 000"
             min={1}
             required
-            className={`border rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${
+            className={`border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${
               overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-blue-400'
             }`}
           />
@@ -128,7 +128,7 @@ export default function WalletSendPage() {
             onChange={(e) => setNote(e.target.value)}
             placeholder="Remboursement, loyer…"
             maxLength={255}
-            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
           />
         </div>
 
@@ -150,8 +150,8 @@ export default function WalletSendPage() {
       </form>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50 p-4">
-          <div className="w-full max-w-md bg-white dark:bg-[#1e293b] rounded-2xl p-6 flex flex-col gap-5 shadow-xl border border-gray-100 dark:border-[#334155]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1e293b] rounded-2xl p-6 flex flex-col gap-5 shadow-xl border border-gray-100 dark:border-[#334155]">
             <div className="flex flex-col gap-1 text-center">
               <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Confirmer l&apos;envoi</h2>
               <p className="text-sm text-gray-500 dark:text-slate-400">Vérifiez les détails avant de confirmer</p>

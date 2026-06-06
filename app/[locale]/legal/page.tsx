@@ -23,9 +23,9 @@ function H2({ children }: { children: React.ReactNode }) {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex gap-3 py-1.5 border-b border-gray-50 dark:border-slate-800 last:border-0">
-      <span className="text-xs text-gray-400 dark:text-slate-500 w-36 shrink-0 pt-0.5">{label}</span>
-      <span className="text-sm text-gray-700 dark:text-gray-300 leading-snug">{value}</span>
+    <div className="flex flex-col gap-0.5 py-2.5 border-b border-gray-50 dark:border-slate-800 last:border-0">
+      <span className="text-xs text-gray-400 dark:text-slate-500 font-medium">{label}</span>
+      <span className="text-sm text-gray-700 dark:text-gray-300 leading-snug break-all">{value}</span>
     </div>
   );
 }
@@ -33,7 +33,7 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function LegalPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-lg mx-auto px-4 py-6">
         <BackButton />
 
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Mentions Légales</h1>
@@ -48,7 +48,7 @@ export default function LegalPage() {
           <Row label="N° Impôt"       value="A1621850T" />
           <Row label="INSS"           value="010109351A1" />
           <Row label="Agréments ARPTC" value="n°0573 & n°0574 (2023)" />
-          <Row label="Directeur de publication" value="Benjamin Barrère" />
+          <Row label="Directeur de publication" value="ia-solution" />
         </div>
 
         <H2>Hébergement</H2>

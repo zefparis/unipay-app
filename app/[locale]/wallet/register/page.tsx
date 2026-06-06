@@ -105,7 +105,7 @@ export default function WalletRegisterPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jean Dupont"
                   maxLength={100}
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
 
@@ -117,7 +117,7 @@ export default function WalletRegisterPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+243 XXX XXX XXX"
                   required
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
 
@@ -133,7 +133,7 @@ export default function WalletRegisterPage() {
                   placeholder="••••••"
                   maxLength={6}
                   required
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] tracking-widest text-center text-lg transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] tracking-widest text-center text-lg transition-all duration-200"
                 />
               </div>
 
@@ -149,7 +149,7 @@ export default function WalletRegisterPage() {
                   placeholder="••••••"
                   maxLength={6}
                   required
-                  className={`border rounded-xl px-4 py-3.5 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 tracking-widest text-center text-lg transition-all duration-200 ${
+                  className={`border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 tracking-widest text-center text-lg transition-all duration-200 ${
                     pinConfirm.length === 6 && pinConfirm !== pin
                       ? 'border-red-400 focus:ring-red-300'
                       : 'border-gray-200 dark:border-slate-600 focus:ring-[#00A651]'

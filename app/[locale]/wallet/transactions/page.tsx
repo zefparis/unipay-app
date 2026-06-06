@@ -93,7 +93,7 @@ export default function WalletTransactionsPage() {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 px-4 py-3 overflow-x-auto">
+      <div className="flex flex-wrap gap-2 px-4 py-3">
         {FILTERS.map(({ key, label }) => (
           <button
             key={key}
@@ -149,7 +149,7 @@ export default function WalletTransactionsPage() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-bold ${
+                    <p className={`text-sm font-bold whitespace-nowrap ${
                       isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
                     }`}>
                       {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
