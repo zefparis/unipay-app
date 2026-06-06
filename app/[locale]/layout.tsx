@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import ThemeProvider from '@/components/ThemeProvider';
 import '../globals.css';
 
 export const metadata: Metadata = {
@@ -18,9 +19,11 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   return (
     <html lang={params.locale}>
-      <body className="bg-white antialiased">
+      <body className="bg-white dark:bg-[#0f172a] antialiased transition-colors duration-200">
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -2,5 +2,20 @@
   "app": {
     "name": "UniPay Wallet",
     "tagline": "Envoyez et recevez de l'argent facilement"
+  },
+  "wallet": {
+    "balance": "Solde disponible",
+    "deposit": "Déposer",
+    "withdraw": "Retirer",
+    "send": "Envoyer",
+    "history": "Historique",
+    "profile": "Profil",
+    "login": "Connexion",
+    "register": "Créer mon wallet",
+    "logout": "Se déconnecter",
+    "network": "UniPay Wallet · RDC",
+    "soon": "Bientôt",
+    "noTx": "Aucune transaction pour le moment.",
+    "seeAll": "Voir tout"
   }
 }

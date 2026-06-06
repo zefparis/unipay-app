@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, QrCode } from 'lucide-react';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Tx {
   id: string;
@@ -64,86 +65,75 @@ export default function WalletHomePage() {
   return (
     <div className="flex flex-col">
 
-      {/* Balance card */}
-      <div className="bg-[#00A651] px-6 pt-12 pb-8 flex flex-col gap-1 text-white">
-        <p className="text-sm opacity-75 tracking-wide">Solde disponible</p>
+      {/* Balance card — gradient + lang switcher */}
+      <div className="bg-gradient-to-br from-[#00A651] to-[#007a3d] px-6 pt-10 pb-8 flex flex-col gap-1 text-white shadow-lg relative">
+        <div className="absolute top-4 left-4">
+          <LanguageSwitcher />
+        </div>
+        <p className="text-sm opacity-80 tracking-wide mt-7">Solde disponible</p>
         {loadingBal ? (
-          <div className="h-11 mt-1"><Spinner /></div>
+          <div className="h-12 mt-1"><Spinner /></div>
         ) : (
-          <p className="text-[2.6rem] font-bold leading-tight tracking-tight">
+          <p className="text-4xl font-bold leading-tight tracking-tight mt-1">
             {balance !== null ? fmt(balance) : '—'}
-            <span className="text-2xl font-normal opacity-80"> CDF</span>
+            <span className="text-2xl font-normal opacity-70 ml-2">CDF</span>
           </p>
         )}
-        <p className="text-xs opacity-50 mt-2">UniPay Wallet · RDC</p>
+        <p className="text-xs opacity-50 mt-3">UniPay Wallet · RDC</p>
       </div>
 
       {/* Action grid */}
       <div className="grid grid-cols-2 gap-3 px-4 py-5">
-        <Link href={`${base}/deposit`}
-          className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 bg-white shadow-sm p-5 active:scale-95 transition-transform">
-          <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-            <ArrowDownCircle className="text-[#00A651]" size={26} />
-          </div>
-          <span className="text-sm font-semibold text-gray-700">Déposer</span>
-        </Link>
+        {([
+          { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-[#00A651]" size={26} />, iconBg: 'bg-green-50 dark:bg-green-900/20',   label: 'Déposer' },
+          { href: `${base}/withdraw`, icon: <ArrowUpCircle  className="text-orange-500" size={26} />, iconBg: 'bg-orange-50 dark:bg-orange-900/20', label: 'Retirer' },
+          { href: `${base}/send`,     icon: <ArrowLeftRight className="text-blue-500"   size={26} />, iconBg: 'bg-blue-50 dark:bg-blue-900/20',     label: 'Envoyer' },
+        ] as const).map(({ href, icon, iconBg, label }) => (
+          <Link key={label} href={href}
+            className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-5 active:scale-95 hover:scale-105 transition-all duration-200">
+            <div className={`w-12 h-12 rounded-full ${iconBg} flex items-center justify-center`}>{icon}</div>
+            <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">{label}</span>
+          </Link>
+        ))}
 
-        <Link href={`${base}/withdraw`}
-          className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 bg-white shadow-sm p-5 active:scale-95 transition-transform">
-          <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center">
-            <ArrowUpCircle className="text-orange-500" size={26} />
-          </div>
-          <span className="text-sm font-semibold text-gray-700">Retirer</span>
-        </Link>
-
-        <Link href={`${base}/send`}
-          className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 bg-white shadow-sm p-5 active:scale-95 transition-transform">
-          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-            <ArrowLeftRight className="text-blue-500" size={26} />
-          </div>
-          <span className="text-sm font-semibold text-gray-700">Envoyer</span>
-        </Link>
-
-        <div className="flex flex-col items-center gap-2.5 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 opacity-50 cursor-not-allowed">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2.5 rounded-2xl border border-dashed border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/40 p-5 opacity-50 cursor-not-allowed">
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
             <QrCode className="text-gray-400" size={26} />
           </div>
-          <span className="text-sm font-semibold text-gray-400">Scanner QR</span>
-          <span className="text-[10px] text-gray-400 -mt-1.5">Bientôt</span>
+          <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">Scanner QR</span>
+          <span className="text-[10px] text-gray-400 dark:text-slate-500 -mt-1.5">Bientôt</span>
         </div>
       </div>
 
       {/* Recent transactions */}
       <div className="px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Dernières opérations</h2>
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Dernières opérations</h2>
           <Link href={`${base}/transactions`} className="text-xs text-[#00A651] font-semibold">Voir tout</Link>
         </div>
 
         {txList.length === 0 && !loadingBal && (
-          <p className="text-sm text-gray-400 text-center py-8">Aucune transaction pour le moment.</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-8">Aucune transaction pour le moment.</p>
         )}
 
-        <div className="flex flex-col divide-y divide-gray-50">
+        <div className="flex flex-col gap-2">
           {txList.map((tx) => {
             const isCredit = tx.direction === 'collect';
             const isP2P    = tx.direction === 'p2p';
             return (
-              <div key={tx.id} className="flex items-center gap-3 py-3">
+              <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                  isCredit ? 'bg-green-50' : isP2P ? 'bg-blue-50' : 'bg-orange-50'
+                  isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
                 }`}>
                   {isCredit && <ArrowDownCircle className="text-[#00A651]" size={20} />}
                   {tx.direction === 'payout' && <ArrowUpCircle className="text-orange-500" size={20} />}
                   {isP2P && <ArrowLeftRight className="text-blue-500" size={20} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 capitalize">{tx.operator}</p>
-                  <p className="text-xs text-gray-400">{relativeDate(tx.created_at)}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{tx.operator}</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500">{relativeDate(tx.created_at)}</p>
                 </div>
-                <p className={`text-sm font-bold shrink-0 ${
-                  isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-600' : 'text-orange-500'
-                }`}>
+                <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'}`}>
                   {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
                 </p>
               </div>

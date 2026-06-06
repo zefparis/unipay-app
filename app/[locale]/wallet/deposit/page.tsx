@@ -75,12 +75,12 @@ export default function WalletDepositPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-50">
-        <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 transition">
-          <ArrowLeft size={20} className="text-gray-600" />
+    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0f172a] transition-colors duration-200">
+      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-50 dark:border-[#334155]">
+        <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200">
+          <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
         </Link>
-        <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900">
+        <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowDownCircle className="text-[#00A651]" size={20} />
           Déposer de l&apos;argent
         </h1>
@@ -90,7 +90,7 @@ export default function WalletDepositPage() {
 
         {/* Operator */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-gray-600">Opérateur Mobile Money</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Opérateur Mobile Money</label>
           <div className="flex gap-3">
             {OPERATORS.map((op) => (
               <button
@@ -109,21 +109,21 @@ export default function WalletDepositPage() {
 
         {/* Phone */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600">Numéro Mobile Money</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro Mobile Money</label>
           <input
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+243 XXX XXX XXX"
             required
-            className="border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00A651]"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
           />
         </div>
 
         {/* Amount */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600">
-            Montant (CDF) <span className="text-gray-400 font-normal">— min {fmt(MIN_AMOUNT)} CDF</span>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+            Montant (CDF) <span className="text-gray-400 dark:text-slate-500 font-normal">— min {fmt(MIN_AMOUNT)} CDF</span>
           </label>
           <input
             type="number"
@@ -132,35 +132,35 @@ export default function WalletDepositPage() {
             placeholder="500"
             min={MIN_AMOUNT}
             required
-            className="border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00A651]"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
           />
         </div>
 
         {/* Fee preview */}
         {amountNum >= MIN_AMOUNT && (
-          <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
-            <div className="flex justify-between text-gray-500">
+          <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
+            <div className="flex justify-between text-gray-500 dark:text-slate-400">
               <span>Frais (3%)</span>
               <span>−{fmt(fee)} CDF</span>
             </div>
-            <div className="flex justify-between font-bold text-gray-800 pt-1 border-t border-gray-200 mt-1">
+            <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
               <span>Vous recevez</span>
               <span className="text-[#00A651]">+{fmt(net)} CDF</span>
             </div>
           </div>
         )}
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
+        {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <p className="text-sm text-green-800 font-medium">✓ {success}</p>
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl px-4 py-3">
+            <p className="text-sm text-green-800 dark:text-green-300 font-medium">✓ {success}</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading || !!success}
-          className="w-full bg-[#00A651] hover:bg-[#008f45] text-white font-semibold py-4 rounded-xl transition disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
+          className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
         >
           {loading && <Spinner />}
           {loading ? 'Envoi…' : 'Déposer'}

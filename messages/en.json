@@ -2,5 +2,20 @@
   "app": {
     "name": "UniPay Wallet",
     "tagline": "Send and receive money easily"
+  },
+  "wallet": {
+    "balance": "Available balance",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "send": "Send",
+    "history": "History",
+    "profile": "Profile",
+    "login": "Sign in",
+    "register": "Create wallet",
+    "logout": "Sign out",
+    "network": "UniPay Wallet · DRC",
+    "soon": "Coming soon",
+    "noTx": "No transactions yet.",
+    "seeAll": "See all"
   }
 }

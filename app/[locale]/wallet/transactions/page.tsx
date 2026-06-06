@@ -27,10 +27,10 @@ function fmtDate(iso: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    success:   'bg-green-100 text-green-700',
-    pending:   'bg-yellow-100 text-yellow-700',
-    failed:    'bg-red-100 text-red-700',
-    cancelled: 'bg-gray-100 text-gray-500',
+    success:   'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    pending:   'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    failed:    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    cancelled: 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400',
   };
   const label: Record<string, string> = {
     success: 'Succès', pending: 'En attente', failed: 'Échoué', cancelled: 'Annulé',
@@ -84,12 +84,12 @@ export default function WalletTransactionsPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-50">
-        <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 transition">
-          <ArrowLeft size={20} className="text-gray-600" />
+    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0f172a] transition-colors duration-200">
+      <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-50 dark:border-[#334155]">
+        <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200">
+          <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
         </Link>
-        <h1 className="text-lg font-bold text-gray-900">Historique</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Historique</h1>
       </div>
 
       {/* Filter tabs */}
@@ -98,10 +98,10 @@ export default function WalletTransactionsPage() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition ${
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
               filter === key
                 ? 'bg-[#00A651] text-white'
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-600'
             }`}
           >
             {label}
@@ -118,22 +118,22 @@ export default function WalletTransactionsPage() {
         )}
 
         {!loading && error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mt-2">{error}</p>
+          <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3 mt-2">{error}</p>
         )}
 
         {!loading && !error && filtered.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-16">Aucune transaction trouvée.</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-16">Aucune transaction trouvée.</p>
         )}
 
         {!loading && !error && paginated.length > 0 && (
-          <div className="flex flex-col divide-y divide-gray-50">
+          <div className="flex flex-col gap-2">
             {paginated.map((tx) => {
               const isCredit = tx.direction === 'collect';
               const isP2P    = tx.direction === 'p2p';
               return (
-                <div key={tx.id} className="flex items-center gap-3 py-4">
+                <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    isCredit ? 'bg-green-50' : isP2P ? 'bg-blue-50' : 'bg-orange-50'
+                    isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
                   }`}>
                     {isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
                     {tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
@@ -142,19 +142,19 @@ export default function WalletTransactionsPage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-800 capitalize">{tx.operator}</p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{tx.operator}</p>
                       <StatusBadge status={tx.status} />
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{fmtDate(tx.created_at)}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{fmtDate(tx.created_at)}</p>
                   </div>
 
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-bold ${
-                      isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-600' : 'text-orange-500'
+                      isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
                     }`}>
                       {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
                     </p>
-                    {!isCredit && <p className="text-[10px] text-gray-400">{fmt(tx.amount)} brut</p>}
+                    {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{fmt(tx.amount)} brut</p>}
                   </div>
                 </div>
               );
@@ -164,19 +164,19 @@ export default function WalletTransactionsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 pt-4 mt-2 border-t border-gray-100">
+          <div className="flex items-center justify-center gap-4 pt-4 mt-2 border-t border-gray-100 dark:border-[#334155]">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition"
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200"
             >
               Précédent
             </button>
-            <span className="text-sm text-gray-500">{page} / {totalPages}</span>
+            <span className="text-sm text-gray-500 dark:text-slate-400">{page} / {totalPages}</span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition"
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200"
             >
               Suivant
             </button>
