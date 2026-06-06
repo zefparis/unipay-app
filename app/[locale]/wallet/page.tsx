@@ -96,13 +96,13 @@ export default function WalletHomePage() {
           </Link>
         ))}
 
-        <div className="flex flex-col items-center gap-2.5 rounded-2xl border border-dashed border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/40 p-5 opacity-50 cursor-not-allowed">
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-            <QrCode className="text-gray-400" size={26} />
+        <Link href={`${base}/scan`}
+          className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-5 active:scale-95 hover:scale-105 transition-all duration-200">
+          <div className="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+            <QrCode className="text-purple-500" size={26} />
           </div>
-          <span className="text-sm font-semibold text-gray-400 dark:text-slate-500">Scanner QR</span>
-          <span className="text-[10px] text-gray-400 dark:text-slate-500 -mt-1.5">Bientôt</span>
-        </div>
+          <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">Scanner QR</span>
+        </Link>
       </div>
 
       {/* Recent transactions */}

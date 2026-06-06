@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,15 +19,24 @@ function Spinner() {
 export default function WalletSendPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const searchParams = useSearchParams();
 
   const [balance, setBalance]               = useState<number | null>(null);
   const [recipientPhone, setRecipientPhone] = useState('');
+  const [recipientName, setRecipientName]   = useState('');
   const [amount, setAmount]                 = useState('');
   const [note, setNote]                     = useState('');
   const [error, setError]                   = useState('');
   const [success, setSuccess]               = useState('');
   const [loading, setLoading]               = useState(false);
   const [showModal, setShowModal]           = useState(false);
+
+  useEffect(() => {
+    const qPhone = searchParams.get('phone');
+    const qName  = searchParams.get('name');
+    if (qPhone) setRecipientPhone(qPhone);
+    if (qName)  setRecipientName(qName);
+  }, [searchParams]);
 
   useEffect(() => {
     fetch('/api/wallet/balance')
@@ -92,6 +101,9 @@ export default function WalletSendPage() {
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-5 px-4 py-5">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Téléphone du destinataire</label>
+          {recipientName && (
+            <p className="text-xs font-medium text-[#00A651] -mb-1">{recipientName}</p>
+          )}
           <input
             type="tel"
             value={recipientPhone}

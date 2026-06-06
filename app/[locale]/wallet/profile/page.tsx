@@ -397,7 +397,11 @@ export default function WalletProfilePage() {
         <Card title="Partager mon wallet">
           <div className="flex flex-col items-center gap-4 py-5 px-4">
             <div className="max-w-[160px] mx-auto p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
-              <QRCodeSVG value={profile?.phone ?? 'unipay'} size={140} level="M" />
+              <QRCodeSVG
+                value={`unipaycongo://send?phone=${encodeURIComponent(profile?.phone ?? '')}&name=${encodeURIComponent(profile?.full_name ?? '')}`}
+                size={140}
+                level="M"
+              />
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-400 font-medium">{profile?.phone}</p>
             <button onClick={shareWallet} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00A651] text-white font-semibold text-sm">
