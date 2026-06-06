@@ -323,11 +323,14 @@ export default function WalletProfilePage() {
               </button>
             }
           />
-          <Row
-            icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
-            label="Niveau KYC"
-            value={<KycBadge level={profile?.kyc_level ?? 0} />}
-          />
+          <Link href={`/${locale}/wallet/kyc`}>
+            <Row
+              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
+              label="Niveau KYC"
+              value={<KycBadge level={profile?.kyc_level ?? 0} />}
+              action={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-300 dark:text-slate-600"><polyline points="9 18 15 12 9 6"/></svg>}
+            />
+          </Link>
         </Card>
 
         {/* ── Section 2 : Sécurité ── */}
