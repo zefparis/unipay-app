@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { normalizePhone } from '@/lib/phone';
 
 function Spinner() {
   return (
@@ -28,7 +29,7 @@ export default function WalletLoginPage() {
     if (pin.length !== 6) { setError('Le PIN doit contenir 6 chiffres.'); return; }
     setLoading(true);
 
-    const cleanPhone = phone.replace(/\s+/g, '').replace(/-/g, '');
+    const cleanPhone = normalizePhone(phone);
 
     try {
       const res = await fetch('/api/wallet/auth/login', {

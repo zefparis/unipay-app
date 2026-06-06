@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
+import { normalizePhone } from '@/lib/phone';
 
 const OPERATORS = [
   { key: 'orange',     label: 'Orange Money', color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -66,7 +67,7 @@ export default function WalletWithdrawPage() {
       const res = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator, phone_number: phone, amount: amountNum }),
+        body: JSON.stringify({ operator, phone_number: normalizePhone(phone), amount: amountNum }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
