@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, QrCode } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Tx {
@@ -88,6 +88,7 @@ export default function WalletHomePage() {
           { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-[#00A651]" size={26} />, iconBg: 'bg-green-50 dark:bg-green-900/20',   label: 'Déposer' },
           { href: `${base}/withdraw`, icon: <ArrowUpCircle  className="text-orange-500" size={26} />, iconBg: 'bg-orange-50 dark:bg-orange-900/20', label: 'Retirer' },
           { href: `${base}/send`,     icon: <ArrowLeftRight className="text-blue-500"   size={26} />, iconBg: 'bg-blue-50 dark:bg-blue-900/20',     label: 'Envoyer' },
+          { href: `${base}/swap`,     icon: <ArrowDownUp   className="text-indigo-500" size={26} />, iconBg: 'bg-indigo-50 dark:bg-indigo-900/20', label: 'Convertir USDT' },
         ] as const).map(({ href, icon, iconBg, label }) => (
           <Link key={label} href={href}
             className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-5 active:scale-95 hover:scale-105 transition-all duration-200">
