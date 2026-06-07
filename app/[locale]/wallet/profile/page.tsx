@@ -193,14 +193,23 @@ export default function WalletProfilePage() {
     navigator.clipboard.writeText(profile.wallet_id).then(() => showToast('Copié !'));
   }
 
-  async function shareWallet() {
-    const text = `Mon wallet UniPay : ${profile?.phone}`;
+  const userPhone = profile?.phone ?? '';
+  const userName = profile?.full_name ?? '';
+  const qrValue = `https://app.unipaycongo.com/fr/wallet/send?phone=${encodeURIComponent(userPhone)}&name=${encodeURIComponent(userName)}`;
+  const shareData = {
+    title: 'UniPay Congo',
+    text: `Envoie-moi de l'argent sur UniPay Congo`,
+    url: qrValue,
+  };
+
+  const handleShare = async () => {
     if (navigator.share) {
-      await navigator.share({ title: 'UniPay Wallet', text }).catch(() => {});
+      await navigator.share(shareData);
     } else {
-      navigator.clipboard.writeText(text).then(() => showToast('Lien copié !'));
+      await navigator.clipboard.writeText(shareData.url);
+      showToast('Lien copié !');
     }
-  }
+  };
 
   function toggleNotifs() {
     const next = !notifs;
@@ -402,13 +411,13 @@ export default function WalletProfilePage() {
           <div className="flex flex-col items-center gap-4 py-5 px-4">
             <div className="max-w-[160px] mx-auto p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
               <QRCodeSVG
-                value={`unipaycongo://send?phone=${encodeURIComponent(profile?.phone ?? '')}&name=${encodeURIComponent(profile?.full_name ?? '')}`}
+                value={qrValue}
                 size={140}
                 level="M"
               />
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-400 font-medium">{profile?.phone}</p>
-            <button onClick={shareWallet} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00A651] text-white font-semibold text-sm">
+            <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00A651] text-white font-semibold text-sm">
               <IcShare /> Partager
             </button>
           </div>
