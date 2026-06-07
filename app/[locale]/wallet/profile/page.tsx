@@ -211,7 +211,10 @@ export default function WalletProfilePage() {
   async function doLogout() {
     setLoggingOut(true);
     await fetch('/api/wallet/auth/logout', { method: 'POST' });
-    router.replace(`/${locale}/wallet/login`);
+    localStorage.removeItem('wallet_token');
+    localStorage.removeItem('wallet_phone');
+    localStorage.removeItem('wallet_avatar');
+    router.push('/fr/wallet/login');
   }
 
   const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(n);
@@ -224,13 +227,13 @@ export default function WalletProfilePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-28">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-24">
       {toast && <Toast msg={toast} onDone={() => setToast('')} />}
 
       {/* Logout modal */}
       {logoutModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4">
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end justify-center px-4 pt-4 pb-32">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
             <p className="text-base font-bold text-gray-900 dark:text-white text-center">Se déconnecter ?</p>
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center">Tu devras saisir ton PIN pour te reconnecter.</p>
             <div className="flex gap-3 pt-2">
@@ -427,7 +430,7 @@ export default function WalletProfilePage() {
         {/* ── Section 6 : Déconnexion ── */}
         <button
           onClick={() => setLogoutModal(true)}
-          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition mb-2"
+          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition mt-6 mb-24"
         >
           <IcLogout /> Se déconnecter
         </button>
