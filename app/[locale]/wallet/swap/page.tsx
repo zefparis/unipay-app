@@ -28,6 +28,7 @@ export default function WalletSwapPage() {
   const [feePct, setFeePct]           = useState(0.5);
   const [paused, setPaused]           = useState(false);
   const [cgltBalance, setCgltBalance] = useState<number | null>(null);
+  const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
   const [direction, setDirection]     = useState<Direction>('cglt_to_usdt');
   const [amount, setAmount]           = useState('');
   const [error, setError]             = useState('');
@@ -54,7 +55,7 @@ export default function WalletSwapPage() {
     loadRate();
     fetch('/api/wallet/balance')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
-      .then((d) => { if (d) setCgltBalance(Number(d.cglt_balance ?? 0)); })
+      .then((d) => { if (d) { setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {});
   }, []);
 
@@ -69,8 +70,9 @@ export default function WalletSwapPage() {
   }
   const feeOut    = grossOut * (feePct / 100);
   const netOut    = Math.max(grossOut - feeOut, 0);
-  const usdtBalance = cgltBalance !== null && rate ? cgltBalance / rate : null;
-  const overBudget  = direction === 'cglt_to_usdt' && cgltBalance !== null && amountNum > cgltBalance;
+  const overBudget =
+    (direction === 'cglt_to_usdt' && cgltBalance !== null && amountNum > cgltBalance) ||
+    (direction === 'usdt_to_cglt' && usdtBalance !== null && amountNum > usdtBalance);
 
   function toggleDirection() {
     setDirection((d) => (d === 'cglt_to_usdt' ? 'usdt_to_cglt' : 'cglt_to_usdt'));
@@ -82,7 +84,12 @@ export default function WalletSwapPage() {
     e.preventDefault();
     setError(''); setSuccess('');
     if (amountNum <= 0) { setError('Montant invalide.'); return; }
-    if (overBudget) { setError(`Solde CGLT insuffisant (${fmt(cgltBalance!)} disponibles).`); return; }
+    if (overBudget) {
+      const sym = direction === 'cglt_to_usdt' ? 'CGLT' : 'USDT';
+      const avail = direction === 'cglt_to_usdt' ? cgltBalance! : usdtBalance!;
+      setError(`Solde ${sym} insuffisant (${fmt(avail)} disponibles).`);
+      return;
+    }
     if (paused) { setError('Les conversions sont temporairement suspendues.'); return; }
 
     setLoading(true);
@@ -99,7 +106,7 @@ export default function WalletSwapPage() {
       setSuccess(`${fmt(data.amount_in)} ${fromSym} convertis en ${fmt(data.amount_out)} ${toSym}.`);
       setAmount('');
       // refresh balance
-      fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) setCgltBalance(Number(d.cglt_balance ?? 0)); });
+      fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } });
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
@@ -214,9 +221,9 @@ export default function WalletSwapPage() {
             <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">CGLT</p>
           </div>
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
-            <p className="text-xs text-gray-400 dark:text-slate-500">Équivalent USDT</p>
+            <p className="text-xs text-gray-400 dark:text-slate-500">Solde USDT</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{usdtBalance !== null ? fmt(usdtBalance, 2) : '—'}</p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">USDT (au taux actuel)</p>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">USDT</p>
           </div>
         </div>
       </div>

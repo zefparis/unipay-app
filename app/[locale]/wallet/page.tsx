@@ -43,6 +43,7 @@ export default function WalletHomePage() {
   const base = `/${locale}/wallet`;
 
   const [balance, setBalance] = useState<number | null>(null);
+  const [usdtBalance, setUsdtBalance] = useState(0);
   const [txList, setTxList] = useState<Tx[]>([]);
   const [loadingBal, setLoadingBal] = useState(true);
 
@@ -52,7 +53,7 @@ export default function WalletHomePage() {
         if (r.status === 401) { router.replace(`${base}/login`); return null; }
         return r.json();
       })
-      .then((d) => { if (d) setBalance(Number(d.balance_cdf ?? 0)); })
+      .then((d) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {})
       .finally(() => setLoadingBal(false));
 
@@ -81,6 +82,14 @@ export default function WalletHomePage() {
         )}
         <p className="text-xs opacity-50 mt-3">UniPay Wallet · RDC</p>
       </div>
+
+      {/* USDT balance card (secondary) */}
+      {usdtBalance > 0 && (
+        <div className="bg-slate-800 rounded-xl p-4 mx-4 mt-2">
+          <p className="text-xs text-gray-400">Solde USDT</p>
+          <p className="text-2xl font-bold text-green-400">{usdtBalance.toFixed(2)} USDT</p>
+        </div>
+      )}
 
       {/* Action grid */}
       <div className="grid grid-cols-2 gap-3 px-4 py-5">
