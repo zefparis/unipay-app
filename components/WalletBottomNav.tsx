@@ -11,14 +11,15 @@ const NAV_ITEMS = [
   { key: 'profile',      segment: '/profile',      Icon: User,           label: 'Profil' },
 ] as const;
 
-export default function WalletBottomNav() {
+export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const homeHref = isLoggedIn ? `/${locale}/wallet` : `/${locale}`;
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] flex items-center z-50 transition-colors duration-200">
       {NAV_ITEMS.map(({ key, segment, Icon, label }) => {
-        const href = `/${locale}/wallet${segment}`;
+        const href = key === 'home' ? homeHref : `/${locale}/wallet${segment}`;
         const isActive =
           key === 'home'
             ? pathname === `/${locale}/wallet`

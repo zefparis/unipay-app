@@ -20,7 +20,7 @@ export default function WalletLayout({ children }: { children: React.ReactNode }
       <div className="fixed top-3 right-3 z-50">
         <DarkModeToggle />
       </div>
-      {isLoggedIn && <WalletBottomNav />}
+      {isLoggedIn && <WalletBottomNav isLoggedIn={isLoggedIn} />}
     </div>
   );
 }

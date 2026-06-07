@@ -62,7 +62,10 @@ export default function WalletLoginPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-[#0f172a] transition-colors duration-200">
-      <div className="flex justify-start px-4 pt-4">
+      <div className="flex items-center justify-between px-4 pt-4">
+        <Link href={`/${locale}`} className="text-sm text-gray-400 hover:text-white transition">
+          ← Retour à l&apos;accueil
+        </Link>
         <LanguageSwitcher />
       </div>
 

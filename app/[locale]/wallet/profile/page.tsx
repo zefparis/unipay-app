@@ -214,7 +214,7 @@ export default function WalletProfilePage() {
     localStorage.removeItem('wallet_token');
     localStorage.removeItem('wallet_phone');
     localStorage.removeItem('wallet_avatar');
-    router.push('/fr/wallet/login');
+    router.push(`/${locale}`);
   }
 
   const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(n);
