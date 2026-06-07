@@ -4,3 +4,8 @@ export function normalizePhone(raw: string): string {
   if (digits.startsWith('0')) return '+243' + digits.slice(1);
   return '+' + digits;
 }
+
+export function validateDRCPhone(phone: string): boolean {
+  const normalized = normalizePhone(phone);
+  return /^\+243[0-9]{9}$/.test(normalized);
+}

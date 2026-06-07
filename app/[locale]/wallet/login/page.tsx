@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { normalizePhone } from '@/lib/phone';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 function Spinner() {
@@ -27,6 +27,10 @@ export default function WalletLoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!validateDRCPhone(phone)) {
+      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
+      return;
+    }
     if (pin.length !== 6) { setError('Le PIN doit contenir 6 chiffres.'); return; }
     setLoading(true);
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import Link from 'next/link';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
 
@@ -51,6 +52,10 @@ export default function WalletSendPage() {
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!validateDRCPhone(recipientPhone)) {
+      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
+      return;
+    }
     if (amountNum < 1) { setError('Montant invalide.'); return; }
     if (overBudget) { setError(`Solde insuffisant (${fmt(balance!)} CDF disponibles).`); return; }
     setShowModal(true);
@@ -63,7 +68,7 @@ export default function WalletSendPage() {
       const res = await fetch('/api/wallet/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient_phone: recipientPhone, amount: amountNum, note: note || undefined }),
+        body: JSON.stringify({ recipient_phone: normalizePhone(recipientPhone), amount: amountNum, note: note || undefined }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }

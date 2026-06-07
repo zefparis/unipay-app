@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
-import { normalizePhone } from '@/lib/phone';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 
 const OPERATORS = [
   { key: 'orange',     label: 'Orange Money', color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -59,6 +59,10 @@ export default function WalletWithdrawPage() {
     setSuccess('');
 
     if (!operator) { setError('Sélectionnez un opérateur.'); return; }
+    if (!validateDRCPhone(phone)) {
+      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
+      return;
+    }
     if (amountNum < MIN_AMOUNT) { setError(`Montant minimum : ${fmt(MIN_AMOUNT)} CDF.`); return; }
     if (overBudget) { setError(`Solde insuffisant. Coût total (montant + frais) : ${fmt(totalCost)} CDF.`); return; }
     setLoading(true);

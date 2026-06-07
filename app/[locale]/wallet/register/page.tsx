@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { normalizePhone } from '@/lib/phone';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 function Spinner() {
@@ -30,8 +30,8 @@ export default function WalletRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!/^\+?[0-9]{8,15}$/.test(phone.replace(/\s+/g, '').replace(/-/g, ''))) {
-      setError('Numéro de téléphone invalide. Format attendu : +243XXXXXXXXX');
+    if (!validateDRCPhone(phone)) {
+      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
       return;
     }
     if (pin.length !== 6) {

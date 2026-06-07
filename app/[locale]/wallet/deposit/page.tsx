@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowDownCircle } from 'lucide-react';
-import { normalizePhone } from '@/lib/phone';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 
 const OPERATORS = [
   { key: 'orange',    label: 'Orange Money',  color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -14,14 +14,6 @@ const OPERATORS = [
 
 const FEE_RATE = 0.03;
 const MIN_AMOUNT = 500;
-
-function formatPhoneForDeposit(phone: string, operator: string): string {
-  const normalized = normalizePhone(phone);
-  const digits = normalized.replace(/\D/g, '');
-  const local = digits.startsWith('243') ? digits.slice(3) : digits;
-  if (operator === 'airtel') return local;
-  return '0' + local;
-}
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(Math.round(n)); }
 
@@ -60,6 +52,10 @@ export default function WalletDepositPage() {
     setSuccess('');
 
     if (!operator) { setError('Sélectionnez un opérateur.'); return; }
+    if (!validateDRCPhone(phone)) {
+      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
+      return;
+    }
     if (amountNum < MIN_AMOUNT) { setError(`Montant minimum : ${fmt(MIN_AMOUNT)} CDF.`); return; }
     setLoading(true);
 
@@ -67,7 +63,7 @@ export default function WalletDepositPage() {
       const res = await fetch('/api/wallet/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator, phone_mm: formatPhoneForDeposit(phone, operator), amount: amountNum }),
+        body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
