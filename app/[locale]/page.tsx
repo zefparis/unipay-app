@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -27,17 +28,14 @@ const transactions = [
 
 function Logo() {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00A651] shadow-lg shadow-[#00A651]/25">
-        <svg width="21" height="21" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 20.5L17 27.5L30 12.5" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-      <div className="leading-none">
-        <p className="text-base font-black tracking-tight text-white">UniPay</p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#C9A84C]">Congo</p>
-      </div>
-    </div>
+    <Image
+      src="/logodark.png"
+      alt="UniPay Congo"
+      width={118}
+      height={40}
+      priority
+      className="h-10 w-auto"
+    />
   );
 }
 
