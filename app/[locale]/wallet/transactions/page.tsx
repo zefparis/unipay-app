@@ -3,19 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight } from 'lucide-react';
+import { ArrowLeft, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowRightLeft } from 'lucide-react';
 
 interface Tx {
   id: string;
-  direction: 'collect' | 'payout' | 'p2p';
+  direction: 'collect' | 'payout' | 'p2p' | 'p2p_usdt';
   operator: string;
   amount: number;
   net_amount: number;
+  usdt_amount?: number | null;
   created_at: string;
   status: string;
 }
 
-type Filter = 'all' | 'collect' | 'payout' | 'p2p';
+type Filter = 'all' | 'collect' | 'payout' | 'p2p' | 'p2p_usdt';
 
 const PAGE_SIZE = 20;
 
@@ -81,6 +82,7 @@ export default function WalletTransactionsPage() {
     { key: 'collect', label: 'Dépôts' },
     { key: 'payout',  label: 'Retraits' },
     { key: 'p2p',     label: 'P2P' },
+    { key: 'p2p_usdt', label: 'USDT' },
   ];
 
   return (
@@ -130,31 +132,43 @@ export default function WalletTransactionsPage() {
             {paginated.map((tx) => {
               const isCredit = tx.direction === 'collect';
               const isP2P    = tx.direction === 'p2p';
+              const isUsdt   = tx.direction === 'p2p_usdt';
+              const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
+              const label    = isUsdt ? (usdtIn ? 'USDT reçu' : 'USDT envoyé') : tx.operator;
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
+                    isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
                   }`}>
-                    {isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
-                    {tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
-                    {isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
+                    {isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={20} />}
+                    {!isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
+                    {!isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
+                    {!isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{tx.operator}</p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{label}</p>
                       <StatusBadge status={tx.status} />
                     </div>
                     <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{fmtDate(tx.created_at)}</p>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-bold whitespace-nowrap ${
-                      isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
-                    }`}>
-                      {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
-                    </p>
-                    {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{fmt(tx.amount)} brut</p>}
+                    {isUsdt ? (
+                      <p className={`text-sm font-bold whitespace-nowrap ${usdtIn ? 'text-emerald-500' : 'text-orange-500'}`}>
+                        {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
+                      </p>
+                    ) : (
+                      <>
+                        <p className={`text-sm font-bold whitespace-nowrap ${
+                          isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
+                        }`}>
+                          {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
+                        </p>
+                        {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{fmt(tx.amount)} brut</p>}
+                      </>
+                    )}
                   </div>
                 </div>
               );

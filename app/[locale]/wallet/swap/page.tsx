@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, ArrowDownUp, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ArrowDownUp, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
 
 type Direction = 'cglt_to_usdt' | 'usdt_to_cglt';
@@ -226,6 +226,11 @@ export default function WalletSwapPage() {
             <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">USDT</p>
           </div>
         </div>
+
+        <Link href={`/${locale}/wallet/send-usdt`}
+          className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition">
+          <ArrowRightLeft size={16} /> Envoyer des USDT
+        </Link>
       </div>
     </div>
   );
