@@ -28,9 +28,9 @@ function fmt(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n);
 }
 
-// Deep night-blue → violet gradient backdrop for the glassmorphism hero.
+// Discreet mesh-gradient backdrop for the glassmorphism hero.
 const HERO_BG =
-  'radial-gradient(120% 90% at 50% -10%, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0) 55%), linear-gradient(165deg, #0a0e27 0%, #141033 48%, #1d1240 100%)';
+  'radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(0,200,150,0.10) 0%, transparent 50%), #0f1117';
 
 // Subtle fractal-noise texture (data-URI SVG) layered over the gradient.
 const NOISE_BG =
@@ -93,18 +93,18 @@ export default function WalletHomePage() {
         <div
           className="w-full rounded-[24px] p-6"
           style={{
-            background: 'rgba(255,255,255,0.08)',
+            background: 'rgba(255,255,255,0.06)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: '0 0 60px rgba(99,102,241,0.15)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: '0 8px 32px rgba(99,102,241,0.20), 0 0 0 1px rgba(255,255,255,0.05)',
           }}
         >
           <p className="text-sm text-white/60 tracking-wide">Solde disponible</p>
           {loadingBal ? (
             <div className="h-14 mt-2"><Spinner /></div>
           ) : (
-            <p className="mt-1 font-bold leading-none tracking-tight" style={{ fontSize: 52 }}>
+            <p className="mt-1 leading-none" style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-1px' }}>
               {balance !== null ? fmt(balance) : '—'}
               <span className="text-2xl font-normal text-white/50 ml-2">CDF</span>
             </p>
