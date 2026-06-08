@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -187,9 +188,9 @@ const FEATURES = [
 ] as const;
 
 const BG = `
-  radial-gradient(ellipse at 15% 15%, rgba(0,200,150,0.18) 0%, transparent 45%),
-  radial-gradient(ellipse at 85% 80%, rgba(0,80,220,0.13) 0%, transparent 45%),
-  radial-gradient(ellipse at 50% 50%, rgba(7,15,30,1) 0%, #060d1a 100%)
+  radial-gradient(ellipse at 15% 15%, rgba(0,200,150,0.14) 0%, transparent 45%),
+  radial-gradient(ellipse at 85% 80%, rgba(0,80,220,0.10) 0%, transparent 45%),
+  linear-gradient(180deg, #0a0f1e 0%, #051410 60%, #001a12 100%)
 `.trim();
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -235,31 +236,27 @@ export default function WalletLoginPage() {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: BG }}>
 
-      {/* ── top bar ── */}
-      <div className="flex items-center justify-between px-5 pt-5 relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#00C896,#00A651)' }}>
-            <svg width="16" height="16" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="16" stroke="white" strokeWidth="3"/>
-              <path d="M13 20 L20 27 L27 13" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-sm font-bold text-white/80 tracking-wide">UniPay</span>
-        </div>
-        <LanguageSwitcher />
-      </div>
-
       {/* ════════════════════════════════════════════
           HERO
       ════════════════════════════════════════════ */}
       <section className="relative z-10 flex flex-col items-center text-center px-6 pt-14 pb-16">
+        {/* Language switcher — absolute top-right on hero */}
+        <div className="absolute top-4 right-4 z-20">
+          <div style={{ backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <LanguageSwitcher />
+          </div>
+        </div>
+
         {/* Logo */}
-        <div className="w-20 h-20 rounded-[22px] mb-6 flex items-center justify-center shadow-2xl"
-          style={{ background: 'linear-gradient(135deg,#00C896 0%,#007a5c 100%)', boxShadow: '0 0 40px rgba(0,200,150,0.35)' }}>
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <circle cx="20" cy="20" r="16" stroke="white" strokeWidth="3"/>
-            <path d="M13 20 L20 27 L27 13" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+        <div className="mb-6">
+          <Image
+            src="/logodark.png"
+            alt="UniPay Congo"
+            width={280}
+            height={120}
+            priority
+            style={{ width: '100%', maxWidth: 280, height: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3" style={{ textShadow: '0 2px 20px rgba(0,200,150,0.3)' }}>
