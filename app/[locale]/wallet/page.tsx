@@ -12,6 +12,7 @@ interface Tx {
   operator: string;
   amount: number;
   net_amount: number;
+  currency?: string;
   created_at: string;
   status: string;
 }
@@ -213,7 +214,12 @@ export default function WalletHomePage() {
                   <p className="text-xs text-white/40">{relativeDate(tx.created_at)}</p>
                 </div>
                 <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-emerald-400' : isP2P ? 'text-sky-400' : 'text-orange-400'}`}>
-                  {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
+                  {(() => {
+                    const cur = (tx.currency ?? 'CDF').toUpperCase();
+                    const val = isCredit ? tx.net_amount : tx.amount;
+                    const display = cur === 'USD' ? val.toFixed(2) : fmt(val);
+                    return `${isCredit ? '+' : '−'}${display} ${cur}`;
+                  })()}
                 </p>
               </div>
             );

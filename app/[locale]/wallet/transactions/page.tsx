@@ -12,6 +12,7 @@ interface Tx {
   amount: number;
   net_amount: number;
   usdt_amount?: number | null;
+  currency?: string;
   created_at: string;
   status: string;
 }
@@ -175,16 +176,23 @@ export default function WalletTransactionsPage() {
                       <p className={`text-sm font-bold whitespace-nowrap ${usdtIn ? 'text-emerald-500' : 'text-orange-500'}`}>
                         {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
                       </p>
-                    ) : (
-                      <>
-                        <p className={`text-sm font-bold whitespace-nowrap ${
-                          isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
-                        }`}>
-                          {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
-                        </p>
-                        {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{fmt(tx.amount)} brut</p>}
-                      </>
-                    )}
+                    ) : (() => {
+                      const cur = (tx.currency ?? 'CDF').toUpperCase();
+                      const isUsd = cur === 'USD';
+                      const val = isCredit ? tx.net_amount : tx.amount;
+                      const display = isUsd ? val.toFixed(2) : fmt(val);
+                      const gross = isUsd ? tx.amount.toFixed(2) : fmt(tx.amount);
+                      return (
+                        <>
+                          <p className={`text-sm font-bold whitespace-nowrap ${
+                            isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
+                          }`}>
+                            {isCredit ? '+' : '−'}{display} {cur}
+                          </p>
+                          {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{gross} brut</p>}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               );

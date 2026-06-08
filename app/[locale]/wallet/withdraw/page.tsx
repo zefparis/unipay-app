@@ -111,7 +111,7 @@ export default function WalletWithdrawPage() {
         const data = await res.json();
         if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
         if (!res.ok) { setError(data.error ?? 'Retrait USD échoué'); return; }
-        setSuccess(`Retrait de ${amountNum.toFixed(2)} USD initié. Vous recevrez ${(amountNum - fee).toFixed(2)} USD sur votre compte ${operator}.`);
+        setSuccess(`Retrait de ${amountNum.toFixed(2)} USD initié. ${totalCost.toFixed(2)} USD débités, vous recevrez ${amountNum.toFixed(2)} USD sur votre compte ${operator}.`);
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       }
     } catch {
@@ -204,18 +204,37 @@ export default function WalletWithdrawPage() {
 
         {amountNum >= minAmt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
-            <div className="flex justify-between text-gray-500 dark:text-slate-400">
-              <span>Frais (3%)</span>
-              <span>−{isCdf ? fmt(fee) : fee.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
-            </div>
-            <div className="flex justify-between text-gray-500 dark:text-slate-400">
-              <span>Coût total prélevé</span>
-              <span>{isCdf ? fmt(totalCost) : totalCost.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
-            </div>
-            <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
-              <span>Vous recevez</span>
-              <span className="text-orange-500">{isCdf ? fmt(amountNum - fee) : (amountNum - fee).toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
-            </div>
+            {isCdf ? (
+              <>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Frais (3%)</span>
+                  <span>−{fmt(fee)} CDF</span>
+                </div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Coût total prélevé</span>
+                  <span>{fmt(totalCost)} CDF</span>
+                </div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
+                  <span>Vous recevez</span>
+                  <span className="text-orange-500">{fmt(amountNum - fee)} CDF</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Vous envoyez</span>
+                  <span>{amountNum.toFixed(2)} USD</span>
+                </div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Frais (3%)</span>
+                  <span>+{fee.toFixed(2)} USD</span>
+                </div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
+                  <span>Total débité de votre wallet</span>
+                  <span className="text-orange-500">{totalCost.toFixed(2)} USD</span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
