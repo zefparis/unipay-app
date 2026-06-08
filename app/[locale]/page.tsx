@@ -1,219 +1,404 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-const operators = ['Orange Money', 'Airtel Money', 'M-Pesa', 'Africell Money'];
+// ─── Translations (FR / EN / LN / SW) ────────────────────────────────────────
+const T = {
+  fr: {
+    tagline:    'Le wallet financier de la République Démocratique du Congo',
+    subtitle:   'CDF · USD · USDT · CGLT — tout dans votre téléphone',
+    cta_create: 'Créer mon wallet',
+    cta_login:  'Se connecter',
+    feat_title: 'Tout ce dont vous avez besoin',
+    f1t: 'Envoyez de l\'argent',      f1d: 'Par numéro de téléphone ou QR code, instantané',
+    f2t: 'Changez vos devises',       f2d: 'CDF, USD, USDT et CGLT au meilleur taux',
+    f3t: 'KYC Cognitif',              f3d: 'Vérification d\'identité par IA, résultat en 2 minutes',
+    f4t: 'Blockchain Congolaise',     f4d: 'Vos CGLT sécurisés sur la première blockchain privée de RDC',
+    qr_title:   'Payez et recevez avec votre QR code personnel',
+    qr_sub:     'Montrez votre QR, encaissez instantanément',
+    login_h:    'Connexion',
+    login_sub:  'Accédez à votre portefeuille UniPay',
+    phone_lbl:  'Numéro de téléphone',
+    pin_lbl:    'Code PIN',
+    login_btn:  'Se connecter',
+    logging:    'Connexion…',
+    no_acct:    'Pas encore de compte ?',
+    reg_link:   'Créer mon wallet',
+    footer:     'UniPay Congo — Propulsé par IA-Solution & CGL',
+    cgu: 'CGU', priv: 'Confidentialité', support: 'Support',
+    err_phone:  'Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX',
+    err_pin:    'Le PIN doit contenir 6 chiffres.',
+    err_net:    'Erreur réseau, réessayez.',
+    err_def:    'Numéro ou PIN incorrect',
+  },
+  en: {
+    tagline:    'The financial wallet of the Democratic Republic of Congo',
+    subtitle:   'CDF · USD · USDT · CGLT — all in your phone',
+    cta_create: 'Create my wallet',
+    cta_login:  'Sign in',
+    feat_title: 'Everything you need',
+    f1t: 'Send money',                f1d: 'By phone number or QR code, instantly',
+    f2t: 'Exchange currencies',       f2d: 'CDF, USD, USDT and CGLT at the best rate',
+    f3t: 'Cognitive KYC',             f3d: 'AI-powered identity verification, result in 2 minutes',
+    f4t: 'Congolese Blockchain',      f4d: 'Your CGLT secured on the first private blockchain in DRC',
+    qr_title:   'Pay and receive with your personal QR code',
+    qr_sub:     'Show your QR, collect instantly',
+    login_h:    'Sign in',
+    login_sub:  'Access your UniPay wallet',
+    phone_lbl:  'Phone number',
+    pin_lbl:    'PIN code',
+    login_btn:  'Sign in',
+    logging:    'Signing in…',
+    no_acct:    'No account yet?',
+    reg_link:   'Create my wallet',
+    footer:     'UniPay Congo — Powered by IA-Solution & CGL',
+    cgu: 'ToS', priv: 'Privacy', support: 'Support',
+    err_phone:  'Invalid number. Format: 09XXXXXXXX or +243 9X XXX XXXX',
+    err_pin:    'PIN must be 6 digits.',
+    err_net:    'Network error, please retry.',
+    err_def:    'Incorrect number or PIN',
+  },
+  ln: {
+    tagline:    'Portefeuille ya mbongo ya Republique ya Congo Demokratiki',
+    subtitle:   'CDF · USD · USDT · CGLT — nyonso na telefone na yo',
+    cta_create: 'Sálá wallet na ngai',
+    cta_login:  'Kótá',
+    feat_title: 'Nyonso ozali na yango',
+    f1t: 'Tumela mbongo',             f1d: 'Na nombolo ya telefone to QR, mbala moko',
+    f2t: 'Sángola mbongo',            f2d: 'CDF, USD, USDT na CGLT na prix ya malamu',
+    f3t: 'KYC ya mayele',             f3d: 'Vérification ya identité na IA, résultat na miniti 2',
+    f4t: 'Blockchain ya Congo',       f4d: 'CGLT na yo babateli na blockchain ya liboso ya RDC',
+    qr_title:   'Lipa mpe kangá mbongo na QR code na yo',
+    qr_sub:     'Monisá QR na yo, kangá mbongo mbala moko',
+    login_h:    'Kótá',
+    login_sub:  'Kóta na portefeuille na yo ya UniPay',
+    phone_lbl:  'Nombolo ya telefone',
+    pin_lbl:    'Code PIN',
+    login_btn:  'Kótá',
+    logging:    'Kokóta…',
+    no_acct:    'Ozali na compte te?',
+    reg_link:   'Sálá wallet na ngai',
+    footer:     'UniPay Congo — Propulsé na IA-Solution & CGL',
+    cgu: 'CGU', priv: 'Confidentiel', support: 'Lisungi',
+    err_phone:  'Nombolo ekoki te. Format: 09XXXXXXXX',
+    err_pin:    'PIN esengeli ezala na nombolo 6.',
+    err_net:    'Lisaleli ya réseau, kozonga lisusu.',
+    err_def:    'Nombolo to PIN ya bozoba',
+  },
+  sw: {
+    tagline:    'Pochi ya fedha ya Jamhuri ya Kidemokrasia ya Kongo',
+    subtitle:   'CDF · USD · USDT · CGLT — yote kwenye simu yako',
+    cta_create: 'Fungua pochi yangu',
+    cta_login:  'Ingia',
+    feat_title: 'Kila unachohitaji',
+    f1t: 'Tuma pesa',                 f1d: 'Kwa nambari ya simu au QR code, mara moja',
+    f2t: 'Badilisha sarafu',          f2d: 'CDF, USD, USDT na CGLT kwa kiwango bora',
+    f3t: 'KYC ya Akili Bandia',       f3d: 'Uthibitisho wa utambulisho kwa AI, matokeo kwa dakika 2',
+    f4t: 'Blockchain ya Kongo',       f4d: 'CGLT yako salama kwenye blockchain ya kwanza ya DRC',
+    qr_title:   'Lipa na upokee na QR code yako ya kibinafsi',
+    qr_sub:     'Onyesha QR yako, pokea mara moja',
+    login_h:    'Ingia',
+    login_sub:  'Fikia pochi yako ya UniPay',
+    phone_lbl:  'Nambari ya simu',
+    pin_lbl:    'Nambari ya siri (PIN)',
+    login_btn:  'Ingia',
+    logging:    'Inaingia…',
+    no_acct:    'Bado huna akaunti?',
+    reg_link:   'Fungua pochi yangu',
+    footer:     'UniPay Congo — Inayoundwa na IA-Solution & CGL',
+    cgu: 'Masharti', priv: 'Faragha', support: 'Msaada',
+    err_phone:  'Nambari si sahihi. Muundo: 09XXXXXXXX',
+    err_pin:    'PIN lazima iwe na nambari 6.',
+    err_net:    'Hitilafu ya mtandao, jaribu tena.',
+    err_def:    'Nambari au PIN si sahihi',
+  },
+} as const;
+type LK = keyof typeof T;
+function t(locale: string, key: keyof (typeof T)['fr']): string {
+  const lang = (locale in T ? locale : 'fr') as LK;
+  return (T[lang] as any)[key] ?? (T.fr as any)[key];
+}
 
-const steps = [
-  { icon: '📱', title: 'Inscrivez-vous', text: 'Créez votre wallet avec votre numéro de téléphone.' },
-  { icon: '💳', title: 'Déposez', text: 'Alimentez votre solde via Mobile Money.' },
-  { icon: '✈️', title: 'Envoyez', text: 'Transférez à n’importe qui en RDC.' },
-];
-
-const features = [
-  { icon: '🔒', title: 'Sécurisé', text: 'Vérification biométrique PayGuard pour protéger votre argent.' },
-  { icon: '⚡', title: 'Rapide', text: 'Transfert instantané, disponible à tout moment.' },
-  { icon: '📶', title: 'Bas débit', text: 'Fonctionne même avec peu de réseau grâce à la PWA.' },
-  { icon: '🌍', title: 'Multi-opérateurs', text: 'Orange, Airtel, M-Pesa et Africell réunis dans une seule app.' },
-];
-
-const transactions = [
-  { name: 'Marie K.', type: 'Reçu', amount: '+4 500 CDF', color: 'text-[#00A651]' },
-  { name: 'Airtel Money', type: 'Dépôt', amount: '+8 000 CDF', color: 'text-[#00A651]' },
-  { name: 'Jean B.', type: 'Envoyé', amount: '-2 000 CDF', color: 'text-white' },
-];
-
-function Logo() {
+// ─── FadeIn on scroll ─────────────────────────────────────────────────────────
+function FadeIn({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } }, { threshold: 0.12 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   return (
-    <Image
-      src="/logodark.png"
-      alt="UniPay Congo"
-      width={118}
-      height={40}
-      priority
-      className="h-10 w-auto"
-    />
+    <div ref={ref} className={className} style={{ opacity: vis ? 1 : 0, transform: vis ? 'none' : 'translateY(22px)', transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms` }}>
+      {children}
+    </div>
   );
 }
 
-export default function LandingPage() {
-  const { locale } = useParams<{ locale: string }>();
-  const [scrolled, setScrolled] = useState(false);
+// ─── Decorative QR SVG ────────────────────────────────────────────────────────
+function QRIllustration() {
+  const G = '#00C896';
+  const dots: [number, number][] = [
+    [72,72],[80,72],[88,72],[72,80],[88,80],[72,88],[80,88],[88,88],
+    [72,96],[80,104],[88,96],[96,72],[104,72],[112,80],[96,88],[104,96],[112,96],
+    [96,104],[104,104],[80,112],[88,112],[96,112],[104,112],
+  ];
+  return (
+    <svg width="164" height="164" viewBox="0 0 164 164" fill="none" aria-hidden>
+      {/* TL finder */}
+      <rect x="8" y="8" width="44" height="44" rx="6" stroke={G} strokeWidth="3.5" fill="none"/>
+      <rect x="18" y="18" width="24" height="24" rx="3" fill={G} fillOpacity="0.7"/>
+      {/* TR finder */}
+      <rect x="112" y="8" width="44" height="44" rx="6" stroke={G} strokeWidth="3.5" fill="none"/>
+      <rect x="122" y="18" width="24" height="24" rx="3" fill={G} fillOpacity="0.7"/>
+      {/* BL finder */}
+      <rect x="8" y="112" width="44" height="44" rx="6" stroke={G} strokeWidth="3.5" fill="none"/>
+      <rect x="18" y="122" width="24" height="24" rx="3" fill={G} fillOpacity="0.7"/>
+      {/* Data dots */}
+      {dots.map(([x, y], i) => <rect key={i} x={x} y={y} width="6" height="6" rx="1.5" fill={G} fillOpacity={0.45 + (i % 3) * 0.18}/>)}
+      {/* Logo center */}
+      <rect x="68" y="68" width="28" height="28" rx="5" fill="rgba(0,200,150,0.12)" stroke={G} strokeWidth="1.5"/>
+      <path d="M76 82 L82 88 L90 75" stroke={G} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
 
-  useEffect(() => {
-    document.documentElement.style.scrollBehavior = 'smooth';
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener('scroll', onScroll);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      document.documentElement.style.scrollBehavior = '';
-    };
-  }, []);
+// ─── Spinner ──────────────────────────────────────────────────────────────────
+function Spinner() {
+  return (
+    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+// ─── Feature card ─────────────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: '💸', tk: 'f1t', dk: 'f1d' },
+  { icon: '🔄', tk: 'f2t', dk: 'f2d' },
+  { icon: '🛡️', tk: 'f3t', dk: 'f3d' },
+  { icon: '⛓️', tk: 'f4t', dk: 'f4d' },
+] as const;
+
+const BG = [
+  'radial-gradient(ellipse at 30% 20%, rgba(0,200,150,0.08) 0%, transparent 50%)',
+  'linear-gradient(160deg, #0a0f1e 0%, #051a14 50%, #001a0e 100%)',
+].join(',');
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function LandingPage() {
+  const router   = useRouter();
+  const { locale } = useParams<{ locale: string }>();
+  const loginRef = useRef<HTMLDivElement>(null);
+
+  const [phone,   setPhone]   = useState('');
+  const [pin,     setPin]     = useState('');
+  const [error,   setError]   = useState('');
+  const [loading, setLoading] = useState(false);
+
+  function scrollToLogin() {
+    loginRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => { document.getElementById('unipay-phone')?.focus(); }, 500);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    if (!validateDRCPhone(phone)) { setError(t(locale, 'err_phone')); return; }
+    if (pin.length !== 6)        { setError(t(locale, 'err_pin'));   return; }
+    setLoading(true);
+    try {
+      const res  = await fetch('/api/wallet/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizePhone(phone), pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? t(locale, 'err_def')); return; }
+      localStorage.setItem('wallet_phone', phone);
+      router.refresh();
+      router.push(`/${locale}/wallet`);
+    } catch {
+      setError(t(locale, 'err_net'));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <main className="min-h-screen max-w-screen overflow-x-hidden bg-[#0A1628] text-white">
-      <header className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0A1628]/90 shadow-2xl shadow-black/20 backdrop-blur' : 'bg-transparent'}`}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <Logo />
-          <Link
-            href={`/${locale}/wallet/login`}
-            className="rounded-full border border-white/35 px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white hover:text-[#0A1628] active:scale-95"
-          >
-            Se connecter
-          </Link>
+    <div className="flex flex-col min-h-screen" style={{ background: BG }}>
+
+      {/* ════════════════════════════════════════════
+          HERO
+      ════════════════════════════════════════════ */}
+      <section className="relative z-10 flex flex-col text-center pt-10 pb-16">
+        {/* Language switcher — absolute top-right */}
+        <div className="absolute top-4 right-4 z-20">
+          <div style={{ backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.15)' }}>
+            <LanguageSwitcher />
+          </div>
         </div>
-      </header>
 
-      <section className="relative flex min-h-screen items-center overflow-hidden bg-gradient-to-b from-[#0A1628] via-[#0D2040] to-[#0A1628] px-5 pb-16 pt-28">
-        <div className="absolute left-1/2 top-32 h-72 w-72 -translate-x-1/2 rounded-full border border-[#00A651]/20 animate-pulse" />
-        <div className="absolute left-1/2 top-24 h-96 w-96 -translate-x-1/2 rounded-full border border-[#1A5FAB]/20 animate-pulse" />
-        <div className="absolute left-1/2 top-16 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-[#00A651]/10 blur-3xl" />
+        {/* Logo — full viewport width, no container, no padding */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logodark.png"
+          alt="UniPay Congo"
+          style={{ width: '100vw', display: 'block', objectFit: 'cover', marginLeft: 'calc(-50vw + 50%)' }}
+        />
 
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
-          <div className="mx-auto w-full max-w-[18rem] rounded-[2.25rem] border border-white/15 bg-black/40 p-3 shadow-2xl shadow-[#00A651]/10 backdrop-blur lg:order-2">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#0A1628] p-4">
-              <div className="mb-5 flex items-center justify-between">
-                <Logo />
-                <div className="h-8 w-8 rounded-full bg-[#1A5FAB]/30" />
-              </div>
-              <div className="rounded-3xl bg-gradient-to-br from-[#00A651] to-[#1A5FAB] p-5 shadow-xl shadow-[#00A651]/20">
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/70">Solde wallet</p>
-                <p className="mt-3 text-3xl font-black tracking-tight">12 500</p>
-                <p className="text-sm font-semibold text-white/80">CDF disponibles</p>
-              </div>
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold">Dernières transactions</p>
-                  <span className="rounded-full bg-[#C9A84C]/15 px-2 py-1 text-[10px] font-bold text-[#C9A84C]">Live</span>
-                </div>
-                {transactions.map((tx) => (
-                  <div key={tx.name} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{tx.name}</p>
-                      <p className="text-xs text-white/45">{tx.type}</p>
-                    </div>
-                    <p className={`text-sm font-black ${tx.color}`}>{tx.amount}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Hero text + CTAs — padded & centred */}
+        <div className="flex flex-col items-center px-6 pt-8">
+          <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3" style={{ textShadow: '0 2px 20px rgba(0,200,150,0.3)' }}>
+            {t(locale, 'tagline')}
+          </h1>
+          <p className="text-sm text-white/55 mb-8 tracking-wide">
+            {t(locale, 'subtitle')}
+          </p>
+
+          <div className="flex flex-col gap-3 w-full max-w-[280px]">
+            <Link href={`/${locale}/wallet/register`}
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-[#070f1a] text-base shadow-lg"
+              style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 24px rgba(0,200,150,0.45)' }}>
+              {t(locale, 'cta_create')}
+            </Link>
+            <button type="button" onClick={scrollToLogin}
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-white text-base border transition-all"
+              style={{ borderColor: 'rgba(0,200,150,0.5)', background: 'rgba(0,200,150,0.08)', backdropFilter: 'blur(8px)' }}>
+              {t(locale, 'cta_login')}
+            </button>
           </div>
 
-          <div className="text-center lg:text-left">
-            <p className="mb-4 inline-flex rounded-full border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-[#C9A84C]">
-              Wallet mobile pour la RDC
-            </p>
-            <h1 className="text-5xl font-black leading-[0.98] tracking-tight sm:text-6xl lg:text-7xl">
-              Envoyez de l’argent
-              <span className="mt-2 block bg-gradient-to-r from-[#00A651] to-[#1A5FAB] bg-clip-text text-transparent">
-                en toute simplicité
+          {/* Currency badge row */}
+          <div className="flex gap-2 mt-8 flex-wrap justify-center">
+            {['CDF','USD','USDT','CGLT'].map((c) => (
+              <span key={c} className="px-3 py-1 rounded-full text-xs font-semibold"
+                style={{ background: c === 'CGLT' ? 'rgba(212,175,55,0.15)' : 'rgba(0,200,150,0.12)', color: c === 'CGLT' ? '#d4af37' : '#00C896', border: `1px solid ${c === 'CGLT' ? 'rgba(212,175,55,0.3)' : 'rgba(0,200,150,0.25)'}` }}>
+                {c}
               </span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-8 text-white/70 sm:text-lg lg:mx-0">
-              Dépôt, retrait et transfert via Mobile Money — Orange, Airtel, M-Pesa, Africell.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
-              <Link
-                href={`/${locale}/wallet/register`}
-                className="rounded-2xl bg-[#00A651] px-7 py-4 text-center text-base font-black text-white shadow-xl shadow-[#00A651]/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#008f45] active:scale-95"
-              >
-                Créer mon wallet
-              </Link>
-              <Link
-                href={`/${locale}/wallet/login`}
-                className="rounded-2xl border border-white/30 px-7 py-4 text-center text-base font-black text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:text-[#0A1628] active:scale-95"
-              >
-                J’ai déjà un compte
-              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          FEATURES  2×2
+      ════════════════════════════════════════════ */}
+      <section className="relative z-10 px-4 pb-12">
+        <FadeIn className="text-center mb-5">
+          <h2 className="text-base font-bold text-white/70 uppercase tracking-widest">{t(locale, 'feat_title')}</h2>
+        </FadeIn>
+        <div className="grid grid-cols-2 gap-3">
+          {FEATURES.map(({ icon, tk, dk }, i) => (
+            <FadeIn key={tk} delay={i * 80}>
+              <div className="rounded-2xl p-4 h-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
+                <div className="text-2xl mb-2">{icon}</div>
+                <p className="text-sm font-bold text-white/90 leading-snug mb-1">{t(locale, tk)}</p>
+                <p className="text-xs text-white/45 leading-relaxed">{t(locale, dk)}</p>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════
+          QR SECTION
+      ════════════════════════════════════════════ */}
+      <section className="relative z-10 px-4 pb-14">
+        <FadeIn>
+          <div className="rounded-2xl p-6 flex flex-col items-center text-center" style={{ background: 'rgba(0,200,150,0.06)', border: '1px solid rgba(0,200,150,0.18)', backdropFilter: 'blur(12px)' }}>
+            <div className="mb-4 p-3 rounded-2xl" style={{ background: 'rgba(0,200,150,0.08)', border: '1px solid rgba(0,200,150,0.2)' }}>
+              <QRIllustration />
             </div>
+            <h3 className="text-base font-bold text-white/90 mb-2">{t(locale, 'qr_title')}</h3>
+            <p className="text-sm text-white/50">{t(locale, 'qr_sub')}</p>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
-      <section className="bg-[#0D2040] px-5 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="text-center">
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#C9A84C]">Comment ça marche</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Trois étapes pour utiliser votre wallet</h2>
-          </div>
-          <div className="relative mt-12 grid gap-6 md:grid-cols-3">
-            <div className="absolute left-1/2 top-12 hidden h-px w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#C9A84C]/45 to-transparent md:block" />
-            {steps.map((step, index) => (
-              <div key={step.title} className="relative rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#C9A84C]/30 bg-[#C9A84C]/15 text-3xl shadow-lg shadow-[#C9A84C]/10">
-                  {step.icon}
-                </div>
-                <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-[#C9A84C]">Étape {index + 1}</p>
-                <h3 className="mt-2 text-xl font-black">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-white/60">{step.text}</p>
+      {/* ════════════════════════════════════════════
+          LOGIN FORM
+      ════════════════════════════════════════════ */}
+      <section ref={loginRef} className="relative z-10 px-4 pb-10">
+        <FadeIn>
+          <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
+            <div className="flex flex-col items-center mb-5">
+              <h2 className="text-lg font-extrabold text-white">{t(locale, 'login_h')}</h2>
+              <p className="text-xs text-white/45 mt-1">{t(locale, 'login_sub')}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-white/60 uppercase tracking-widest">{t(locale, 'phone_lbl')}</label>
+                <input
+                  id="unipay-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+243 XXX XXX XXX"
+                  required
+                  className="rounded-xl px-4 py-3.5 text-base text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+                />
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <section className="bg-[#0A1628] px-5 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#00A651]">Pourquoi UniPay Congo</p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Un wallet premium, pensé pour le quotidien congolais</h2>
-          </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => (
-              <div key={feature.title} className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.03] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#00A651]/40">
-                <div className="mb-5 text-4xl">{feature.icon}</div>
-                <h3 className="text-lg font-black">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-white/60">{feature.text}</p>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-white/60 uppercase tracking-widest">
+                  {t(locale, 'pin_lbl')} <span className="text-white/30 normal-case font-normal">{pin.length}/6</span>
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="••••••"
+                  maxLength={6}
+                  required
+                  className="rounded-xl px-4 py-3.5 text-base text-white tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+                />
               </div>
-            ))}
+
+              {error && (
+                <p className="text-sm text-red-400 bg-red-900/20 rounded-xl px-4 py-3 border border-red-800/30">{error}</p>
+              )}
+
+              <button type="submit" disabled={loading}
+                className="h-[52px] flex items-center justify-center gap-2 rounded-xl font-bold text-[#070f1a] text-base disabled:opacity-60 transition-all"
+                style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 20px rgba(0,200,150,0.35)' }}>
+                {loading && <Spinner />}
+                {loading ? t(locale, 'logging') : t(locale, 'login_btn')}
+              </button>
+            </form>
+
+            <p className="text-sm text-center text-white/40 mt-5">
+              {t(locale, 'no_acct')}{' '}
+              <Link href={`/${locale}/wallet/register`} className="font-bold" style={{ color: '#00C896' }}>
+                {t(locale, 'reg_link')}
+              </Link>
+            </p>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
-      <section className="bg-[#0D2040] px-5 py-16">
-        <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#C9A84C]/25 bg-[#0A1628]/70 p-6 shadow-2xl shadow-black/20 sm:p-8">
-          <h2 className="text-center text-2xl font-black tracking-tight sm:text-3xl">Compatible avec tous les opérateurs DRC</h2>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {operators.map((operator) => (
-              <div key={operator} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-5 text-center font-black text-white/90 transition-all duration-300 hover:border-[#C9A84C]/50 hover:text-[#C9A84C]">
-                {operator}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 py-20">
-        <div className="mx-auto max-w-5xl rounded-[2.25rem] bg-gradient-to-r from-[#00A651] to-[#1A5FAB] p-8 text-center shadow-2xl shadow-[#1A5FAB]/20 sm:p-12">
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl">Prêt à commencer ?</h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/85">Créez votre wallet UniPay Congo et envoyez de l’argent en quelques secondes.</p>
-          <Link
-            href={`/${locale}/wallet/register`}
-            className="mt-8 inline-flex rounded-2xl bg-white px-8 py-4 text-base font-black text-[#0A1628] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-95"
-          >
-            Créer mon wallet
-          </Link>
-        </div>
-      </section>
-
-      <footer className="border-t border-white/10 bg-[#07111f] px-5 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Logo />
-            <p className="mt-3 text-xs text-white/45">© CGL 2026. Tous droits réservés.</p>
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/60">
-            <Link href={`/${locale}/terms`} className="transition-colors hover:text-white">CGU</Link>
-            <Link href={`/${locale}/privacy`} className="transition-colors hover:text-white">Confidentialité</Link>
-            <Link href={`/${locale}/legal`} className="transition-colors hover:text-white">Mentions légales</Link>
-            <Link href={`/${locale}/contact`} className="transition-colors hover:text-white">Contact</Link>
-          </div>
+      {/* ════════════════════════════════════════════
+          FOOTER
+      ════════════════════════════════════════════ */}
+      <footer className="relative z-10 px-4 pb-8 pt-2 flex flex-col items-center gap-3">
+        <p className="text-[11px] text-white/25 text-center">{t(locale, 'footer')}</p>
+        <div className="flex gap-4">
+          {(['cgu','priv','support'] as const).map((k) => (
+            <span key={k} className="text-[11px] text-white/30 cursor-pointer hover:text-white/60 transition">{t(locale, k)}</span>
+          ))}
         </div>
       </footer>
-    </main>
+
+    </div>
   );
 }
