@@ -14,9 +14,9 @@ const CDF_OPERATORS = [
 ] as const;
 
 const USD_OPERATORS = [
-  { key: 'airtel', label: 'Airtel USD',  color: 'bg-red-500',    active: 'ring-red-500'    },
-  { key: 'mpesa',  label: 'Mpesa USD',   color: 'bg-green-500',  active: 'ring-green-500'  },
-  { key: 'orange', label: 'Orange USD',  color: 'bg-orange-500', active: 'ring-orange-500' },
+  { key: 'airtel',   label: 'Airtel USD',   color: 'bg-red-500',    active: 'ring-red-500'    },
+  { key: 'africell', label: 'Africell USD', color: 'bg-yellow-500',  active: 'ring-yellow-500'  },
+  { key: 'orange',   label: 'Orange USD',   color: 'bg-orange-500', active: 'ring-orange-500' },
 ] as const;
 
 const FEE_RATE = 0.03;
@@ -173,7 +173,7 @@ export default function WalletDepositPage() {
         </button>
         <button type="button" onClick={() => switchTab('usd')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-          USD via Unipesa
+          USD
         </button>
       </div>
 
