@@ -187,11 +187,10 @@ const FEATURES = [
   { icon: '⛓️', tk: 'f4t', dk: 'f4d' },
 ] as const;
 
-const BG = `
-  radial-gradient(ellipse at 15% 15%, rgba(0,200,150,0.14) 0%, transparent 45%),
-  radial-gradient(ellipse at 85% 80%, rgba(0,80,220,0.10) 0%, transparent 45%),
-  linear-gradient(180deg, #0a0f1e 0%, #051410 60%, #001a12 100%)
-`.trim();
+const BG = [
+  'radial-gradient(ellipse at 30% 20%, rgba(0,200,150,0.08) 0%, transparent 50%)',
+  'linear-gradient(160deg, #0a0f1e 0%, #051a14 50%, #001a0e 100%)',
+].join(',');
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function WalletLoginPage() {
@@ -247,17 +246,16 @@ export default function WalletLoginPage() {
           </div>
         </div>
 
-        {/* Logo */}
-        <div className="mb-6">
-          <Image
-            src="/logodark.png"
-            alt="UniPay Congo"
-            width={280}
-            height={120}
-            priority
-            style={{ width: '100%', maxWidth: 280, height: 'auto', objectFit: 'contain' }}
-          />
-        </div>
+        {/* Logo — directly on background, no card/container */}
+        <Image
+          src="/logodark.png"
+          alt="UniPay Congo"
+          width={320}
+          height={140}
+          priority
+          className="mb-6"
+          style={{ width: '100%', maxWidth: 320, height: 'auto', objectFit: 'contain' }}
+        />
 
         <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3" style={{ textShadow: '0 2px 20px rgba(0,200,150,0.3)' }}>
           {t(locale, 'tagline')}
