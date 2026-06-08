@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowRightLe
 
 interface Tx {
   id: string;
-  direction: 'collect' | 'payout' | 'p2p' | 'p2p_usdt';
+  direction: 'collect' | 'payout' | 'p2p' | 'p2p_usdt' | 'cglt_gaming_debit' | 'cglt_gaming_credit';
   operator: string;
   amount: number;
   net_amount: number;
@@ -16,7 +16,7 @@ interface Tx {
   status: string;
 }
 
-type Filter = 'all' | 'collect' | 'payout' | 'p2p' | 'p2p_usdt';
+type Filter = 'all' | 'collect' | 'payout' | 'p2p' | 'p2p_usdt' | 'gaming';
 
 const PAGE_SIZE = 20;
 
@@ -73,7 +73,12 @@ export default function WalletTransactionsPage() {
 
   useEffect(() => { setPage(1); }, [filter]);
 
-  const filtered  = filter === 'all' ? txList : txList.filter((t) => t.direction === filter);
+  const filtered  =
+    filter === 'all'
+      ? txList
+      : filter === 'gaming'
+        ? txList.filter((t) => t.direction === 'cglt_gaming_debit' || t.direction === 'cglt_gaming_credit')
+        : txList.filter((t) => t.direction === filter);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -83,6 +88,7 @@ export default function WalletTransactionsPage() {
     { key: 'payout',  label: 'Retraits' },
     { key: 'p2p',     label: 'P2P' },
     { key: 'p2p_usdt', label: 'USDT' },
+    { key: 'gaming',   label: 'Gaming' },
   ];
 
   return (
@@ -133,17 +139,23 @@ export default function WalletTransactionsPage() {
               const isCredit = tx.direction === 'collect';
               const isP2P    = tx.direction === 'p2p';
               const isUsdt   = tx.direction === 'p2p_usdt';
+              const isGameDebit  = tx.direction === 'cglt_gaming_debit';
+              const isGameCredit = tx.direction === 'cglt_gaming_credit';
+              const isGaming = isGameDebit || isGameCredit;
               const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
-              const label    = isUsdt ? (usdtIn ? 'USDT reçu' : 'USDT envoyé') : tx.operator;
+              const label    = isGaming
+                ? (isGameCredit ? 'Gain CGLT' : 'Mise CGLT')
+                : isUsdt ? (usdtIn ? 'USDT reçu' : 'USDT envoyé') : tx.operator;
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xl ${
+                    isGaming ? 'bg-purple-50 dark:bg-purple-900/20' : isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
                   }`}>
-                    {isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={20} />}
-                    {!isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
-                    {!isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
-                    {!isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
+                    {isGaming  && <span aria-hidden>🎮</span>}
+                    {!isGaming && isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={20} />}
+                    {!isGaming && !isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
+                    {!isGaming && !isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
+                    {!isGaming && !isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -155,7 +167,11 @@ export default function WalletTransactionsPage() {
                   </div>
 
                   <div className="text-right shrink-0">
-                    {isUsdt ? (
+                    {isGaming ? (
+                      <p className={`text-sm font-bold whitespace-nowrap ${isGameCredit ? 'text-[#00A651]' : 'text-purple-500'}`}>
+                        {isGameCredit ? '+' : '−'}{fmt(tx.amount)} CGLT
+                      </p>
+                    ) : isUsdt ? (
                       <p className={`text-sm font-bold whitespace-nowrap ${usdtIn ? 'text-emerald-500' : 'text-orange-500'}`}>
                         {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
                       </p>
