@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -238,53 +237,53 @@ export default function WalletLoginPage() {
       {/* ════════════════════════════════════════════
           HERO
       ════════════════════════════════════════════ */}
-      <section className="relative z-10 flex flex-col items-center text-center px-6 pt-14 pb-16">
-        {/* Language switcher — absolute top-right on hero */}
+      <section className="relative z-10 flex flex-col text-center pt-10 pb-16">
+        {/* Language switcher — absolute top-right */}
         <div className="absolute top-4 right-4 z-20">
           <div style={{ backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.15)' }}>
             <LanguageSwitcher />
           </div>
         </div>
 
-        {/* Logo — directly on background, no card/container */}
-        <Image
+        {/* Logo — full viewport width, no container, no padding */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/logodark.png"
           alt="UniPay Congo"
-          width={320}
-          height={140}
-          priority
-          className="mb-6"
-          style={{ width: '100%', maxWidth: 320, height: 'auto', objectFit: 'contain' }}
+          style={{ width: '100vw', display: 'block', objectFit: 'cover', marginLeft: 'calc(-50vw + 50%)' }}
         />
 
-        <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3" style={{ textShadow: '0 2px 20px rgba(0,200,150,0.3)' }}>
-          {t(locale, 'tagline')}
-        </h1>
-        <p className="text-sm text-white/55 mb-8 tracking-wide">
-          {t(locale, 'subtitle')}
-        </p>
+        {/* Hero text + CTAs — padded & centred */}
+        <div className="flex flex-col items-center px-6 pt-8">
+          <h1 className="text-[26px] font-extrabold text-white leading-tight mb-3" style={{ textShadow: '0 2px 20px rgba(0,200,150,0.3)' }}>
+            {t(locale, 'tagline')}
+          </h1>
+          <p className="text-sm text-white/55 mb-8 tracking-wide">
+            {t(locale, 'subtitle')}
+          </p>
 
-        <div className="flex flex-col gap-3 w-full max-w-[280px]">
-          <Link href={`/${locale}/wallet/register`}
-            className="h-[52px] flex items-center justify-center rounded-xl font-bold text-[#070f1a] text-base shadow-lg"
-            style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 24px rgba(0,200,150,0.45)' }}>
-            {t(locale, 'cta_create')}
-          </Link>
-          <button type="button" onClick={scrollToLogin}
-            className="h-[52px] flex items-center justify-center rounded-xl font-bold text-white text-base border transition-all"
-            style={{ borderColor: 'rgba(0,200,150,0.5)', background: 'rgba(0,200,150,0.08)', backdropFilter: 'blur(8px)' }}>
-            {t(locale, 'cta_login')}
-          </button>
-        </div>
+          <div className="flex flex-col gap-3 w-full max-w-[280px]">
+            <Link href={`/${locale}/wallet/register`}
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-[#070f1a] text-base shadow-lg"
+              style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 24px rgba(0,200,150,0.45)' }}>
+              {t(locale, 'cta_create')}
+            </Link>
+            <button type="button" onClick={scrollToLogin}
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-white text-base border transition-all"
+              style={{ borderColor: 'rgba(0,200,150,0.5)', background: 'rgba(0,200,150,0.08)', backdropFilter: 'blur(8px)' }}>
+              {t(locale, 'cta_login')}
+            </button>
+          </div>
 
-        {/* Currency badge row */}
-        <div className="flex gap-2 mt-8 flex-wrap justify-center">
-          {['CDF','USD','USDT','CGLT'].map((c) => (
-            <span key={c} className="px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background: c === 'CGLT' ? 'rgba(212,175,55,0.15)' : 'rgba(0,200,150,0.12)', color: c === 'CGLT' ? '#d4af37' : '#00C896', border: `1px solid ${c === 'CGLT' ? 'rgba(212,175,55,0.3)' : 'rgba(0,200,150,0.25)'}` }}>
-              {c}
-            </span>
-          ))}
+          {/* Currency badge row */}
+          <div className="flex gap-2 mt-8 flex-wrap justify-center">
+            {['CDF','USD','USDT','CGLT'].map((c) => (
+              <span key={c} className="px-3 py-1 rounded-full text-xs font-semibold"
+                style={{ background: c === 'CGLT' ? 'rgba(212,175,55,0.15)' : 'rgba(0,200,150,0.12)', color: c === 'CGLT' ? '#d4af37' : '#00C896', border: `1px solid ${c === 'CGLT' ? 'rgba(212,175,55,0.3)' : 'rgba(0,200,150,0.25)'}` }}>
+                {c}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

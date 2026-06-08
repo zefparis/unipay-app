@@ -17,9 +17,11 @@ export default function WalletLayout({ children }: { children: React.ReactNode }
       <div className={`w-full max-w-md mx-auto min-h-screen flex flex-col${isLoggedIn ? ' pb-16' : ''}`}>
         {children}
       </div>
-      <div className="fixed top-3 right-3 z-50">
-        <DarkModeToggle />
-      </div>
+      {isLoggedIn && (
+        <div className="fixed top-3 right-3 z-50">
+          <DarkModeToggle />
+        </div>
+      )}
       {isLoggedIn && <WalletBottomNav isLoggedIn={isLoggedIn} />}
     </div>
   );
