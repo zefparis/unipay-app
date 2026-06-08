@@ -5,17 +5,25 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import type { WalletBalance } from '@/lib/wallet-types';
 
-const OPERATORS = [
+const CDF_OPERATORS = [
   { key: 'orange',     label: 'Orange Money', color: 'bg-orange-500', active: 'ring-orange-500' },
   { key: 'airtel',    label: 'Airtel Money',  color: 'bg-red-500',    active: 'ring-red-500'    },
   { key: 'afrimoney', label: 'Afrimoney',     color: 'bg-blue-600',   active: 'ring-blue-600'   },
 ] as const;
 
-const FEE_RATE  = 0.02;
-const MIN_AMOUNT = 100;
+const USD_OPERATORS = [
+  { key: 'airtel', label: 'Airtel USD',  color: 'bg-red-500',    active: 'ring-red-500'    },
+  { key: 'mpesa',  label: 'Mpesa USD',   color: 'bg-green-500',  active: 'ring-green-500'  },
+  { key: 'orange', label: 'Orange USD',  color: 'bg-orange-500', active: 'ring-orange-500' },
+] as const;
 
-function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(Math.round(n)); }
+const FEE_RATE  = 0.03;
+const MIN_CDF_AMOUNT = 100;
+const MIN_USD_AMOUNT = 1;
+
+function fmt(n: number, max = 0) { return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: max }).format(n); }
 
 function Spinner() {
   return (
@@ -30,13 +38,15 @@ export default function WalletWithdrawPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
-  const [balance, setBalance]   = useState<number | null>(null);
-  const [operator, setOperator] = useState<string>('');
-  const [phone, setPhone]       = useState('');
-  const [amount, setAmount]     = useState('');
-  const [error, setError]       = useState('');
-  const [success, setSuccess]   = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [tab, setTab]               = useState<'cdf' | 'usd'>('cdf');
+  const [balance, setBalance]       = useState<number | null>(null);
+  const [usdBalance, setUsdBalance] = useState<number | null>(null);
+  const [operator, setOperator]     = useState<string>('orange');
+  const [phone, setPhone]           = useState('');
+  const [amount, setAmount]         = useState('');
+  const [error, setError]           = useState('');
+  const [success, setSuccess]       = useState('');
+  const [loading, setLoading]       = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('wallet_phone');
@@ -44,14 +54,26 @@ export default function WalletWithdrawPage() {
 
     fetch('/api/wallet/balance')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
-      .then((d) => { if (d) setBalance(Number(d.balance_cdf ?? 0)); })
+      .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } })
       .catch(() => {});
   }, []);
 
+  const isCdf      = tab === 'cdf';
+  const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
+  const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
   const amountNum  = Number(amount);
-  const fee        = amountNum > 0 ? amountNum * FEE_RATE : 0;
-  const totalCost  = amountNum + fee;
-  const overBudget = balance !== null && amountNum > 0 && totalCost > balance;
+  const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
+  const totalCost  = amountNum > 0 ? Math.round((amountNum + fee) * 100) / 100 : 0;
+  const activeBal  = isCdf ? balance : usdBalance;
+  const overBudget = activeBal !== null && amountNum > 0 && totalCost > activeBal;
+
+  function switchTab(t: 'cdf' | 'usd') {
+    setTab(t);
+    setAmount('');
+    setError('');
+    setSuccess('');
+    setOperator(t === 'cdf' ? 'orange' : 'airtel');
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,22 +85,35 @@ export default function WalletWithdrawPage() {
       setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
       return;
     }
-    if (amountNum < MIN_AMOUNT) { setError(`Montant minimum : ${fmt(MIN_AMOUNT)} CDF.`); return; }
-    if (overBudget) { setError(`Solde insuffisant. Coût total (montant + frais) : ${fmt(totalCost)} CDF.`); return; }
+    if (amountNum < minAmt) { setError(`Montant minimum : ${isCdf ? fmt(minAmt) : minAmt} ${isCdf ? 'CDF' : 'USD'}.`); return; }
+    if (overBudget) { setError(`Solde insuffisant. Coût total (montant + frais) : ${isCdf ? fmt(totalCost) : totalCost.toFixed(2)} ${isCdf ? 'CDF' : 'USD'}.`); return; }
     setLoading(true);
 
     try {
-      const res = await fetch('/api/wallet/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
-      });
-      const data = await res.json();
-      if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-      if (!res.ok) { setError(data.error ?? 'Retrait échoué'); return; }
-
-      setSuccess(`Retrait de ${fmt(amountNum)} CDF initié. Vous recevrez ${fmt(amountNum - fee)} CDF sur votre compte ${operator}.`);
-      setTimeout(() => router.push(`/${locale}/wallet`), 5000);
+      let res: Response;
+      if (isCdf) {
+        res = await fetch('/api/wallet/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
+        });
+        const data = await res.json();
+        if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
+        if (!res.ok) { setError(data.error ?? 'Retrait échoué'); return; }
+        setSuccess(`Retrait de ${fmt(amountNum)} CDF initié. Vous recevrez ${fmt(amountNum - fee)} CDF sur votre compte ${operator}.`);
+        setTimeout(() => router.push(`/${locale}/wallet`), 5000);
+      } else {
+        res = await fetch('/api/wallet/unipesa/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: normalizePhone(phone), operator, amount: amountNum }),
+        });
+        const data = await res.json();
+        if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
+        if (!res.ok) { setError(data.error ?? 'Retrait USD échoué'); return; }
+        setSuccess(`Retrait de ${amountNum.toFixed(2)} USD initié. Vous recevrez ${(amountNum - fee).toFixed(2)} USD sur votre compte ${operator}.`);
+        setTimeout(() => router.push(`/${locale}/wallet`), 5000);
+      }
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
@@ -98,10 +133,22 @@ export default function WalletWithdrawPage() {
         </h1>
       </div>
 
-      {balance !== null && (
+      {/* Currency tab */}
+      <div className="flex gap-2 px-4 pt-4">
+        <button type="button" onClick={() => switchTab('cdf')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cdf' ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          CDF
+        </button>
+        <button type="button" onClick={() => switchTab('usd')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          USD via Unipesa
+        </button>
+      </div>
+
+      {activeBal !== null && (
         <div className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-orange-700 dark:text-orange-400">Solde disponible</span>
-          <span className="text-sm font-bold text-orange-700 dark:text-orange-400">{fmt(balance)} CDF</span>
+          <span className="text-sm text-orange-700 dark:text-orange-400">Solde {isCdf ? 'CDF' : 'USD'} disponible</span>
+          <span className="text-sm font-bold text-orange-700 dark:text-orange-400">{isCdf ? fmt(activeBal) : activeBal.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
         </div>
       )}
 
@@ -109,7 +156,7 @@ export default function WalletWithdrawPage() {
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Opérateur Mobile Money</label>
           <div className="flex flex-wrap gap-2">
-            {OPERATORS.map((op) => (
+            {operators.map((op) => (
               <button
                 key={op.key}
                 type="button"
@@ -138,14 +185,15 @@ export default function WalletWithdrawPage() {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            Montant (CDF) <span className="text-gray-400 dark:text-slate-500 font-normal">— min {fmt(MIN_AMOUNT)} CDF</span>
+            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-400 dark:text-slate-500 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
           </label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="100"
-            min={MIN_AMOUNT}
+            placeholder={isCdf ? '100' : '10.00'}
+            min={minAmt}
+            step={isCdf ? '1' : '0.01'}
             required
             className={`border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${
               overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-orange-400'
@@ -154,19 +202,19 @@ export default function WalletWithdrawPage() {
           {overBudget && <p className="text-xs text-red-500">Solde insuffisant pour couvrir montant + frais.</p>}
         </div>
 
-        {amountNum >= MIN_AMOUNT && (
+        {amountNum >= minAmt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between text-gray-500 dark:text-slate-400">
-              <span>Frais (2%)</span>
-              <span>−{fmt(fee)} CDF</span>
+              <span>Frais (3%)</span>
+              <span>−{isCdf ? fmt(fee) : fee.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
             <div className="flex justify-between text-gray-500 dark:text-slate-400">
               <span>Coût total prélevé</span>
-              <span>{fmt(totalCost)} CDF</span>
+              <span>{isCdf ? fmt(totalCost) : totalCost.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
             <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
               <span>Vous recevez</span>
-              <span className="text-orange-500">{fmt(amountNum - fee)} CDF</span>
+              <span className="text-orange-500">{isCdf ? fmt(amountNum - fee) : (amountNum - fee).toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
           </div>
         )}
