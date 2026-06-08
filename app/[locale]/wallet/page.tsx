@@ -51,6 +51,7 @@ export default function WalletHomePage() {
   const base = `/${locale}/wallet`;
 
   const [balance, setBalance] = useState<number | null>(null);
+  const [usdBalance, setUsdBalance] = useState(0);
   const [usdtBalance, setUsdtBalance] = useState(0);
   const [txList, setTxList] = useState<Tx[]>([]);
   const [loadingBal, setLoadingBal] = useState(true);
@@ -61,7 +62,7 @@ export default function WalletHomePage() {
         if (r.status === 401) { router.replace(`${base}/login`); return null; }
         return r.json();
       })
-      .then((d) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
+      .then((d) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {})
       .finally(() => setLoadingBal(false));
 
@@ -108,6 +109,14 @@ export default function WalletHomePage() {
               {balance !== null ? fmt(balance) : '—'}
               <span className="text-2xl font-normal text-white/50 ml-2">CDF</span>
             </p>
+          )}
+          {!loadingBal && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs opacity-60">Solde USD</span>
+              <span className="text-base font-bold" style={{ color: '#6ee7b7' }}>
+                {usdBalance.toFixed(2)} USD
+              </span>
+            </div>
           )}
           <p className="text-xs text-white/50 mt-3">UniPay Wallet · RDC</p>
 

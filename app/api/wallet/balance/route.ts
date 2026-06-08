@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
 
   const upstream = await fetch(`${API_URL}/v1/wallet/balance`, {
     headers: { Authorization: `Bearer ${walletToken}` },
+    cache: 'no-store',
   });
 
   const data = await upstream.json();
