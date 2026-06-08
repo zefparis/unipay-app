@@ -156,15 +156,23 @@ export default function WalletSendUsdtPage() {
 
       {/* Confirmation modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4" onClick={() => setShowConfirm(false)}>
-          <div className="w-full max-w-md bg-white dark:bg-[#1e293b] rounded-2xl p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">Confirmer l'envoi</h2>
-            <div className="flex flex-col gap-3 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Destinataire</span><span className="font-medium text-gray-800 dark:text-slate-200">{phone}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Montant</span><span className="font-bold text-emerald-600">{fmt(amountNum)} USDT</span></div>
-              <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Frais</span><span className="font-medium text-emerald-500">Gratuit</span></div>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 sm:p-4" onClick={() => setShowConfirm(false)}>
+          <div
+            className="w-full sm:max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1e293b] rounded-t-2xl sm:rounded-2xl shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">Confirmer l'envoi</h2>
+              <div className="flex flex-col gap-3 text-sm">
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Destinataire</span><span className="font-medium text-gray-800 dark:text-slate-200">{phone}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Montant</span><span className="font-bold text-emerald-600">{fmt(amountNum)} USDT</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Frais</span><span className="font-medium text-emerald-500">Gratuit</span></div>
+              </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div
+              className="sticky bottom-0 flex gap-3 px-6 pt-3 bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] rounded-b-2xl"
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+            >
               <button onClick={() => setShowConfirm(false)} className="flex-1 h-[48px] rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold">Annuler</button>
               <button onClick={confirmSend} className="flex-1 h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">Confirmer</button>
             </div>

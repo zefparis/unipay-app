@@ -167,29 +167,40 @@ export default function WalletSendPage() {
       </form>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-          <div className="w-full max-w-sm bg-white dark:bg-[#1e293b] rounded-2xl p-6 flex flex-col gap-5 shadow-xl border border-gray-100 dark:border-[#334155]">
-            <div className="flex flex-col gap-1 text-center">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Confirmer l&apos;envoi</h2>
-              <p className="text-sm text-gray-500 dark:text-slate-400">Vérifiez les détails avant de confirmer</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-4 flex flex-col gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Destinataire</span>
-                <span className="font-semibold text-gray-800 dark:text-slate-200">{recipientPhone}</span>
+        <div
+          className="fixed inset-0 z-[100] bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="w-full sm:max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1e293b] rounded-t-2xl sm:rounded-2xl shadow-xl border border-gray-100 dark:border-[#334155]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 flex flex-col gap-5">
+              <div className="flex flex-col gap-1 text-center">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Confirmer l&apos;envoi</h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Vérifiez les détails avant de confirmer</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Montant</span>
-                <span className="font-bold text-blue-600">{fmt(amountNum)} CDF</span>
-              </div>
-              {note && (
+              <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-4 flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Note</span>
-                  <span className="text-gray-700 dark:text-slate-300 truncate max-w-[180px]">{note}</span>
+                  <span className="text-gray-500 dark:text-slate-400">Destinataire</span>
+                  <span className="font-semibold text-gray-800 dark:text-slate-200">{recipientPhone}</span>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Montant</span>
+                  <span className="font-bold text-blue-600">{fmt(amountNum)} CDF</span>
+                </div>
+                {note && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-slate-400">Note</span>
+                    <span className="text-gray-700 dark:text-slate-300 truncate max-w-[180px]">{note}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div
+              className="sticky bottom-0 grid grid-cols-2 gap-3 px-6 pt-3 bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] rounded-b-2xl"
+              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+            >
               <button
                 onClick={() => setShowModal(false)}
                 className="py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-all duration-200"
