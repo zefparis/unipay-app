@@ -5,7 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ArrowDownUp, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
 
+type Mode = 'cdf_cglt' | 'cglt_usdt';
 type Direction = 'cglt_to_usdt' | 'usdt_to_cglt';
+type InternalDir = 'cdf_to_cglt' | 'cglt_to_cdf';
 
 function fmt(n: number, max = 2) {
   return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: max }).format(n);
@@ -24,12 +26,15 @@ export default function WalletSwapPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
+  const [mode, setMode]               = useState<Mode>('cdf_cglt');
   const [rate, setRate]               = useState<number | null>(null);
   const [feePct, setFeePct]           = useState(0.5);
   const [paused, setPaused]           = useState(false);
+  const [cdfBalance, setCdfBalance]   = useState<number | null>(null);
   const [cgltBalance, setCgltBalance] = useState<number | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
   const [direction, setDirection]     = useState<Direction>('cglt_to_usdt');
+  const [internalDir, setInternalDir] = useState<InternalDir>('cdf_to_cglt');
   const [amount, setAmount]           = useState('');
   const [error, setError]             = useState('');
   const [success, setSuccess]         = useState('');
@@ -55,24 +60,33 @@ export default function WalletSwapPage() {
     loadRate();
     fetch('/api/wallet/balance')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
-      .then((d) => { if (d) { setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
+      .then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {});
   }, []);
 
   const amountNum = Number(amount) || 0;
-  const fromSym   = direction === 'cglt_to_usdt' ? 'CGLT' : 'USDT';
-  const toSym     = direction === 'cglt_to_usdt' ? 'USDT' : 'CGLT';
+  const isInternal = mode === 'cdf_cglt';
 
-  // Real-time estimate (mirrors backend / reserve math)
+  const fromSym = isInternal
+    ? (internalDir === 'cdf_to_cglt' ? 'CDF' : 'CGLT')
+    : (direction === 'cglt_to_usdt' ? 'CGLT' : 'USDT');
+  const toSym = isInternal
+    ? (internalDir === 'cdf_to_cglt' ? 'CGLT' : 'CDF')
+    : (direction === 'cglt_to_usdt' ? 'USDT' : 'CGLT');
+
+  // Real-time estimate. Internal CDF<->CGLT is 1:1 and free; CGLT<->USDT uses
+  // the AMM reserve math (rate + fee).
   let grossOut = 0;
   if (rate) {
     grossOut = direction === 'cglt_to_usdt' ? amountNum / rate : amountNum * rate;
   }
-  const feeOut    = grossOut * (feePct / 100);
-  const netOut    = Math.max(grossOut - feeOut, 0);
-  const overBudget =
-    (direction === 'cglt_to_usdt' && cgltBalance !== null && amountNum > cgltBalance) ||
-    (direction === 'usdt_to_cglt' && usdtBalance !== null && amountNum > usdtBalance);
+  const feeOut = isInternal ? 0 : grossOut * (feePct / 100);
+  const netOut = isInternal ? amountNum : Math.max(grossOut - feeOut, 0);
+
+  const availFrom = isInternal
+    ? (internalDir === 'cdf_to_cglt' ? cdfBalance : cgltBalance)
+    : (direction === 'cglt_to_usdt' ? cgltBalance : usdtBalance);
+  const overBudget = availFrom !== null && amountNum > availFrom;
 
   function toggleDirection() {
     setDirection((d) => (d === 'cglt_to_usdt' ? 'usdt_to_cglt' : 'cglt_to_usdt'));
@@ -80,33 +94,52 @@ export default function WalletSwapPage() {
     setError('');
   }
 
+  function toggleInternal() {
+    setInternalDir((d) => (d === 'cdf_to_cglt' ? 'cglt_to_cdf' : 'cdf_to_cglt'));
+    setAmount('');
+    setError('');
+  }
+
+  function switchMode(m: Mode) {
+    setMode(m);
+    setAmount('');
+    setError('');
+    setSuccess('');
+  }
+
   async function handleSwap(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
     if (amountNum <= 0) { setError('Montant invalide.'); return; }
     if (overBudget) {
-      const sym = direction === 'cglt_to_usdt' ? 'CGLT' : 'USDT';
-      const avail = direction === 'cglt_to_usdt' ? cgltBalance! : usdtBalance!;
-      setError(`Solde ${sym} insuffisant (${fmt(avail)} disponibles).`);
+      setError(`Solde ${fromSym} insuffisant (${fmt(availFrom ?? 0)} disponibles).`);
       return;
     }
-    if (paused) { setError('Les conversions sont temporairement suspendues.'); return; }
+    if (!isInternal && paused) { setError('Les conversions sont temporairement suspendues.'); return; }
+
+    const swapDirection: Direction | InternalDir = isInternal ? internalDir : direction;
 
     setLoading(true);
     try {
       const res = await fetch('/api/wallet/swap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ direction, amount: amountNum }),
+        body: JSON.stringify({ direction: swapDirection, amount: amountNum }),
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
       if (!res.ok) { setError(data.error ?? 'Conversion échouée'); return; }
 
-      setSuccess(`${fmt(data.amount_in)} ${fromSym} convertis en ${fmt(data.amount_out)} ${toSym}.`);
+      if (isInternal) {
+        const spent = internalDir === 'cdf_to_cglt' ? data.cdf_spent : data.cglt_spent;
+        const received = internalDir === 'cdf_to_cglt' ? data.cglt_received : data.cdf_received;
+        setSuccess(`${fmt(Number(spent ?? amountNum))} ${fromSym} convertis en ${fmt(Number(received ?? amountNum))} ${toSym}.`);
+      } else {
+        setSuccess(`${fmt(data.amount_in)} ${fromSym} convertis en ${fmt(data.amount_out)} ${toSym}.`);
+      }
       setAmount('');
-      // refresh balance
-      fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } });
+      // refresh balances
+      fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } });
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
@@ -127,7 +160,34 @@ export default function WalletSwapPage() {
         </h1>
       </div>
 
-      {/* Rate card */}
+      {/* Mode tabs */}
+      <div className="flex gap-2 px-4 pt-4">
+        <button
+          type="button"
+          onClick={() => switchMode('cdf_cglt')}
+          className={`flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            isInternal
+              ? 'bg-indigo-600 text-white shadow'
+              : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300'
+          }`}
+        >
+          CDF ↔ CGLT
+        </button>
+        <button
+          type="button"
+          onClick={() => switchMode('cglt_usdt')}
+          className={`flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            !isInternal
+              ? 'bg-indigo-600 text-white shadow'
+              : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300'
+          }`}
+        >
+          CGLT ↔ USDT
+        </button>
+      </div>
+
+      {/* Rate card (AMM mode only) */}
+      {!isInternal && (
       <div className="mx-4 mt-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl px-5 py-4 text-white shadow-lg flex items-center justify-between">
         <div>
           <p className="text-xs opacity-80">Taux actuel</p>
@@ -142,8 +202,17 @@ export default function WalletSwapPage() {
           <RefreshCw size={18} className={loadingRate ? 'animate-spin' : ''} />
         </button>
       </div>
+      )}
 
-      {paused && (
+      {isInternal && (
+        <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl px-5 py-4 text-white shadow-lg">
+          <p className="text-xs opacity-80">Conversion interne</p>
+          <p className="text-xl font-bold mt-0.5">1 CDF = 1 CGLT</p>
+          <p className="text-[11px] opacity-70 mt-1">Frais : Gratuit</p>
+        </div>
+      )}
+
+      {!isInternal && paused && (
         <p className="mx-4 mt-3 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-4 py-3">
           Conversions temporairement suspendues (disjoncteur actif).
         </p>
@@ -152,14 +221,25 @@ export default function WalletSwapPage() {
       {/* Swap form */}
       <form onSubmit={handleSwap} className="flex flex-col gap-4 px-4 py-5">
         {/* Direction toggle */}
-        <div className="flex items-center justify-center gap-3">
-          <span className={`text-sm font-semibold ${direction === 'cglt_to_usdt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CGLT → USDT</span>
-          <button type="button" onClick={toggleDirection}
-            className="w-12 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 relative transition">
-            <span className={`absolute top-1 w-5 h-5 rounded-full bg-indigo-600 transition-all duration-200 ${direction === 'cglt_to_usdt' ? 'left-1' : 'left-6'}`} />
-          </button>
-          <span className={`text-sm font-semibold ${direction === 'usdt_to_cglt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>USDT → CGLT</span>
-        </div>
+        {isInternal ? (
+          <div className="flex items-center justify-center gap-3">
+            <span className={`text-sm font-semibold ${internalDir === 'cdf_to_cglt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CDF → CGLT</span>
+            <button type="button" onClick={toggleInternal}
+              className="w-12 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 relative transition">
+              <span className={`absolute top-1 w-5 h-5 rounded-full bg-indigo-600 transition-all duration-200 ${internalDir === 'cdf_to_cglt' ? 'left-1' : 'left-6'}`} />
+            </button>
+            <span className={`text-sm font-semibold ${internalDir === 'cglt_to_cdf' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CGLT → CDF</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-3">
+            <span className={`text-sm font-semibold ${direction === 'cglt_to_usdt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CGLT → USDT</span>
+            <button type="button" onClick={toggleDirection}
+              className="w-12 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 relative transition">
+              <span className={`absolute top-1 w-5 h-5 rounded-full bg-indigo-600 transition-all duration-200 ${direction === 'cglt_to_usdt' ? 'left-1' : 'left-6'}`} />
+            </button>
+            <span className={`text-sm font-semibold ${direction === 'usdt_to_cglt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>USDT → CGLT</span>
+          </div>
+        )}
 
         {/* Amount */}
         <div className="flex flex-col gap-1.5">
@@ -180,15 +260,25 @@ export default function WalletSwapPage() {
 
         {/* Estimate */}
         <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-4 flex flex-col gap-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-slate-400">Montant brut</span>
-            <span className="font-medium text-gray-800 dark:text-slate-200">{fmt(grossOut, 4)} {toSym}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-slate-400">Frais ({fmt(feePct)}%)</span>
-            <span className="font-medium text-orange-500">− {fmt(feeOut, 4)} {toSym}</span>
-          </div>
-          <div className="flex justify-between border-t border-gray-200 dark:border-slate-600 pt-2">
+          {!isInternal && (
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Montant brut</span>
+                <span className="font-medium text-gray-800 dark:text-slate-200">{fmt(grossOut, 4)} {toSym}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Frais ({fmt(feePct)}%)</span>
+                <span className="font-medium text-orange-500">− {fmt(feeOut, 4)} {toSym}</span>
+              </div>
+            </>
+          )}
+          {isInternal && (
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-slate-400">Frais</span>
+              <span className="font-medium text-emerald-600">Gratuit</span>
+            </div>
+          )}
+          <div className={`flex justify-between ${isInternal ? '' : 'border-t border-gray-200 dark:border-slate-600 pt-2'}`}>
             <span className="text-gray-600 dark:text-slate-300 font-semibold">Vous recevez</span>
             <span className="font-bold text-indigo-600">{fmt(netOut, 4)} {toSym}</span>
           </div>
@@ -203,7 +293,7 @@ export default function WalletSwapPage() {
 
         <button
           type="submit"
-          disabled={loading || paused || overBudget || amountNum <= 0}
+          disabled={loading || overBudget || amountNum <= 0 || (!isInternal && paused)}
           className="w-full h-[52px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-1"
         >
           {loading && <Spinner />}
@@ -214,7 +304,12 @@ export default function WalletSwapPage() {
       {/* Balances */}
       <div className="px-4 pb-8">
         <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">Mes soldes</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
+            <p className="text-xs text-gray-400 dark:text-slate-500">Solde CDF</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{cdfBalance !== null ? fmt(cdfBalance) : '—'}</p>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">CDF</p>
+          </div>
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
             <p className="text-xs text-gray-400 dark:text-slate-500">Solde CGLT</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{cgltBalance !== null ? fmt(cgltBalance) : '—'}</p>
