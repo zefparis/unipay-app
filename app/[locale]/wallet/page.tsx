@@ -28,6 +28,14 @@ function fmt(n: number) {
   return new Intl.NumberFormat('fr-FR').format(n);
 }
 
+// Deep night-blue → violet gradient backdrop for the glassmorphism hero.
+const HERO_BG =
+  'radial-gradient(120% 90% at 50% -10%, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0) 55%), linear-gradient(165deg, #0a0e27 0%, #141033 48%, #1d1240 100%)';
+
+// Subtle fractal-noise texture (data-URI SVG) layered over the gradient.
+const NOISE_BG =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
 function Spinner() {
   return (
     <svg className="animate-spin h-5 w-5 text-white/60 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -64,72 +72,113 @@ export default function WalletHomePage() {
   }, []);
 
   return (
-    <div className="flex flex-col">
+    <div
+      className="relative flex flex-col flex-1 min-h-screen text-white overflow-hidden"
+      style={{ background: HERO_BG }}
+    >
+      {/* Subtle noise texture over the gradient */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.04] mix-blend-soft-light"
+        style={{ backgroundImage: NOISE_BG, backgroundSize: '256px 256px' }}
+      />
 
-      {/* Balance card — gradient + lang switcher */}
-      <div className="bg-gradient-to-br from-[#00A651] to-[#007a3d] px-6 pt-10 pb-8 flex flex-col gap-1 text-white shadow-lg relative">
-        <div className="absolute top-4 left-4">
-          <LanguageSwitcher />
-        </div>
-        <p className="text-sm opacity-80 tracking-wide mt-7">Solde disponible</p>
-        {loadingBal ? (
-          <div className="h-12 mt-1"><Spinner /></div>
-        ) : (
-          <p className="text-4xl font-bold leading-tight tracking-tight mt-1">
-            {balance !== null ? fmt(balance) : '—'}
-            <span className="text-2xl font-normal opacity-70 ml-2">CDF</span>
-          </p>
-        )}
-        <p className="text-xs opacity-50 mt-3">UniPay Wallet · RDC</p>
+      {/* Top bar */}
+      <div className="relative z-10 flex items-center justify-between px-5 pt-6">
+        <LanguageSwitcher />
       </div>
 
-      {/* USDT balance card (secondary) */}
-      {usdtBalance > 0 && (
-        <div className="bg-slate-800 rounded-xl p-4 mx-4 mt-2 flex items-center justify-between">
-          <div>
-            <p className="text-xs text-gray-400">Solde USDT</p>
-            <p className="text-2xl font-bold text-green-400">{usdtBalance.toFixed(2)} USDT</p>
-          </div>
-          <Link href={`${base}/send-usdt`}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition active:scale-95">
-            Envoyer
-          </Link>
-        </div>
-      )}
+      {/* Balance hero — glassmorphism */}
+      <div className="relative z-10 px-4 pt-4">
+        <div
+          className="w-full rounded-[24px] p-6"
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            boxShadow: '0 0 60px rgba(99,102,241,0.15)',
+          }}
+        >
+          <p className="text-sm text-white/60 tracking-wide">Solde disponible</p>
+          {loadingBal ? (
+            <div className="h-14 mt-2"><Spinner /></div>
+          ) : (
+            <p className="mt-1 font-bold leading-none tracking-tight" style={{ fontSize: 52 }}>
+              {balance !== null ? fmt(balance) : '—'}
+              <span className="text-2xl font-normal text-white/50 ml-2">CDF</span>
+            </p>
+          )}
+          <p className="text-xs text-white/50 mt-3">UniPay Wallet · RDC</p>
 
-      {/* Action grid */}
-      <div className="grid grid-cols-2 gap-3 px-4 py-5">
+          {/* Subtle separator */}
+          <div className="my-5 h-px w-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
+
+          {/* USDT row */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-white/50">Solde USDT</p>
+              <p className="text-2xl font-bold mt-0.5" style={{ color: '#00C896' }}>
+                {usdtBalance.toFixed(2)}
+                <span className="text-base font-semibold ml-1">USDT</span>
+              </p>
+            </div>
+            <Link
+              href={`${base}/send-usdt`}
+              className="px-4 py-2 rounded-full text-sm font-semibold text-white transition active:scale-95 hover:bg-white/[0.16]"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              Envoyer
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Action grid — 3 + 2 centered, glass tiles */}
+      <div className="relative z-10 flex flex-wrap justify-center gap-3 px-4 py-6">
         {([
-          { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-[#00A651]" size={26} />, iconBg: 'bg-green-50 dark:bg-green-900/20',   label: 'Déposer' },
-          { href: `${base}/withdraw`, icon: <ArrowUpCircle  className="text-orange-500" size={26} />, iconBg: 'bg-orange-50 dark:bg-orange-900/20', label: 'Retirer' },
-          { href: `${base}/send`,     icon: <ArrowLeftRight className="text-blue-500"   size={26} />, iconBg: 'bg-blue-50 dark:bg-blue-900/20',     label: 'Envoyer' },
-          { href: `${base}/swap`,     icon: <ArrowDownUp   className="text-indigo-500" size={26} />, iconBg: 'bg-indigo-50 dark:bg-indigo-900/20', label: 'Convertir' },
-        ] as const).map(({ href, icon, iconBg, label }) => (
-          <Link key={label} href={href}
-            className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-5 active:scale-95 hover:scale-105 transition-all duration-200">
-            <div className={`w-12 h-12 rounded-full ${iconBg} flex items-center justify-center`}>{icon}</div>
-            <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">{label}</span>
+          { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-400" size={24} />, label: 'Déposer' },
+          { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-400"  size={24} />, label: 'Retirer' },
+          { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: 'Envoyer' },
+          { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: 'Convertir' },
+          { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: 'Scanner QR' },
+        ] as const).map(({ href, icon, label }) => (
+          <Link
+            key={label}
+            href={href}
+            className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              {icon}
+            </div>
+            <span className="text-xs font-semibold text-white/80 text-center leading-tight">{label}</span>
           </Link>
         ))}
-
-        <Link href={`${base}/scan`}
-          className="flex flex-col items-center gap-2.5 rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-5 active:scale-95 hover:scale-105 transition-all duration-200">
-          <div className="w-12 h-12 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
-            <QrCode className="text-purple-500" size={26} />
-          </div>
-          <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">Scanner QR</span>
-        </Link>
       </div>
 
       {/* Recent transactions */}
-      <div className="px-4 pb-6">
+      <div className="relative z-10 px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Dernières opérations</h2>
-          <Link href={`${base}/transactions`} className="text-xs text-[#00A651] font-semibold">Voir tout</Link>
+          <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest">Dernières opérations</h2>
+          <Link href={`${base}/transactions`} className="text-xs font-semibold" style={{ color: '#00C896' }}>Voir tout</Link>
         </div>
 
         {txList.length === 0 && !loadingBal && (
-          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-8">Aucune transaction pour le moment.</p>
+          <p className="text-sm text-white/40 text-center py-8">Aucune transaction pour le moment.</p>
         )}
 
         <div className="flex flex-col gap-2">
@@ -137,19 +186,24 @@ export default function WalletHomePage() {
             const isCredit = tx.direction === 'collect';
             const isP2P    = tx.direction === 'p2p';
             return (
-              <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                  isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
-                }`}>
-                  {isCredit && <ArrowDownCircle className="text-[#00A651]" size={20} />}
-                  {tx.direction === 'payout' && <ArrowUpCircle className="text-orange-500" size={20} />}
-                  {isP2P && <ArrowLeftRight className="text-blue-500" size={20} />}
+              <div
+                key={tx.id}
+                className="flex items-center gap-3 p-3 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                >
+                  {isCredit && <ArrowDownCircle className="text-emerald-400" size={20} />}
+                  {tx.direction === 'payout' && <ArrowUpCircle className="text-orange-400" size={20} />}
+                  {isP2P && <ArrowLeftRight className="text-sky-400" size={20} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{tx.operator}</p>
-                  <p className="text-xs text-gray-400 dark:text-slate-500">{relativeDate(tx.created_at)}</p>
+                  <p className="text-sm font-medium text-white/90 capitalize">{tx.operator}</p>
+                  <p className="text-xs text-white/40">{relativeDate(tx.created_at)}</p>
                 </div>
-                <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'}`}>
+                <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-emerald-400' : isP2P ? 'text-sky-400' : 'text-orange-400'}`}>
                   {isCredit ? '+' : '−'}{fmt(isCredit ? tx.net_amount : tx.amount)} CDF
                 </p>
               </div>
