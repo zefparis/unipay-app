@@ -22,7 +22,9 @@ const USD_OPERATORS = [
 const FEE_RATE       = 0.03;
 const MIN_CDF_AMOUNT = 100;
 const MIN_USD_AMOUNT = 1;
-const MIN_CGLT_AMOUNT = 10;
+const MIN_CGLT_AMOUNT  = 500;
+const CGLT_PER_WCGLT   = 500;
+const WCGLT_PRICE_USD  = 0.109;
 
 type Tab = 'cdf' | 'usd' | 'cglt';
 
@@ -94,7 +96,7 @@ export default function WalletWithdrawPage() {
     setSuccess('');
 
     if (isCglt) {
-      if (amountNum < MIN_CGLT_AMOUNT) { setError(`Montant minimum : ${MIN_CGLT_AMOUNT} CGLT.`); return; }
+      if (amountNum < 500) { setError(`Montant minimum : 500 CGLT (= 1 wCGLT).`); return; }
       if (overBudget) { setError(`Solde CGLT insuffisant. Disponible : ${cgltBalance} CGLT.`); return; }
       if (!/^0x[0-9a-fA-F]{40}$/.test(bscAddress)) { setError('Adresse BSC invalide (format 0x...).'); return; }
       setLoading(true);
@@ -196,8 +198,24 @@ export default function WalletWithdrawPage() {
       )}
 
       {isCglt && (
-        <div className="mx-4 mt-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl px-4 py-3">
-          <p className="text-xs text-purple-700 dark:text-purple-300">🔗 Retrait vers BSC (BNB Chain) — vous recevrez des <strong>wCGLT</strong> dans votre wallet MetaMask, échangeables sur PancakeSwap.</p>
+        <div className="mx-4 mt-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl px-4 py-3 flex flex-col gap-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-purple-700 dark:text-purple-300">Taux de conversion</span>
+            <span className="font-bold text-purple-800 dark:text-purple-200">{CGLT_PER_WCGLT} CGLT = 1 wCGLT</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-purple-700 dark:text-purple-300">Valeur marchée wCGLT</span>
+            <span className="font-bold text-purple-800 dark:text-purple-200">~${WCGLT_PRICE_USD}</span>
+          </div>
+          {amountNum >= 500 && (
+            <div className="border-t border-purple-200 dark:border-purple-700 pt-2 flex justify-between text-sm">
+              <span className="text-purple-700 dark:text-purple-300">Vous recevrez</span>
+              <span className="font-bold text-purple-800 dark:text-purple-200">
+                {(amountNum / CGLT_PER_WCGLT).toFixed(4)} wCGLT (~${((amountNum / CGLT_PER_WCGLT) * WCGLT_PRICE_USD).toFixed(3)})
+              </span>
+            </div>
+          )}
+          <p className="text-xs text-purple-500 dark:text-purple-400">🔗 Envoyé sur BSC · Échangeable sur PancakeSwap</p>
         </div>
       )}
 
@@ -263,12 +281,6 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {amountNum >= MIN_CGLT_AMOUNT && isCglt && (
-          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl px-4 py-3 flex flex-col gap-1 text-sm">
-            <div className="flex justify-between text-purple-700 dark:text-purple-300"><span>Frais bridge</span><span>0 CGLT</span></div>
-            <div className="flex justify-between font-bold text-purple-800 dark:text-purple-200 pt-1 border-t border-purple-200 dark:border-purple-700 mt-1"><span>Vous recevez (wCGLT BSC)</span><span>{amountNum} wCGLT</span></div>
-          </div>
-        )}
 
         {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
         {success && (
