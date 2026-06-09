@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Download } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Tx {
@@ -157,6 +157,7 @@ export default function WalletHomePage() {
           { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: 'Envoyer' },
           { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: 'Convertir' },
           { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: 'Scanner QR' },
+          { href: `${base}/receive`,  icon: <Download        className="text-teal-400"    size={24} />, label: 'Recevoir wCGLT' },
           { href: `${base}/crypto`,   icon: <TrendingUp      className="text-purple-400"  size={24} />, label: 'Marchés Crypto' },
         ] as const).map(({ href, icon, label }) => (
           <Link
