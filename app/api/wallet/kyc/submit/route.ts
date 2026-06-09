@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://unipay-api.onrender.com';
+const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
 
 export async function POST(request: NextRequest) {
   const t = request.cookies.get('wallet_token')?.value;

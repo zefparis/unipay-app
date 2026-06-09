@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://unipay-api.onrender.com';
+const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
 
 export async function POST(request: NextRequest) {
   const walletToken = request.cookies.get('wallet_token')?.value;
@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  console.log('[deposit] body envoyé:', JSON.stringify(body));
   const upstream = await fetch(`${API_URL}/v1/wallet/deposit`, {
     method: 'POST',
     headers: {

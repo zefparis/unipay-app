@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://unipay-api.onrender.com';
+import { API_URL, upstreamFetch } from '../_proxy';
 
 export async function GET(request: NextRequest) {
   const walletToken = request.cookies.get('wallet_token')?.value;
-  if (!walletToken) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!walletToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const upstream = await fetch(`${API_URL}/v1/wallet/balance`, {
+  const result = await upstreamFetch(`${API_URL}/v1/wallet/balance`, {
     headers: { Authorization: `Bearer ${walletToken}` },
     cache: 'no-store',
   });
-
-  const data = await upstream.json();
-
-  if (!upstream.ok) {
-    return NextResponse.json({ error: data.error ?? 'Failed' }, { status: upstream.status });
-  }
-
+  if (!result.ok) return result.errorResponse;
+  const { res, data } = result;
+  if (!res.ok) return NextResponse.json({ error: (data as { error?: string }).error ?? 'Failed' }, { status: res.status });
   return NextResponse.json(data);
 }
