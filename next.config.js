@@ -15,11 +15,11 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self' https://unipay-api.onrender.com",
+      "connect-src 'self' https://unipay-api.onrender.com https://api.coingecko.com https://api.dexscreener.com",
       "frame-ancestors 'none'",
     ].join('; '),
   },
