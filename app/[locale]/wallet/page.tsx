@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Download } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Tx {
@@ -54,6 +54,7 @@ export default function WalletHomePage() {
   const [balance, setBalance] = useState<number | null>(null);
   const [usdBalance, setUsdBalance] = useState(0);
   const [usdtBalance, setUsdtBalance] = useState(0);
+  const [cgltBalance, setCgltBalance] = useState(0);
   const [txList, setTxList] = useState<Tx[]>([]);
   const [loadingBal, setLoadingBal] = useState(true);
 
@@ -63,7 +64,7 @@ export default function WalletHomePage() {
         if (r.status === 401) { router.replace(`${base}/login`); return null; }
         return r.json();
       })
-      .then((d) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
+      .then((d) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); } })
       .catch(() => {})
       .finally(() => setLoadingBal(false));
 
@@ -124,6 +125,17 @@ export default function WalletHomePage() {
           {/* Subtle separator */}
           <div className="my-5 h-px w-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
 
+          {/* CGLT row */}
+          {cgltBalance > 0 && (
+            <div className="mb-4">
+              <p className="text-xs text-white/50">Solde CGLT</p>
+              <p className="text-2xl font-bold mt-0.5" style={{ color: '#a78bfa' }}>
+                {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cgltBalance)}
+                <span className="text-base font-semibold ml-1">CGLT</span>
+              </p>
+            </div>
+          )}
+
           {/* USDT row */}
           <div className="flex items-center justify-between">
             <div>
@@ -157,7 +169,8 @@ export default function WalletHomePage() {
           { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: 'Envoyer' },
           { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: 'Convertir' },
           { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: 'Scanner QR' },
-          { href: `${base}/receive`,  icon: <Download        className="text-teal-400"    size={24} />, label: 'Recevoir wCGLT' },
+          { href: `${base}/receive`,  icon: <Wallet          className="text-teal-400"    size={24} />, label: 'Recevoir wCGLT' },
+          { href: `${base}/exchange`, icon: <Repeat2         className="text-amber-400"   size={24} />, label: 'Échanger CGLT' },
           { href: `${base}/crypto`,   icon: <TrendingUp      className="text-purple-400"  size={24} />, label: 'Marchés Crypto' },
         ] as const).map(({ href, icon, label }) => (
           <Link
