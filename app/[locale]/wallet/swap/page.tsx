@@ -402,6 +402,11 @@ export default function WalletSwapPage() {
           className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition">
           <ArrowRightLeft size={16} /> Envoyer des USDT
         </Link>
+
+        <Link href={`/${locale}/wallet/exchange`}
+          className="mt-2 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-xl py-3 transition">
+          <ArrowRightLeft size={16} /> Convertir en wCGLT (BSC)
+        </Link>
       </div>
     </div>
   );
