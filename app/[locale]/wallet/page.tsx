@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2 } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2, Gamepad2 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Tx {
@@ -193,6 +193,26 @@ export default function WalletHomePage() {
             <span className="text-xs font-semibold text-white/80 text-center leading-tight">{label}</span>
           </Link>
         ))}
+        <a
+          href="https://congogaming.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <Gamepad2 className="text-violet-400" size={24} />
+          </div>
+          <span className="text-xs font-semibold text-white/80 text-center leading-tight">Gagner CGLT</span>
+        </a>
       </div>
 
       {/* Recent transactions */}
