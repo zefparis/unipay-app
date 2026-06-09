@@ -25,19 +25,26 @@ export default function ExchangePage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
 
-  const [cgltBalance, setCgltBalance] = useState<number | null>(null);
-  const [amount, setAmount]           = useState('');
-  const [bscAddress, setBscAddress]   = useState('');
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState('');
-  const [txHash, setTxHash]           = useState('');
-  const [loading, setLoading]         = useState(false);
+  const [cgltBalance, setCgltBalance]     = useState<number | null>(null);
+  const [amount, setAmount]               = useState('');
+  const [bscAddress, setBscAddress]       = useState('');
+  const [addrHistory, setAddrHistory]     = useState<string[]>([]);
+  const [error, setError]                 = useState('');
+  const [success, setSuccess]             = useState('');
+  const [txHash, setTxHash]               = useState('');
+  const [loading, setLoading]             = useState(false);
 
   useEffect(() => {
     fetch('/api/wallet/cglt/balance')
       .then((r) => r.json())
       .then((d: { cglt_balance?: number }) => setCgltBalance(Number(d.cglt_balance ?? 0)))
       .catch(() => {});
+    const saved = localStorage.getItem('bsc_address');
+    if (saved) setBscAddress(saved);
+    try {
+      const hist = JSON.parse(localStorage.getItem('bsc_addresses_history') ?? '[]') as string[];
+      setAddrHistory(hist);
+    } catch { /* ignore */ }
   }, []);
 
   const amountNum   = Number(amount);
@@ -84,6 +91,11 @@ export default function ExchangePage() {
       setSuccess(`${(data.wcglt_amount ?? wCGLTAmount).toFixed(4)} wCGLT reçus sur BSC !`);
       setCgltBalance((b) => b !== null ? b - amountNum : b);
       setAmount('');
+      setAddrHistory((prev) => {
+        const next = [bscAddress, ...prev.filter((a) => a !== bscAddress)].slice(0, 3);
+        localStorage.setItem('bsc_addresses_history', JSON.stringify(next));
+        return next;
+      });
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
@@ -154,11 +166,29 @@ export default function ExchangePage() {
             <input
               type="text"
               value={bscAddress}
-              onChange={(e) => setBscAddress(e.target.value)}
+              onChange={(e) => { setBscAddress(e.target.value); localStorage.setItem('bsc_address', e.target.value); }}
               placeholder="0x..."
               required
               className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
             />
+            {addrHistory.length > 0 && (
+              <div className="flex flex-col gap-1.5 mt-1">
+                <p className="text-xs text-gray-400 dark:text-slate-500">Adresses récentes</p>
+                <div className="flex flex-wrap gap-2">
+                  {addrHistory.map((addr) => (
+                    <button
+                      key={addr}
+                      type="button"
+                      onClick={() => { setBscAddress(addr); localStorage.setItem('bsc_address', addr); }}
+                      className="text-xs font-mono px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 hover:bg-purple-100 dark:hover:bg-purple-800/40 transition truncate max-w-[160px]"
+                      title={addr}
+                    >
+                      {addr.slice(0, 6)}…{addr.slice(-4)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Résumé */}
