@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
+import { Wallet, ExternalLink, X } from 'lucide-react';
 
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ interface Profile {
   kyc_level: number;
   is_verified: boolean;
   balance_cdf: number;
+  blockchain_address: string | null;
   created_at: string;
 }
 interface Tx { direction: string; status: string; amount: number; net_amount: number }
@@ -143,6 +145,8 @@ export default function WalletProfilePage() {
       setProfile(pd);
       setNameVal(pd.full_name ?? '');
       const txs: Tx[] = td.data ?? [];
+      // TODO: Replace client-side computation with GET /v1/wallet/stats once the endpoint is available.
+      // The current approach fetches up to 200 transactions and may under-report totals for active accounts.
       const totalDeposited = txs.filter(t => t.direction === 'collect' && t.status === 'success').reduce((s, t) => s + Number(t.amount), 0);
       const totalWithdrawn = txs.filter(t => t.direction === 'payout'  && t.status === 'success').reduce((s, t) => s + Number(t.amount), 0);
       setStats({ totalDeposited, totalWithdrawn, count: txs.length });
@@ -152,6 +156,9 @@ export default function WalletProfilePage() {
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) { showToast('Format non supporté (JPG / PNG / WebP uniquement)'); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast('Image trop lourde — max 2 Mo'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const b64 = reader.result as string;
@@ -188,6 +195,17 @@ export default function WalletProfilePage() {
     else setPinError(d.error ?? 'Erreur');
   }
 
+  function removeAvatar() {
+    setAvatar(null);
+    localStorage.removeItem('wallet_avatar');
+    showToast('Avatar supprimé');
+  }
+
+  function copyBscAddress() {
+    if (!profile?.blockchain_address) return;
+    navigator.clipboard.writeText(profile.blockchain_address).then(() => showToast('Adresse BSC copiée !'));
+  }
+
   function copyWalletId() {
     if (!profile?.wallet_id) return;
     navigator.clipboard.writeText(profile.wallet_id).then(() => showToast('Copié !'));
@@ -195,7 +213,8 @@ export default function WalletProfilePage() {
 
   const userPhone = profile?.phone ?? '';
   const userName = profile?.full_name ?? '';
-  const qrValue = `https://app.unipaycongo.com/fr/wallet/send?phone=${encodeURIComponent(userPhone)}&name=${encodeURIComponent(userName)}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.unipaycongo.com';
+  const qrValue = `${appUrl}/${locale}/wallet/send?phone=${encodeURIComponent(userPhone)}&name=${encodeURIComponent(userName)}`;
   const shareData = {
     title: 'UniPay Congo',
     text: `Envoie-moi de l'argent sur UniPay Congo`,
@@ -271,7 +290,9 @@ export default function WalletProfilePage() {
             <div className="w-20 h-20 rounded-full bg-[#00A651]/10 overflow-hidden flex items-center justify-center border-2 border-[#00A651]/30">
               {avatar
                 ? <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
-                : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-9 h-9 text-[#00A651]"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                : profile?.full_name
+                  ? <span className="text-2xl font-bold text-[#00A651]">{profile.full_name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()}</span>
+                  : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-9 h-9 text-[#00A651]"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               }
             </div>
             <button onClick={() => fileRef.current?.click()} className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#00A651] flex items-center justify-center shadow text-white">
@@ -279,6 +300,14 @@ export default function WalletProfilePage() {
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
+          {avatar && (
+            <button
+              onClick={removeAvatar}
+              className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition"
+            >
+              <X size={12} /> Supprimer la photo
+            </button>
+          )}
           <div className="text-center">
             {editName ? (
               <div className="flex items-center gap-2">
@@ -299,11 +328,13 @@ export default function WalletProfilePage() {
             )}
             <div className="flex items-center justify-center gap-1.5 mt-1">
               <p className="text-sm text-gray-400 dark:text-slate-500">{profile?.phone}</p>
-              {profile?.is_verified && (
+              {profile?.is_verified ? (
                 <span className="inline-flex items-center gap-0.5 text-xs text-green-600 dark:text-green-400 font-medium">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   Vérifié
                 </span>
+              ) : (
+                <span className="inline-flex items-center gap-0.5 text-xs text-gray-400 dark:text-slate-500 font-medium">Non vérifié</span>
               )}
             </div>
           </div>
@@ -336,6 +367,28 @@ export default function WalletProfilePage() {
               </button>
             }
           />
+          {profile?.blockchain_address && (
+            <Row
+              icon={<Wallet size={16} />}
+              label="Adresse BSC"
+              value={
+                <a
+                  href={`https://bscscan.com/address/${profile.blockchain_address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                >
+                  {profile.blockchain_address.slice(0, 6)}…{profile.blockchain_address.slice(-4)}
+                  <ExternalLink size={11} />
+                </a>
+              }
+              action={
+                <button onClick={copyBscAddress} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 transition">
+                  <IcCopy />
+                </button>
+              }
+            />
+          )}
           <Link href={`/${locale}/wallet/kyc`}>
             <Row
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
