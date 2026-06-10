@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ArrowDownUp, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
+import { wT, type WalletDict } from '@/lib/i18n-wallet';
 
 type Mode = 'cdf_cglt' | 'cglt_usdt' | 'cdf_usd' | 'usd_usdt';
 type Direction = 'cglt_to_usdt' | 'usdt_to_cglt' | 'usd_to_usdt' | 'usdt_to_usd';
@@ -25,6 +26,7 @@ function Spinner() {
 export default function WalletSwapPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
 
   const [mode, setMode]               = useState<Mode>('cdf_cglt');
   const [rate, setRate]               = useState<number | null>(null);
@@ -128,12 +130,12 @@ export default function WalletSwapPage() {
   async function handleSwap(e: React.FormEvent) {
     e.preventDefault();
     setError(''); setSuccess('');
-    if (amountNum <= 0) { setError('Montant invalide.'); return; }
+    if (amountNum <= 0) { setError(T.err_swap_invalid); return; }
     if (overBudget) {
       setError(`Solde ${fromSym} insuffisant (${fmt(availFrom ?? 0)} disponibles).`);
       return;
     }
-    if (isAmm && paused) { setError('Les conversions sont temporairement suspendues.'); return; }
+    if (isAmm && paused) { setError(T.err_swap_paused); return; }
 
     const swapDirection: Direction | InternalDir = (isCdfCglt || isCdfUsd) ? internalDir : direction;
 
@@ -146,7 +148,7 @@ export default function WalletSwapPage() {
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-      if (!res.ok) { setError(data.error ?? 'Conversion échouée'); return; }
+      if (!res.ok) { setError(data.error ?? T.err_swap_failed); return; }
 
       if (isCdfCglt || isCdfUsd) {
         const spent = internalDir === 'cdf_to_cglt' ? data.cdf_spent : (internalDir === 'cdf_to_usd' ? data.cdf_spent : data.usd_spent);
@@ -159,7 +161,7 @@ export default function WalletSwapPage() {
       // refresh balances
       fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } });
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -174,7 +176,7 @@ export default function WalletSwapPage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowDownUp className="text-indigo-500" size={20} />
-          Convertir
+          {T.swap_title}
         </h1>
       </div>
 
@@ -229,37 +231,37 @@ export default function WalletSwapPage() {
       {/* Rate card */}
       {isCdfCglt && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl px-5 py-4 text-white shadow-lg">
-          <p className="text-xs opacity-80">Conversion interne</p>
+          <p className="text-xs opacity-80">{T.swap_internal}</p>
           <p className="text-xl font-bold mt-0.5">1 CDF = 1 CGLT</p>
-          <p className="text-[11px] opacity-70 mt-1">Frais : Gratuit</p>
+          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_free}</p>
         </div>
       )}
       {isCdfUsd && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl px-5 py-4 text-white shadow-lg">
-          <p className="text-xs opacity-80">Taux officiel</p>
+          <p className="text-xs opacity-80">{T.swap_rate_off}</p>
           <p className="text-xl font-bold mt-0.5">1 USD = {fmt(USD_CDF_RATE, 0)} CDF</p>
-          <p className="text-[11px] opacity-70 mt-1">Frais : Gratuit</p>
+          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_free}</p>
         </div>
       )}
       {isUsdUsdt && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl px-5 py-4 text-white shadow-lg">
-          <p className="text-xs opacity-80">Parité</p>
+          <p className="text-xs opacity-80">{T.swap_parity}</p>
           <p className="text-xl font-bold mt-0.5">1 USD = 1 USDT</p>
-          <p className="text-[11px] opacity-70 mt-1">Frais : Gratuit</p>
+          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_free}</p>
         </div>
       )}
       {isAmm && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl px-5 py-4 text-white shadow-lg flex items-center justify-between">
           <div>
-            <p className="text-xs opacity-80">Taux AMM</p>
+            <p className="text-xs opacity-80">{T.swap_amm_rate}</p>
             {loadingRate ? (
               <div className="h-7 mt-1"><Spinner /></div>
             ) : (
               <p className="text-xl font-bold mt-0.5">1 USDT = {rate ? fmt(rate, 0) : '—'} CGLT</p>
             )}
-            <p className="text-[11px] opacity-70 mt-1">Frais de conversion : {fmt(feePct)}%</p>
+            <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_pct_lbl} {fmt(feePct)}%</p>
           </div>
-          <button onClick={loadRate} className="p-2 rounded-full bg-white/15 hover:bg-white/25 transition" aria-label="Rafraîchir">
+          <button onClick={loadRate} className="p-2 rounded-full bg-white/15 hover:bg-white/25 transition" aria-label={T.swap_refresh}>
             <RefreshCw size={18} className={loadingRate ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -267,7 +269,7 @@ export default function WalletSwapPage() {
 
       {isAmm && paused && (
         <p className="mx-4 mt-3 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-xl px-4 py-3">
-          Conversions temporairement suspendues (disjoncteur actif).
+          {T.swap_suspended}
         </p>
       )}
 
@@ -314,7 +316,7 @@ export default function WalletSwapPage() {
 
         {/* Amount */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Montant ({fromSym})</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.swap_amount} ({fromSym})</label>
           <input
             type="number"
             value={amount}
@@ -334,23 +336,23 @@ export default function WalletSwapPage() {
           {isAmm && (
             <>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Montant brut</span>
+                <span className="text-gray-500 dark:text-slate-400">{T.swap_gross}</span>
                 <span className="font-medium text-gray-800 dark:text-slate-200">{fmt(grossOut, 4)} {toSym}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Frais ({fmt(feePct)}%)</span>
+                <span className="text-gray-500 dark:text-slate-400">{T.swap_fee} ({fmt(feePct)}%)</span>
                 <span className="font-medium text-orange-500">− {fmt(feeOut, 4)} {toSym}</span>
               </div>
             </>
           )}
           {(isCdfCglt || isCdfUsd || isUsdUsdt) && (
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-slate-400">Frais</span>
-              <span className="font-medium text-emerald-600">Gratuit</span>
+              <span className="text-gray-500 dark:text-slate-400">{T.swap_fee}</span>
+              <span className="font-medium text-emerald-600">{T.swap_free}</span>
             </div>
           )}
           <div className={`flex justify-between ${isAmm ? 'border-t border-gray-200 dark:border-slate-600 pt-2' : ''}`}>
-            <span className="text-gray-600 dark:text-slate-300 font-semibold">Vous recevez</span>
+            <span className="text-gray-600 dark:text-slate-300 font-semibold">{T.you_receive}</span>
             <span className="font-bold text-indigo-600">{fmt(netOut, 4)} {toSym}</span>
           </div>
         </div>
@@ -368,13 +370,13 @@ export default function WalletSwapPage() {
           className="w-full h-[52px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-1"
         >
           {loading && <Spinner />}
-          {loading ? 'Conversion…' : 'Convertir'}
+          {loading ? T.swap_loading : T.swap_cta}
         </button>
       </form>
 
       {/* Balances */}
       <div className="px-4 pb-8">
-        <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">Mes soldes</h2>
+        <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">{T.swap_balances}</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
             <p className="text-xs text-gray-400 dark:text-slate-500">Solde CDF</p>
@@ -400,12 +402,12 @@ export default function WalletSwapPage() {
 
         <Link href={`/${locale}/wallet/send-usdt`}
           className="mt-3 flex items-center justify-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition">
-          <ArrowRightLeft size={16} /> Envoyer des USDT
+          <ArrowRightLeft size={16} /> {T.swap_send_usdt}
         </Link>
 
         <Link href={`/${locale}/wallet/exchange`}
           className="mt-2 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-xl py-3 transition">
-          <ArrowRightLeft size={16} /> Convertir en wCGLT (BSC)
+          <ArrowRightLeft size={16} /> {T.swap_to_wcglt}
         </Link>
       </div>
     </div>

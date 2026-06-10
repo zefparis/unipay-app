@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
+import { wT, type WalletDict } from '@/lib/i18n-wallet';
 
 const CDF_OPERATORS = [
   { key: 'orange',     label: 'Orange Money', color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -42,6 +43,7 @@ function Spinner() {
 export default function WalletWithdrawPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
 
   const [tab, setTab]                 = useState<Tab>('cdf');
   const [balance, setBalance]         = useState<number | null>(null);
@@ -96,9 +98,9 @@ export default function WalletWithdrawPage() {
     setSuccess('');
 
     if (isCglt) {
-      if (amountNum < 500) { setError(`Montant minimum : 500 CGLT (= 1 wCGLT).`); return; }
+      if (amountNum < 500) { setError(T.err_wd_cglt_min); return; }
       if (overBudget) { setError(`Solde CGLT insuffisant. Disponible : ${cgltBalance} CGLT.`); return; }
-      if (!/^0x[0-9a-fA-F]{40}$/.test(bscAddress)) { setError('Adresse BSC invalide (format 0x...).'); return; }
+      if (!/^0x[0-9a-fA-F]{40}$/.test(bscAddress)) { setError(T.err_wd_bsc); return; }
       setLoading(true);
       try {
         const res = await fetch('/api/wallet/cglt/withdraw-bsc', {
@@ -108,7 +110,7 @@ export default function WalletWithdrawPage() {
         });
         const data = await res.json();
         if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? 'Retrait CGLT échoué'); return; }
+        if (!res.ok) { setError(data.error ?? T.err_wd_cglt_failed); return; }
         setSuccess(`${amountNum} wCGLT envoyés sur BSC. Tx: ${String(data.bsc_tx_hash ?? '').slice(0, 14)}...`);
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       } catch {
@@ -119,7 +121,7 @@ export default function WalletWithdrawPage() {
       return;
     }
 
-    if (!operator) { setError('Sélectionnez un opérateur.'); return; }
+    if (!operator) { setError(T.err_wd_op); return; }
     if (!validateDRCPhone(phone)) {
       setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
       return;
@@ -168,7 +170,7 @@ export default function WalletWithdrawPage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowUpCircle className="text-orange-500" size={20} />
-          Retirer de l&apos;argent
+          {T.wd_title}
         </h1>
       </div>
 
@@ -190,7 +192,7 @@ export default function WalletWithdrawPage() {
 
       {activeBal !== null && (
         <div className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-orange-700 dark:text-orange-400">Solde {isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'} disponible</span>
+          <span className="text-sm text-orange-700 dark:text-orange-400">{T.wd_avail.replace('{cur}', isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT')}</span>
           <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
             {isCdf ? fmt(activeBal) : isUsd ? activeBal.toFixed(2) : fmt(activeBal)} {isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}
           </span>
@@ -200,22 +202,22 @@ export default function WalletWithdrawPage() {
       {isCglt && (
         <div className="mx-4 mt-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl px-4 py-3 flex flex-col gap-2">
           <div className="flex justify-between text-sm">
-            <span className="text-purple-700 dark:text-purple-300">Taux de conversion</span>
+            <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_rate}</span>
             <span className="font-bold text-purple-800 dark:text-purple-200">{CGLT_PER_WCGLT} CGLT = 1 wCGLT</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-purple-700 dark:text-purple-300">Valeur marchée wCGLT</span>
+            <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_value}</span>
             <span className="font-bold text-purple-800 dark:text-purple-200">~${WCGLT_PRICE_USD}</span>
           </div>
           {amountNum >= 500 && (
             <div className="border-t border-purple-200 dark:border-purple-700 pt-2 flex justify-between text-sm">
-              <span className="text-purple-700 dark:text-purple-300">Vous recevrez</span>
+              <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_receive}</span>
               <span className="font-bold text-purple-800 dark:text-purple-200">
                 {(amountNum / CGLT_PER_WCGLT).toFixed(4)} wCGLT (~${((amountNum / CGLT_PER_WCGLT) * WCGLT_PRICE_USD).toFixed(3)})
               </span>
             </div>
           )}
-          <p className="text-xs text-purple-500 dark:text-purple-400">🔗 Envoyé sur BSC · Échangeable sur PancakeSwap</p>
+          <p className="text-xs text-purple-500 dark:text-purple-400">{T.wd_cglt_bsc}</p>
         </div>
       )}
 
@@ -223,7 +225,7 @@ export default function WalletWithdrawPage() {
 
         {!isCglt && (
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Opérateur Mobile Money</label>
+            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_operator}</label>
             <div className="flex flex-wrap gap-2">
               {operators.map((op) => (
                 <button key={op.key} type="button" onClick={() => setOperator(op.key)}
@@ -237,7 +239,7 @@ export default function WalletWithdrawPage() {
 
         {!isCglt && (
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro Mobile Money</label>
+            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_phone}</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
               placeholder="+243 XXX XXX XXX" required
               className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200" />
@@ -246,7 +248,7 @@ export default function WalletWithdrawPage() {
 
         {isCglt && (
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Adresse BSC (MetaMask)</label>
+            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_bsc}</label>
             <input type="text" value={bscAddress} onChange={(e) => setBscAddress(e.target.value)}
               placeholder="0x..." required
               className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all break-all" />
@@ -267,15 +269,15 @@ export default function WalletWithdrawPage() {
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             {isCdf ? (
               <>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>Frais (3%)</span><span>−{fmt(fee)} CDF</span></div>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>Coût total prélevé</span><span>{fmt(totalCost)} CDF</span></div>
-                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>Vous recevez</span><span className="text-orange-500">{fmt(amountNum - fee)} CDF</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct}</span><span>−{fmt(fee)} CDF</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_total}</span><span>{fmt(totalCost)} CDF</span></div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>{T.you_receive}</span><span className="text-orange-500">{fmt(amountNum - fee)} CDF</span></div>
               </>
             ) : (
               <>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>Vous envoyez</span><span>{amountNum.toFixed(2)} USD</span></div>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>Frais (3%)</span><span>+{fee.toFixed(2)} USD</span></div>
-                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>Total débité</span><span className="text-orange-500">{totalCost.toFixed(2)} USD</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_you_send}</span><span>{amountNum.toFixed(2)} USD</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct}</span><span>+{fee.toFixed(2)} USD</span></div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>{T.wd_total}</span><span className="text-orange-500">{totalCost.toFixed(2)} USD</span></div>
               </>
             )}
           </div>
@@ -292,7 +294,7 @@ export default function WalletWithdrawPage() {
         <button type="submit" disabled={loading || !!success || overBudget}
           className={`w-full h-[52px] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2 ${isCglt ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-500 hover:bg-orange-600'}`}>
           {loading && <Spinner />}
-          {loading ? 'Traitement…' : isCglt ? 'Retirer en wCGLT' : 'Retirer'}
+          {loading ? T.wd_processing : isCglt ? T.wd_cta_cglt : T.wd_cta}
         </button>
       </form>
     </div>

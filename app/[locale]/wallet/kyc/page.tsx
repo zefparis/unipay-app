@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { wT, type WalletDict } from '@/lib/i18n-wallet';
 
 interface Submission {
   id: string;
@@ -39,13 +40,13 @@ function Spinner({ sm }: { sm?: boolean }) {
   );
 }
 
-function SelfiePicker({ preview, onChange }: { preview: string | null; onChange: (file: File) => void }) {
+function SelfiePicker({ T, preview, onChange }: { T: WalletDict; preview: string | null; onChange: (file: File) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">Selfie</p>
-        <p className="text-xs text-gray-400 dark:text-slate-500">Prenez une photo de votre visage clairement visible</p>
+        <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">{T.kyc_selfie}</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500">{T.kyc_selfie_hint}</p>
       </div>
       <button
         type="button"
@@ -60,7 +61,7 @@ function SelfiePicker({ preview, onChange }: { preview: string | null; onChange:
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
               <circle cx="12" cy="13" r="4" />
             </svg>
-            <span className="text-xs font-medium">Prendre une photo</span>
+            <span className="text-xs font-medium">{T.kyc_take_photo}</span>
           </div>
         )}
       </button>
@@ -83,6 +84,7 @@ function SelfiePicker({ preview, onChange }: { preview: string | null; onChange:
 export default function KycPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
 
   const [kycStatus, setKycStatus] = useState<KycStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,7 @@ export default function KycPage() {
 
   async function handleSubmit() {
     if (!selfie) {
-      setError('Le selfie est obligatoire');
+      setError(T.err_kyc_selfie);
       return;
     }
 
@@ -159,7 +161,7 @@ export default function KycPage() {
         is_verified: approved ? true : prev?.is_verified ?? false,
       }));
     } else {
-      setError(data.error ?? 'Erreur lors de la soumission');
+      setError(data.error ?? T.err_kyc_submit);
     }
   }
 
@@ -178,11 +180,12 @@ export default function KycPage() {
     return (
       <StatusScreen
         locale={locale}
+        T={T}
         color="amber"
         icon="⏳"
-        badge="En cours de vérification (24-48h)"
-        title="Dossier soumis"
-        message="Votre identité est en cours de vérification."
+        badge={T.kyc_pending_badge}
+        title={T.kyc_pending_title}
+        message={T.kyc_pending_msg}
       />
     );
   }
@@ -191,11 +194,12 @@ export default function KycPage() {
     return (
       <StatusScreen
         locale={locale}
+        T={T}
         color="green"
         icon="✓"
-        badge="Identité vérifiée ✓"
-        title="KYC niveau 1 activé"
-        message="Votre identité a été vérifiée avec succès."
+        badge={T.kyc_approved_badge}
+        title={T.kyc_approved_title}
+        message={T.kyc_approved_msg}
         limits={KYC_LIMITS[1]}
       />
     );
@@ -205,11 +209,12 @@ export default function KycPage() {
     return (
       <StatusScreen
         locale={locale}
+        T={T}
         color="red"
         icon="✕"
-        badge="Dossier rejeté"
-        title="Vérification refusée"
-        message={sub?.reviewer_note ?? 'Votre dossier a été refusé. Veuillez le soumettre à nouveau.'}
+        badge={T.kyc_rejected_badge}
+        title={T.kyc_rejected_title}
+        message={sub?.reviewer_note ?? T.kyc_rejected_default}
         onRetry={() => setKycStatus((value) => (value ? { ...value, submission: null } : value))}
       />
     );
@@ -222,8 +227,8 @@ export default function KycPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-gray-600 dark:text-slate-400"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Vérification d&apos;identité</h1>
-          <p className="text-xs text-gray-400 dark:text-slate-500">KYC Niveau 1 avec PayGuard</p>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">{T.kyc_title}</h1>
+          <p className="text-xs text-gray-400 dark:text-slate-500">{T.kyc_subtitle}</p>
         </div>
       </div>
 
@@ -231,13 +236,13 @@ export default function KycPage() {
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white dark:border-slate-700 dark:bg-slate-800">
           <div className="grid grid-cols-3 text-center">
             <div className="bg-gray-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:bg-slate-700/50 dark:text-slate-400" />
-            <div className="border-x border-gray-100 bg-amber-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-amber-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-amber-400">Niveau 0</div>
-            <div className="bg-green-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-green-600 dark:bg-green-900/20 dark:text-green-400">Niveau 1</div>
+            <div className="border-x border-gray-100 bg-amber-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-amber-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-amber-400">{T.kyc_lvl0}</div>
+            <div className="bg-green-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-green-600 dark:bg-green-900/20 dark:text-green-400">{T.kyc_lvl1}</div>
           </div>
           {[
-            { label: 'Dépôt/jour', l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit },
-            { label: 'Retrait/jour', l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw },
-            { label: 'P2P max', l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p },
+            { label: T.kyc_dep_day, l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit },
+            { label: T.kyc_wd_day, l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw },
+            { label: T.kyc_p2p_max, l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p },
           ].map(({ label, l0, l1 }) => (
             <div key={label} className="grid grid-cols-3 border-t border-gray-50 text-center dark:border-slate-700">
               <div className="px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-slate-400">{label}</div>
@@ -263,39 +268,39 @@ export default function KycPage() {
 
           {step === 0 && (
             <div className="space-y-4">
-              <h2 className="text-sm font-bold text-gray-800 dark:text-white">Informations personnelles</h2>
-              <Field label="Nom complet">
+              <h2 className="text-sm font-bold text-gray-800 dark:text-white">{T.kyc_personal}</h2>
+              <Field label={T.kyc_fullname}>
                 <input value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Prénom Nom" className={inputClass} />
               </Field>
-              <Field label="Date de naissance">
+              <Field label={T.kyc_birthdate}>
                 <input type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} className={inputClass} />
               </Field>
-              <Field label="Type de document">
+              <Field label={T.kyc_doctype}>
                 <select value={docType} onChange={(event) => setDocType(event.target.value)} className={inputClass}>
                   {DOC_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
                 </select>
               </Field>
-              <Field label="Numéro du document">
-                <input value={docNumber} onChange={(event) => setDocNumber(event.target.value)} placeholder="Numéro d'identification" className={inputClass} />
+              <Field label={T.kyc_docnumber}>
+                <input value={docNumber} onChange={(event) => setDocNumber(event.target.value)} placeholder={T.kyc_doc_hint} className={inputClass} />
               </Field>
             </div>
           )}
 
-          {step === 1 && <SelfiePicker preview={selfiePrev} onChange={setSelfieFile} />}
+          {step === 1 && <SelfiePicker T={T} preview={selfiePrev} onChange={setSelfieFile} />}
 
           <div className="mt-6 flex gap-3">
             {step > 0 && (
               <button onClick={() => setStep(0)} className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
-                Retour
+                {T.kyc_back}
               </button>
             )}
             {step === 0 ? (
               <button onClick={() => setStep(1)} disabled={!canProceed()} className="flex-1 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
-                Continuer
+                {T.kyc_continue}
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={submitting || !canProceed()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
-                {submitting ? <><Spinner sm /> Envoi en cours…</> : 'Soumettre pour vérification'}
+                {submitting ? <><Spinner sm /> {T.kyc_submitting}</> : T.kyc_submit}
               </button>
             )}
           </div>
@@ -314,8 +319,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StatusScreen({ locale, color, icon, badge, title, message, limits, onRetry }: {
+function StatusScreen({ locale, T, color, icon, badge, title, message, limits, onRetry }: {
   locale: string;
+  T: WalletDict;
   color: 'amber' | 'green' | 'red';
   icon: string;
   badge: string;
@@ -336,7 +342,7 @@ function StatusScreen({ locale, color, icon, badge, title, message, limits, onRe
         <Link href={`/${locale}/wallet/profile`} className="rounded-full p-2 transition hover:bg-gray-100 dark:hover:bg-slate-800">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-gray-600 dark:text-slate-400"><polyline points="15 18 9 12 15 6" /></svg>
         </Link>
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Vérification d&apos;identité</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white">{T.kyc_title}</h1>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 pb-20">
         <div className={`flex h-20 w-20 items-center justify-center rounded-full border-2 text-3xl ${colors.bg} ${colors.border}`}>
@@ -349,7 +355,7 @@ function StatusScreen({ locale, color, icon, badge, title, message, limits, onRe
         </div>
         {limits && (
           <div className="w-full max-w-xs divide-y divide-gray-50 rounded-2xl border border-gray-100 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
-            {[["Dépôt/jour", limits.deposit], ["Retrait/jour", limits.withdraw], ["P2P max", limits.p2p]].map(([label, value]) => (
+            {[[T.kyc_dep_day, limits.deposit], [T.kyc_wd_day, limits.withdraw], [T.kyc_p2p_max, limits.p2p]].map(([label, value]) => (
               <div key={label} className="flex justify-between px-4 py-3 text-sm">
                 <span className="text-gray-500 dark:text-slate-400">{label}</span>
                 <span className="font-semibold text-green-600 dark:text-green-400">{value}</span>
@@ -359,11 +365,11 @@ function StatusScreen({ locale, color, icon, badge, title, message, limits, onRe
         )}
         {onRetry && (
           <button onClick={onRetry} className="rounded-xl bg-[#00A651] px-6 py-3 text-sm font-semibold text-white">
-            Soumettre à nouveau
+            {T.kyc_retry}
           </button>
         )}
         <Link href={`/${locale}/wallet`} className="text-sm text-gray-400 underline dark:text-slate-500">
-          Retour au wallet
+          {T.kyc_wallet_back}
         </Link>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
+import { wT, type WalletDict } from '@/lib/i18n-wallet';
 
 function fmt(n: number, max = 2) {
   return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: max }).format(n);
@@ -21,6 +22,7 @@ function Spinner() {
 export default function WalletSendUsdtPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
 
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
   const [phone, setPhone]   = useState('');
@@ -47,9 +49,9 @@ export default function WalletSendUsdtPage() {
   function openConfirm(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (amountNum < 0.01) { setError('Montant minimum : 0.01 USDT.'); return; }
-    if (!validPhone) { setError('Numéro de téléphone invalide.'); return; }
-    if (overBudget) { setError(`Solde USDT insuffisant (${fmt(usdtBalance!)} disponibles).`); return; }
+    if (amountNum < 0.01) { setError(T.err_usdt_min); return; }
+    if (!validPhone) { setError(T.err_usdt_phone); return; }
+    if (overBudget) { setError(T.err_usdt_insuf.replace('{bal}', fmt(usdtBalance!))); return; }
     setShowConfirm(true);
   }
 
@@ -67,17 +69,17 @@ export default function WalletSendUsdtPage() {
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
       if (!res.ok) {
         const map: Record<string, string> = {
-          INSUFFICIENT_USDT:  'Solde USDT insuffisant.',
-          RECEIVER_NOT_FOUND: 'Aucun compte UniPay trouvé pour ce numéro.',
+          INSUFFICIENT_USDT:  T.err_usdt_insuf,
+          RECEIVER_NOT_FOUND: T.err_usdt_404,
         };
-        setError(map[data.error] ?? data.error ?? 'Envoi échoué');
+        setError(map[data.error] ?? data.error ?? T.err_usdt_failed);
         return;
       }
       setSuccess(`${fmt(data.amount_usdt)} USDT envoyés à ${data.receiver_name ?? phone}.`);
       setAmount(''); setPhone('');
       if (typeof data.new_balance === 'number') setUsdtBalance(data.new_balance);
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -92,20 +94,20 @@ export default function WalletSendUsdtPage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowRightLeft className="text-emerald-500" size={20} />
-          Envoyer USDT
+          {T.usdt_title}
         </h1>
       </div>
 
       {/* Balance card */}
       <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl px-5 py-4 text-white shadow-lg">
-        <p className="text-xs opacity-80">Solde USDT disponible</p>
+        <p className="text-xs opacity-80">{T.usdt_bal}</p>
         <p className="text-2xl font-bold mt-0.5">{usdtBalance !== null ? fmt(usdtBalance) : '—'} <span className="text-base font-normal opacity-80">USDT</span></p>
       </div>
 
       {/* Form */}
       <form onSubmit={openConfirm} className="flex flex-col gap-4 px-4 py-5">
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro du destinataire</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.usdt_recipient}</label>
           <input
             type="tel"
             value={phone}
@@ -117,7 +119,7 @@ export default function WalletSendUsdtPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Montant (USDT)</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.usdt_amount}</label>
           <input
             type="number"
             value={amount}
@@ -133,8 +135,8 @@ export default function WalletSendUsdtPage() {
         </div>
 
         <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-3 flex justify-between text-sm">
-          <span className="text-gray-500 dark:text-slate-400">Vous envoyez</span>
-          <span className="font-semibold text-gray-800 dark:text-slate-200">{fmt(amountNum)} USDT — <span className="text-emerald-500">Gratuit</span></span>
+          <span className="text-gray-500 dark:text-slate-400">{T.usdt_you_send}</span>
+          <span className="font-semibold text-gray-800 dark:text-slate-200">{fmt(amountNum)} USDT — <span className="text-emerald-500">{T.usdt_free}</span></span>
         </div>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
@@ -150,7 +152,7 @@ export default function WalletSendUsdtPage() {
           className="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-1"
         >
           {loading && <Spinner />}
-          {loading ? 'Envoi…' : 'Envoyer'}
+          {loading ? T.usdt_loading : T.usdt_cta}
         </button>
       </form>
 
@@ -162,19 +164,19 @@ export default function WalletSendUsdtPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">Confirmer l'envoi</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">{T.usdt_modal_title}</h2>
               <div className="flex flex-col gap-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Destinataire</span><span className="font-medium text-gray-800 dark:text-slate-200">{phone}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Montant</span><span className="font-bold text-emerald-600">{fmt(amountNum)} USDT</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">Frais</span><span className="font-medium text-emerald-500">Gratuit</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">{T.usdt_rec_lbl}</span><span className="font-medium text-gray-800 dark:text-slate-200">{phone}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">{T.usdt_amt_lbl}</span><span className="font-bold text-emerald-600">{fmt(amountNum)} USDT</span></div>
+                <div className="flex justify-between"><span className="text-gray-500 dark:text-slate-400">{T.usdt_fee_lbl}</span><span className="font-medium text-emerald-500">{T.usdt_free}</span></div>
               </div>
             </div>
             <div
               className="sticky bottom-0 flex gap-3 px-6 pt-3 bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] rounded-b-2xl"
               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
             >
-              <button onClick={() => setShowConfirm(false)} className="flex-1 h-[48px] rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold">Annuler</button>
-              <button onClick={confirmSend} className="flex-1 h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">Confirmer</button>
+              <button onClick={() => setShowConfirm(false)} className="flex-1 h-[48px] rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold">{T.cancel}</button>
+              <button onClick={confirmSend} className="flex-1 h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">{T.confirm}</button>
             </div>
           </div>
         </div>
