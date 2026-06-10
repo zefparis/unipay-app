@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -11,8 +11,10 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
-const stripePromise   = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
-const MIN_USD         = 5;
+const stripePromise   = PUBLISHABLE_KEY
+  ? loadStripe(PUBLISHABLE_KEY).catch(() => null)
+  : Promise.resolve(null);
+const MIN_USD = 5;
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -157,6 +159,14 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
 }
 
 export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    stripePromise.then((s) => {
+      if (s === null && PUBLISHABLE_KEY) setLoadFailed(true);
+    });
+  }, []);
+
   if (!PUBLISHABLE_KEY) {
     return (
       <div className="mx-4 my-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-4 text-sm text-red-700 dark:text-red-400">
@@ -165,8 +175,18 @@ export default function StripeDepositTab({ usdBalance }: { usdBalance: number })
       </div>
     );
   }
+
+  if (loadFailed) {
+    return (
+      <div className="mx-4 my-5 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
+        ⚠️ Stripe n&apos;a pas pu se charger.<br />
+        <span className="text-xs opacity-75">Désactivez les extensions navigateur (MetaMask, etc.) ou ouvrez un onglet de navigation privée.</span>
+      </div>
+    );
+  }
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={{ locale: 'fr' }}>
       <CardForm usdBalance={usdBalance} />
     </Elements>
   );
