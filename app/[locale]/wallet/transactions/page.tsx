@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowRightLeft } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 
 interface Tx {
   id: string;
@@ -34,8 +35,11 @@ function StatusBadge({ status }: { status: string }) {
     failed:    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
     cancelled: 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400',
   };
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const TT = wT(typeof window !== 'undefined' ? (document.documentElement.lang || 'fr') : 'fr');
   const label: Record<string, string> = {
-    success: 'Succès', pending: 'En attente', failed: 'Échoué', cancelled: 'Annulé',
+    success: TT.tx_status_success, pending: TT.tx_status_pending,
+    failed: TT.tx_status_failed,   cancelled: TT.tx_status_cancelled,
   };
   const cls = map[status] ?? 'bg-gray-100 text-gray-500';
   return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${cls}`}>{label[status] ?? status}</span>;
@@ -53,6 +57,7 @@ function Spinner() {
 export default function WalletTransactionsPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale);
 
   const [txList, setTxList]   = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,8 +72,8 @@ export default function WalletTransactionsPage() {
         if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; }
         return r.json();
       })
-      .then((d) => { if (d?.data) setTxList(d.data); else if (d) setError('Impossible de charger les transactions.'); })
-      .catch(() => setError('Erreur réseau.'))
+      .then((d) => { if (d?.data) setTxList(d.data); else if (d) setError(T.tx_err_load); })
+      .catch(() => setError(T.tx_err_net))
       .finally(() => setLoading(false));
   }, []);
 
@@ -84,12 +89,12 @@ export default function WalletTransactionsPage() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const FILTERS: { key: Filter; label: string }[] = [
-    { key: 'all',    label: 'Tout' },
-    { key: 'collect', label: 'Dépôts' },
-    { key: 'payout',  label: 'Retraits' },
-    { key: 'p2p',     label: 'P2P' },
-    { key: 'p2p_usdt', label: 'USDT' },
-    { key: 'gaming',   label: 'Gaming' },
+    { key: 'all',      label: T.tx_all },
+    { key: 'collect',  label: T.tx_deposits },
+    { key: 'payout',   label: T.tx_withdrawals },
+    { key: 'p2p',      label: T.tx_p2p },
+    { key: 'p2p_usdt', label: T.tx_usdt },
+    { key: 'gaming',   label: T.tx_gaming },
   ];
 
   return (
@@ -98,7 +103,7 @@ export default function WalletTransactionsPage() {
         <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200">
           <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
         </Link>
-        <h1 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Historique</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">{T.tx_title}</h1>
       </div>
 
       {/* Filter tabs */}
@@ -131,7 +136,7 @@ export default function WalletTransactionsPage() {
         )}
 
         {!loading && !error && filtered.length === 0 && (
-          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-16">Aucune transaction trouvée.</p>
+          <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-16">{T.tx_empty}</p>
         )}
 
         {!loading && !error && paginated.length > 0 && (
@@ -145,8 +150,8 @@ export default function WalletTransactionsPage() {
               const isGaming = isGameDebit || isGameCredit;
               const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
               const label    = isGaming
-                ? (isGameCredit ? 'Gain CGLT' : 'Mise CGLT')
-                : isUsdt ? (usdtIn ? 'USDT reçu' : 'USDT envoyé') : tx.operator;
+                ? (isGameCredit ? T.tx_gain_cglt : T.tx_mise_cglt)
+                : isUsdt ? (usdtIn ? T.tx_usdt_in : T.tx_usdt_out) : tx.operator;
               return (
                 <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xl ${
@@ -189,7 +194,7 @@ export default function WalletTransactionsPage() {
                           }`}>
                             {isCredit ? '+' : '−'}{display} {cur}
                           </p>
-                          {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{gross} brut</p>}
+                          {!isCredit && <p className="text-[10px] text-gray-400 dark:text-slate-500">{gross} {T.tx_gross}</p>}
                         </>
                       );
                     })()}
@@ -208,7 +213,7 @@ export default function WalletTransactionsPage() {
               disabled={page === 1}
               className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200"
             >
-              Précédent
+              {T.tx_prev}
             </button>
             <span className="text-sm text-gray-500 dark:text-slate-400">{page} / {totalPages}</span>
             <button
@@ -216,7 +221,7 @@ export default function WalletTransactionsPage() {
               disabled={page === totalPages}
               className="px-4 py-2 rounded-xl text-sm font-semibold border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200"
             >
-              Suivant
+              {T.tx_next}
             </button>
           </div>
         )}

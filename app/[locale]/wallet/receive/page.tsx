@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Copy, Check, ExternalLink } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 import { QRCodeSVG } from 'qrcode.react';
 
 function Spinner() {
@@ -18,6 +19,7 @@ function Spinner() {
 export default function ReceivePage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
+  const T = wT(locale);
 
   const [address, setAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ export default function ReceivePage() {
           <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
         </Link>
         <h1 className="text-lg font-bold text-gray-900 dark:text-slate-100">
-          Recevoir des wCGLT
+          {T.recv_title}
         </h1>
       </div>
 
@@ -65,12 +67,12 @@ export default function ReceivePage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <Spinner />
-            <p className="text-sm text-gray-400 dark:text-slate-500">Chargement de l'adresse…</p>
+            <p className="text-sm text-gray-400 dark:text-slate-500">{T.recv_loading}</p>
           </div>
         ) : !address ? (
           <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 px-5 py-6 text-center">
-            <p className="text-sm text-red-700 dark:text-red-300 font-semibold">Adresse blockchain introuvable.</p>
-            <p className="text-xs text-red-500 dark:text-red-400 mt-1">Contactez le support.</p>
+            <p className="text-sm text-red-700 dark:text-red-300 font-semibold">{T.recv_no_addr}</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">{T.recv_no_addr_sub}</p>
           </div>
         ) : (
           <>
@@ -100,17 +102,17 @@ export default function ReceivePage() {
                 }`}
               >
                 {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copié ✓' : 'Copier l\'adresse'}
+                {copied ? T.copied : T.recv_copy}
               </button>
             </div>
 
             {/* Info card */}
             <div className="w-full rounded-2xl bg-gradient-to-br from-purple-600 to-purple-800 p-5 text-white">
               <p className="text-sm font-semibold leading-relaxed">
-                Cette adresse est compatible BNB Chain (BSC). Partagez-la pour recevoir des wCGLT depuis n'importe quel wallet.
+                {T.recv_bsc_info}
               </p>
               <p className="text-xs text-purple-200 mt-3 leading-relaxed">
-                Les wCGLT reçus apparaîtront automatiquement dans votre solde CGLT.
+                {T.recv_auto}
               </p>
             </div>
 
@@ -122,7 +124,7 @@ export default function ReceivePage() {
               className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline font-medium"
             >
               <ExternalLink size={15} />
-              Voir sur BscScan
+              {T.recv_bscscan}
             </a>
           </>
         )}

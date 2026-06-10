@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import Link from 'next/link';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import { wT } from '@/lib/i18n-wallet';
 
 function fmt(n: number) { return new Intl.NumberFormat('fr-FR').format(n); }
 
@@ -21,6 +22,7 @@ export default function WalletSendPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
   const searchParams = useSearchParams();
+  const T = wT(locale);
 
   const [balance, setBalance]               = useState<number | null>(null);
   const [recipientPhone, setRecipientPhone] = useState('');
@@ -52,12 +54,9 @@ export default function WalletSendPage() {
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!validateDRCPhone(recipientPhone)) {
-      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
-      return;
-    }
-    if (amountNum < 1) { setError('Montant invalide.'); return; }
-    if (overBudget) { setError(`Solde insuffisant (${fmt(balance!)} CDF disponibles).`); return; }
+    if (!validateDRCPhone(recipientPhone)) { setError(T.err_send_phone); return; }
+    if (amountNum < 1) { setError(T.err_send_amount); return; }
+    if (overBudget) { setError(T.err_send_budget.replace('{balance}', fmt(balance!))); return; }
     setShowModal(true);
   }
 
@@ -72,13 +71,13 @@ export default function WalletSendPage() {
       });
       const data = await res.json();
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-      if (!res.ok) { setError(data.error ?? 'Envoi échoué'); return; }
+      if (!res.ok) { setError(data.error ?? T.err_send_failed); return; }
 
       const name = data.recipient_name ?? recipientPhone;
-      setSuccess(`${fmt(amountNum)} CDF envoyés à ${name} avec succès.`);
+      setSuccess(`${fmt(amountNum)} ${T.send_success.replace('{name}', name)}`);
       setTimeout(() => router.push(`/${locale}/wallet`), 3500);
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -92,20 +91,20 @@ export default function WalletSendPage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowLeftRight className="text-blue-500" size={20} />
-          Envoyer de l&apos;argent
+          {T.send_title}
         </h1>
       </div>
 
       {balance !== null && (
         <div className="mx-4 mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-blue-700 dark:text-blue-400">Solde disponible</span>
+          <span className="text-sm text-blue-700 dark:text-blue-400">{T.balance_avail}</span>
           <span className="text-sm font-bold text-blue-700 dark:text-blue-400">{fmt(balance)} CDF</span>
         </div>
       )}
 
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-5 px-4 py-5">
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Téléphone du destinataire</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.send_recipient}</label>
           {recipientName && (
             <p className="text-xs font-medium text-[#00A651] -mb-1">{recipientName}</p>
           )}
@@ -117,11 +116,11 @@ export default function WalletSendPage() {
             required
             className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
           />
-          <p className="text-xs text-gray-400 dark:text-slate-500">Le destinataire doit avoir un compte UniPay Wallet</p>
+          <p className="text-xs text-gray-400 dark:text-slate-500">{T.send_rec_hint}</p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Montant (CDF)</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.send_amount}</label>
           <input
             type="number"
             value={amount}
@@ -137,7 +136,7 @@ export default function WalletSendPage() {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            Note <span className="font-normal text-gray-400 dark:text-slate-500">(optionnel)</span>
+            {T.send_note} <span className="font-normal text-gray-400 dark:text-slate-500">{T.optional}</span>
           </label>
           <input
             type="text"
@@ -162,7 +161,7 @@ export default function WalletSendPage() {
           className="w-full h-[52px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
         >
           {loading && <Spinner />}
-          {loading ? 'Envoi…' : 'Envoyer'}
+          {loading ? T.send_loading : T.send_cta}
         </button>
       </form>
 
@@ -177,21 +176,21 @@ export default function WalletSendPage() {
           >
             <div className="p-6 flex flex-col gap-5">
               <div className="flex flex-col gap-1 text-center">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">Confirmer l&apos;envoi</h2>
-                <p className="text-sm text-gray-500 dark:text-slate-400">Vérifiez les détails avant de confirmer</p>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9]">{T.send_modal_title}</h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{T.send_modal_sub}</p>
               </div>
               <div className="bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-4 flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Destinataire</span>
+                  <span className="text-gray-500 dark:text-slate-400">{T.send_lbl_to}</span>
                   <span className="font-semibold text-gray-800 dark:text-slate-200">{recipientPhone}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Montant</span>
+                  <span className="text-gray-500 dark:text-slate-400">{T.send_lbl_amount}</span>
                   <span className="font-bold text-blue-600">{fmt(amountNum)} CDF</span>
                 </div>
                 {note && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-slate-400">Note</span>
+                    <span className="text-gray-500 dark:text-slate-400">{T.send_lbl_note}</span>
                     <span className="text-gray-700 dark:text-slate-300 truncate min-w-0 flex-1 text-right">{note}</span>
                   </div>
                 )}
@@ -205,13 +204,13 @@ export default function WalletSendPage() {
                 onClick={() => setShowModal(false)}
                 className="py-3 rounded-xl border-2 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-300 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-all duration-200"
               >
-                Annuler
+                {T.cancel}
               </button>
               <button
                 onClick={confirmSend}
                 className="py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition"
               >
-                Confirmer
+                {T.confirm}
               </button>
             </div>
           </div>

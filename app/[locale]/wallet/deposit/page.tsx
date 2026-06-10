@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowDownCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
+import { wT } from '@/lib/i18n-wallet';
 
 const StripeDepositTab   = dynamic(() => import('./StripeDepositTab'),   { ssr: false });
 const CryptoDepositTab   = dynamic(() => import('./CryptoDepositTab'),   { ssr: false });
@@ -42,6 +43,7 @@ function Spinner({ size = 'sm' }: { size?: 'sm' | 'md' }) {
 export default function WalletDepositPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale);
 
   const [tab, setTab]               = useState<'cdf' | 'usd' | 'card' | 'bsc'>('cdf');
   const [operator, setOperator]     = useState<string>('orange');
@@ -103,7 +105,7 @@ export default function WalletDepositPage() {
         if (newBal > preBalance) {
           clearInterval(pollRef.current!);
           setPolling(false);
-          setSuccess(`✓ Dépôt confirmé ! Solde USD : ${newBal.toFixed(2)} USD`);
+          setSuccess(T.dep_confirmed.replace('{balance}', newBal.toFixed(2)));
           setUsdBalance(newBal);
           setTimeout(() => router.push(`/${locale}/wallet`), 3000);
           return;
@@ -112,7 +114,7 @@ export default function WalletDepositPage() {
       if (attempts >= 20) {
         clearInterval(pollRef.current!);
         setPolling(false);
-        setSuccess('Votre dépôt est en cours de traitement. Le solde sera mis à jour automatiquement.');
+        setSuccess(T.dep_pending);
         setTimeout(() => router.push(`/${locale}/wallet`), 4000);
       }
     }, 3000);
@@ -123,12 +125,12 @@ export default function WalletDepositPage() {
     setError('');
     setSuccess('');
 
-    if (!operator) { setError('Sélectionnez un opérateur.'); return; }
+    if (!operator) { setError(T.dep_select_op); return; }
     if (!validateDRCPhone(phone)) {
       setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
       return;
     }
-    if (amountNum < minAmt) { setError(`Montant minimum : ${isCdf ? fmt(minAmt) : minAmt} ${isCdf ? 'CDF' : 'USD'}.`); return; }
+    if (amountNum < minAmt) { setError(`${T.min_amount} : ${isCdf ? fmt(minAmt) : minAmt} ${isCdf ? 'CDF' : 'USD'}.`); return; }
     setLoading(true);
 
     try {
@@ -141,8 +143,8 @@ export default function WalletDepositPage() {
         });
         const data = await res.json();
         if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? 'Dépôt échoué'); return; }
-        setSuccess(`Demande envoyée. Validez le paiement de ${fmt(amountNum)} CDF sur votre téléphone ${phone}.`);
+        if (!res.ok) { setError(data.error ?? T.dep_failed); return; }
+        setSuccess(T.dep_success_cdf.replace('{amount}', fmt(amountNum)).replace('{phone}', phone));
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       } else {
         res = await fetch('/api/wallet/unipesa/deposit', {
@@ -152,12 +154,12 @@ export default function WalletDepositPage() {
         });
         const data = await res.json();
         if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? 'Dépôt USD échoué'); return; }
-        setSuccess('Validez la demande sur votre téléphone. Vérification en cours…');
+        if (!res.ok) { setError(data.error ?? T.dep_usd_failed); return; }
+        setSuccess(T.dep_success_usd);
         startPolling(usdBalance);
       }
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -173,7 +175,7 @@ export default function WalletDepositPage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-[#f1f5f9]">
           <ArrowDownCircle className="text-[#00A651]" size={20} />
-          Déposer de l&apos;argent
+          {T.dep_title}
         </h1>
       </div>
 
@@ -182,7 +184,7 @@ export default function WalletDepositPage() {
         <div className="mx-4 mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 flex items-start gap-2 text-xs">
           <span className="text-lg leading-none">🌍</span>
           <p className="text-blue-700 dark:text-blue-300">
-            Depuis l&apos;étranger, rechargez par <strong>carte bancaire</strong> ou via <strong>BSC (USDT/wCGLT)</strong>.
+            {T.dep_diaspora}
           </p>
         </div>
       )}
@@ -213,7 +215,7 @@ export default function WalletDepositPage() {
 
       {tab === 'usd' && (
         <div className="mx-4 mt-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl px-4 py-2 flex items-center justify-between text-xs">
-          <span className="text-emerald-700 dark:text-emerald-400">Solde USD actuel</span>
+          <span className="text-emerald-700 dark:text-emerald-400">{T.dep_usd_balance}</span>
           <span className="font-bold text-emerald-700 dark:text-emerald-400">{usdBalance.toFixed(2)} USD</span>
         </div>
       )}
@@ -225,7 +227,7 @@ export default function WalletDepositPage() {
 
         {/* Operator */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Opérateur Mobile Money</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.dep_operator}</label>
           <div className="flex flex-wrap gap-2">
             {operators.map((op) => (
               <button
@@ -244,7 +246,7 @@ export default function WalletDepositPage() {
 
         {/* Phone */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro Mobile Money</label>
+          <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.dep_phone}</label>
           <input
             type="tel"
             value={phone}
@@ -276,11 +278,11 @@ export default function WalletDepositPage() {
         {amountNum >= minAmt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between text-gray-500 dark:text-slate-400">
-              <span>Frais (3%)</span>
+              <span>{T.fee_pct}</span>
               <span>−{isCdf ? fmt(fee) : fee.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
             <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
-              <span>Vous recevez</span>
+              <span>{T.you_receive}</span>
               <span className="text-[#00A651]">+{isCdf ? fmt(net) : net.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
           </div>
@@ -300,7 +302,7 @@ export default function WalletDepositPage() {
           className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
         >
           {loading && <Spinner />}
-          {loading ? 'Envoi…' : polling ? 'Vérification…' : 'Déposer'}
+          {loading ? T.dep_loading : polling ? T.dep_polling : T.dep_cta}
         </button>
       </form>}
     </div>

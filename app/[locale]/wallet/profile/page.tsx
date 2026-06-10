@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { Wallet, ExternalLink, X } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -44,11 +45,13 @@ function Spinner({ sm }: { sm?: boolean }) {
 
 // ── KYC Badge ──────────────────────────────────────────────────────────
 function KycBadge({ level }: { level: number }) {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const TT = wT(typeof window !== 'undefined' ? (document.documentElement.lang || 'fr') : 'fr');
   const cfg = level === 0
-    ? { label: 'Non vérifié', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }
+    ? { label: TT.prof_kyc_none,  cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' }
     : level === 1
-    ? { label: 'Basique', cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
-    : { label: 'Complet', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+    ? { label: TT.prof_kyc_basic, cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' }
+    : { label: TT.prof_kyc_full,  cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
   return <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${cfg.cls}`}>{cfg.label}</span>;
 }
 
@@ -100,6 +103,7 @@ const IcCamera  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 export default function WalletProfilePage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale);
 
   const [profile, setProfile]       = useState<Profile | null>(null);
   const [stats, setStats]           = useState<Stats | null>(null);
@@ -157,8 +161,8 @@ export default function WalletProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) { showToast('Format non supporté (JPG / PNG / WebP uniquement)'); return; }
-    if (file.size > 2 * 1024 * 1024) { showToast('Image trop lourde — max 2 Mo'); return; }
+    if (!allowed.includes(file.type)) { showToast(T.prof_img_format); return; }
+    if (file.size > 2 * 1024 * 1024) { showToast(T.prof_img_size); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const b64 = reader.result as string;
@@ -176,14 +180,14 @@ export default function WalletProfilePage() {
       body: JSON.stringify({ full_name: nameVal.trim() }),
     });
     setSavingName(false);
-    if (r.ok) { setProfile(p => p ? { ...p, full_name: nameVal.trim() } : p); setEditName(false); showToast('Nom mis à jour'); }
-    else showToast('Erreur lors de la mise à jour');
+    if (r.ok) { setProfile(p => p ? { ...p, full_name: nameVal.trim() } : p); setEditName(false); showToast(T.prof_name_updated); }
+    else showToast(T.prof_err_update);
   }
 
   async function changePin() {
     setPinError('');
-    if (pinForm.new_pin !== pinForm.confirm_pin) { setPinError('Les PINs ne correspondent pas'); return; }
-    if (pinForm.new_pin.length < 4) { setPinError('PIN minimum 4 chiffres'); return; }
+    if (pinForm.new_pin !== pinForm.confirm_pin) { setPinError(T.prof_pin_mismatch); return; }
+    if (pinForm.new_pin.length < 4) { setPinError(T.prof_pin_short); return; }
     setPinSaving(true);
     const r = await fetch('/api/wallet/auth/change-pin', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -191,24 +195,24 @@ export default function WalletProfilePage() {
     });
     const d = await r.json();
     setPinSaving(false);
-    if (r.ok) { setPinOpen(false); setPinForm({ current_pin: '', new_pin: '', confirm_pin: '' }); showToast('PIN modifié avec succès'); }
-    else setPinError(d.error ?? 'Erreur');
+    if (r.ok) { setPinOpen(false); setPinForm({ current_pin: '', new_pin: '', confirm_pin: '' }); showToast(T.prof_pin_updated); }
+    else setPinError(d.error ?? T.prof_err_update);
   }
 
   function removeAvatar() {
     setAvatar(null);
     localStorage.removeItem('wallet_avatar');
-    showToast('Avatar supprimé');
+    showToast(T.prof_avatar_del);
   }
 
   function copyBscAddress() {
     if (!profile?.blockchain_address) return;
-    navigator.clipboard.writeText(profile.blockchain_address).then(() => showToast('Adresse BSC copiée !'));
+    navigator.clipboard.writeText(profile.blockchain_address).then(() => showToast(T.prof_bsc_copied));
   }
 
   function copyWalletId() {
     if (!profile?.wallet_id) return;
-    navigator.clipboard.writeText(profile.wallet_id).then(() => showToast('Copié !'));
+    navigator.clipboard.writeText(profile.wallet_id).then(() => showToast(T.prof_id_copied));
   }
 
   const userPhone = profile?.phone ?? '';
@@ -217,7 +221,7 @@ export default function WalletProfilePage() {
   const qrValue = `${appUrl}/${locale}/wallet/send?phone=${encodeURIComponent(userPhone)}&name=${encodeURIComponent(userName)}`;
   const shareData = {
     title: 'UniPay Congo',
-    text: `Envoie-moi de l'argent sur UniPay Congo`,
+    text: T.prof_share_text,
     url: qrValue,
   };
 
@@ -226,7 +230,7 @@ export default function WalletProfilePage() {
       await navigator.share(shareData);
     } else {
       await navigator.clipboard.writeText(shareData.url);
-      showToast('Lien copié !');
+      showToast(T.prof_link_copied);
     }
   };
 
@@ -262,12 +266,12 @@ export default function WalletProfilePage() {
       {logoutModal && (
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-end justify-center px-4 pt-4 pb-32">
           <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
-            <p className="text-base font-bold text-gray-900 dark:text-white text-center">Se déconnecter ?</p>
-            <p className="text-sm text-gray-500 dark:text-slate-400 text-center">Tu devras saisir ton PIN pour te reconnecter.</p>
+            <p className="text-base font-bold text-gray-900 dark:text-white text-center">{T.prof_logout_title}</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400 text-center">{T.prof_logout_sub}</p>
             <div className="flex gap-3 pt-2">
-              <button onClick={() => setLogoutModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold text-sm">Annuler</button>
+              <button onClick={() => setLogoutModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold text-sm">{T.prof_cancel}</button>
               <button onClick={doLogout} disabled={loggingOut} className="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60">
-                {loggingOut ? <Spinner sm /> : <IcLogout />} Déconnexion
+                {loggingOut ? <Spinner sm /> : <IcLogout />} {T.prof_sign_out}
               </button>
             </div>
           </div>
@@ -279,7 +283,7 @@ export default function WalletProfilePage() {
         <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-gray-600 dark:text-slate-400"><polyline points="15 18 9 12 15 6"/></svg>
         </Link>
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Mon profil</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white">{T.prof_title}</h1>
       </div>
 
       <div className="flex flex-col gap-4 px-4 pt-6">
@@ -305,7 +309,7 @@ export default function WalletProfilePage() {
               onClick={removeAvatar}
               className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition"
             >
-              <X size={12} /> Supprimer la photo
+              <X size={12} /> {T.prof_delete_photo}
             </button>
           )}
           <div className="text-center">
@@ -323,7 +327,7 @@ export default function WalletProfilePage() {
               </div>
             ) : (
               <button onClick={() => setEditName(true)} className="flex items-center gap-1.5 text-lg font-bold text-gray-900 dark:text-white">
-                {profile?.full_name ?? 'Utilisateur'} <span className="text-gray-400 dark:text-slate-500"><IcPencil /></span>
+                {profile?.full_name ?? T.prof_user} <span className="text-gray-400 dark:text-slate-500"><IcPencil /></span>
               </button>
             )}
             <div className="flex items-center justify-center gap-1.5 mt-1">
@@ -331,21 +335,21 @@ export default function WalletProfilePage() {
               {profile?.is_verified ? (
                 <span className="inline-flex items-center gap-0.5 text-xs text-green-600 dark:text-green-400 font-medium">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                  Vérifié
+                  {T.prof_verified}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-0.5 text-xs text-gray-400 dark:text-slate-500 font-medium">Non vérifié</span>
+                <span className="inline-flex items-center gap-0.5 text-xs text-gray-400 dark:text-slate-500 font-medium">{T.prof_unverified}</span>
               )}
             </div>
           </div>
         </div>
 
         {/* ── Section 1 : Mon compte ── */}
-        <Card title="Mon compte">
-          <Row icon={<IcPhone />} label="Téléphone" value={profile?.phone ?? '—'} />
+        <Card title={T.prof_account}>
+          <Row icon={<IcPhone />} label={T.prof_phone} value={profile?.phone ?? '—'} />
           <Row
             icon={<IcUser />}
-            label="Nom complet"
+            label={T.prof_name}
             value={profile?.full_name ?? '—'}
             action={
               <button onClick={() => setEditName(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 transition">
@@ -355,7 +359,7 @@ export default function WalletProfilePage() {
           />
           <Row
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>}
-            label="ID Wallet"
+            label={T.prof_wallet_id}
             value={
               <span className="font-mono text-xs text-gray-600 dark:text-slate-400">
                 {profile ? truncId(profile.wallet_id) : '—'}
@@ -370,7 +374,7 @@ export default function WalletProfilePage() {
           {profile?.blockchain_address && (
             <Row
               icon={<Wallet size={16} />}
-              label="Adresse BSC"
+              label={T.prof_bsc}
               value={
                 <a
                   href={`https://bscscan.com/address/${profile.blockchain_address}`}
@@ -392,7 +396,7 @@ export default function WalletProfilePage() {
           <Link href={`/${locale}/wallet/kyc`}>
             <Row
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
-              label="Niveau KYC"
+              label={T.prof_kyc}
               value={<KycBadge level={profile?.kyc_level ?? 0} />}
               action={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-300 dark:text-slate-600"><polyline points="9 18 15 12 9 6"/></svg>}
             />
@@ -400,11 +404,11 @@ export default function WalletProfilePage() {
         </Card>
 
         {/* ── Section 2 : Sécurité ── */}
-        <Card title="Sécurité">
+        <Card title={T.prof_security}>
           <div className="px-4 py-3 border-b border-gray-50 dark:border-slate-700/60">
             <button onClick={() => setPinOpen(v => !v)} className="flex items-center gap-3 w-full">
               <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 shrink-0"><IcLock /></div>
-              <span className="flex-1 text-left text-sm font-medium text-gray-800 dark:text-slate-200">Changer mon code PIN</span>
+              <span className="flex-1 text-left text-sm font-medium text-gray-800 dark:text-slate-200">{T.prof_pin_change}</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-4 h-4 text-gray-400 transition-transform ${pinOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             {pinOpen && (
@@ -413,7 +417,7 @@ export default function WalletProfilePage() {
                 {(['current_pin', 'new_pin', 'confirm_pin'] as const).map((field) => (
                   <div key={field}>
                     <label className="text-xs text-gray-400 dark:text-slate-500 mb-1 block">
-                      {field === 'current_pin' ? 'PIN actuel' : field === 'new_pin' ? 'Nouveau PIN' : 'Confirmer nouveau PIN'}
+                      {field === 'current_pin' ? T.prof_pin_current : field === 'new_pin' ? T.prof_pin_new : T.prof_pin_cfm}
                     </label>
                     <input
                       type="password" inputMode="numeric" maxLength={6}
@@ -425,7 +429,7 @@ export default function WalletProfilePage() {
                   </div>
                 ))}
                 <button onClick={changePin} disabled={pinSaving} className="w-full py-3 rounded-xl bg-[#00A651] text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-60">
-                  {pinSaving ? <Spinner sm /> : 'Enregistrer le PIN'}
+                  {pinSaving ? <Spinner sm /> : T.prof_pin_save}
                 </button>
               </div>
             )}
@@ -433,7 +437,7 @@ export default function WalletProfilePage() {
           <div className="flex items-center justify-between w-full gap-2 px-4 py-3.5">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 shrink-0"><IcBell /></div>
-              <span className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">Notifications</span>
+              <span className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{T.prof_notifs}</span>
             </div>
             <div className="flex-shrink-0 pr-0.5">
               <button type="button" onClick={toggleNotifs} className={`relative block w-12 h-6 rounded-full overflow-hidden transition-colors ${notifs ? 'bg-[#00A651]' : 'bg-gray-300 dark:bg-slate-600'}`}>
@@ -444,11 +448,11 @@ export default function WalletProfilePage() {
         </Card>
 
         {/* ── Section 3 : Statistiques ── */}
-        <Card title="Statistiques">
+        <Card title={T.prof_stats}>
           <div className="grid grid-cols-3 divide-x divide-gray-100 dark:divide-slate-700">
             {[
-              { label: 'Déposé', value: stats ? `${fmt(stats.totalDeposited)} CDF` : '—' },
-              { label: 'Retiré',  value: stats ? `${fmt(stats.totalWithdrawn)} CDF` : '—' },
+              { label: T.prof_deposited, value: stats ? `${fmt(stats.totalDeposited)} CDF` : '—' },
+              { label: T.prof_withdrawn, value: stats ? `${fmt(stats.totalWithdrawn)} CDF` : '—' },
               { label: 'Tx',      value: stats ? String(stats.count) : '—' },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col items-center py-4 px-2">
@@ -460,7 +464,7 @@ export default function WalletProfilePage() {
         </Card>
 
         {/* ── Section 4 : Partager ── */}
-        <Card title="Partager mon wallet">
+        <Card title={T.prof_share_card}>
           <div className="flex flex-col items-center gap-4 py-5 px-4">
             <div className="max-w-[160px] mx-auto p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
               <QRCodeSVG
@@ -471,21 +475,21 @@ export default function WalletProfilePage() {
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-400 font-medium">{profile?.phone}</p>
             <button onClick={handleShare} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00A651] text-white font-semibold text-sm">
-              <IcShare /> Partager
+              <IcShare /> {T.prof_share_btn}
             </button>
           </div>
         </Card>
 
         {/* ── Section 5 : Assistance ── */}
-        <Card title="Assistance">
+        <Card title={T.prof_support}>
           <a href="mailto:support@unipaycongo.com">
-            <Row icon={<IcMail />} label="Contacter le support" value="support@unipaycongo.com" />
+            <Row icon={<IcMail />} label={T.prof_support_email} value="support@unipaycongo.com" />
           </a>
           <a href={`/${locale}/legal`}>
-            <Row icon={<IcDoc />} label="Conditions d'utilisation" value="" />
+            <Row icon={<IcDoc />} label={T.prof_tos} value="" />
           </a>
           <a href={`/${locale}/privacy`}>
-            <Row icon={<IcDoc />} label="Politique de confidentialité" value="" />
+            <Row icon={<IcDoc />} label={T.prof_privacy} value="" />
           </a>
         </Card>
 
@@ -494,7 +498,7 @@ export default function WalletProfilePage() {
           onClick={() => setLogoutModal(true)}
           className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition mt-6 mb-24"
         >
-          <IcLogout /> Se déconnecter
+          <IcLogout /> {T.prof_logout}
         </button>
 
       </div>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { validatePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { wT } from '@/lib/i18n-wallet';
 
 function Spinner() {
   return (
@@ -19,6 +20,7 @@ function Spinner() {
 export default function WalletRegisterPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale);
 
   const [fullName, setFullName]     = useState('');
   const [phone, setPhone]           = useState('+243');
@@ -31,18 +33,9 @@ export default function WalletRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!validatePhone(phone)) {
-      setError('Numéro invalide. Exemples : +243 9X XXX XXXX, +33 6XX XXX XXX');
-      return;
-    }
-    if (pin.length !== 6) {
-      setError('Le PIN doit contenir exactement 6 chiffres.');
-      return;
-    }
-    if (pin !== pinConfirm) {
-      setError('Les codes PIN ne correspondent pas.');
-      return;
-    }
+    if (!validatePhone(phone)) { setError(T.err_phone_inv);  return; }
+    if (pin.length !== 6)      { setError(T.err_pin_length); return; }
+    if (pin !== pinConfirm)    { setError(T.err_pin_match);  return; }
 
     setLoading(true);
 
@@ -56,14 +49,14 @@ export default function WalletRegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? 'Inscription échouée');
+        setError(data.error ?? T.err_reg_failed);
         return;
       }
 
       localStorage.setItem('wallet_phone', phone);
       router.push(`/${locale}/wallet/login`);
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -86,8 +79,8 @@ export default function WalletRegisterPage() {
               </svg>
             </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-[#f1f5f9]">Créer mon wallet</h1>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Rejoignez UniPay Congo gratuitement</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-[#f1f5f9]">{T.reg_title}</h1>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{T.reg_subtitle}</p>
             </div>
           </div>
 
@@ -96,7 +89,7 @@ export default function WalletRegisterPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  Nom complet <span className="text-gray-400 dark:text-slate-500 font-normal">(optionnel)</span>
+                  {T.reg_name_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{T.optional}</span>
                 </label>
                 <input
                   type="text"
@@ -109,7 +102,7 @@ export default function WalletRegisterPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de téléphone</label>
+                <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.reg_phone_lbl}</label>
                 <PhoneInput
                   value={phone}
                   onChange={setPhone}
@@ -118,7 +111,7 @@ export default function WalletRegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  Code PIN <span className="text-gray-400 dark:text-slate-500 font-normal">{pin.length}/6</span>
+                  {T.reg_pin_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{pin.length}/6</span>
                 </label>
                 <input
                   type="password"
@@ -134,7 +127,7 @@ export default function WalletRegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  Confirmer le PIN <span className="text-gray-400 dark:text-slate-500 font-normal">{pinConfirm.length}/6</span>
+                  {T.reg_pin_confirm} <span className="text-gray-400 dark:text-slate-500 font-normal">{pinConfirm.length}/6</span>
                 </label>
                 <input
                   type="password"
@@ -151,7 +144,7 @@ export default function WalletRegisterPage() {
                   }`}
                 />
                 {pinConfirm.length === 6 && pinConfirm !== pin && (
-                  <p className="text-xs text-red-500">Les PIN ne correspondent pas</p>
+                  <p className="text-xs text-red-500">{T.reg_pin_mismatch}</p>
                 )}
               </div>
 
@@ -165,15 +158,15 @@ export default function WalletRegisterPage() {
                 className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading && <Spinner />}
-                {loading ? 'Création…' : 'Créer mon wallet'}
+                {loading ? T.reg_loading : T.reg_cta}
               </button>
             </form>
           </div>
 
           <p className="text-sm text-center text-gray-500 dark:text-slate-400 mt-6">
-            Déjà un compte ?{' '}
+            {T.reg_have_acct}{' '}
             <Link href={`/${locale}/wallet/login`} className="text-[#00A651] font-semibold hover:underline">
-              Se connecter
+              {T.reg_sign_in}
             </Link>
           </p>
         </div>
