@@ -1,6 +1,7 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { isValidPhoneNumber } from 'libphonenumber-js/min';
 import { DIAL_CODES, buildE164 } from '@/lib/phone';
 
@@ -29,6 +30,8 @@ export default function PhoneInput({
 }: Props) {
   const [dialCode, setDialCode] = useState('+243');
   const [local, setLocal]       = useState('');
+  const [open, setOpen]         = useState(false);
+  const dropRef                 = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!value) return;
@@ -42,11 +45,23 @@ export default function PhoneInput({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    function onOutside(e: MouseEvent) {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [open]);
+
   function handleDialChange(code: string) {
     setDialCode(code);
     const e164 = buildE164(code, local);
     onChange(e164);
     onValid?.(isValidPhoneNumber(e164));
+    setOpen(false);
   }
 
   function handleLocalChange(raw: string) {
@@ -56,25 +71,64 @@ export default function PhoneInput({
     onValid?.(raw.length > 4 && isValidPhoneNumber(e164));
   }
 
-  const selectedEntry = DIAL_CODES.find((d) => d.code === dialCode) ?? DIAL_CODES[0];
+  const selected = DIAL_CODES.find((d) => d.code === dialCode) ?? DIAL_CODES[0];
 
   return (
     <div className="flex w-full gap-2 min-w-0">
-      <select
-        value={dialCode}
-        onChange={(e) => handleDialChange(e.target.value)}
-        disabled={disabled}
-        style={selectStyle}
-        className={`w-[100px] shrink-0 rounded-xl px-2 py-3.5 text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border-gray-200 dark:border-slate-600 ${selectClassName}`}
-        aria-label="Indicatif pays"
-      >
-        {DIAL_CODES.map((d) => (
-          <option key={`${d.iso}-${d.code}`} value={d.code}>
-            {d.flag} {d.code}
-          </option>
-        ))}
-      </select>
 
+      {/* Country selector — custom dropdown */}
+      <div ref={dropRef} className="relative shrink-0">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((v) => !v)}
+          style={selectStyle}
+          className={`flex items-center gap-1.5 h-full px-2.5 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all ${selectClassName}`}
+          aria-label="Indicatif pays"
+          aria-expanded={open}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://flagcdn.com/24x18/${selected.iso}.png`}
+            alt={selected.name}
+            width={24}
+            height={18}
+            style={{ borderRadius: 2, display: 'block' }}
+          />
+          <span className="text-sm font-semibold text-gray-900 dark:text-slate-100 whitespace-nowrap">
+            {dialCode}
+          </span>
+          <ChevronDown size={13} className="text-gray-400 dark:text-slate-500" />
+        </button>
+
+        {open && (
+          <div className="absolute left-0 top-full mt-1 z-50 w-56 max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-xl">
+            {DIAL_CODES.map((d) => (
+              <button
+                key={`${d.iso}-${d.code}`}
+                type="button"
+                onClick={() => handleDialChange(d.code)}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 ${
+                  dialCode === d.code ? 'bg-green-50 dark:bg-green-900/20' : ''
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://flagcdn.com/24x18/${d.iso}.png`}
+                  alt={d.name}
+                  width={24}
+                  height={18}
+                  style={{ borderRadius: 2, flexShrink: 0 }}
+                />
+                <span className="font-semibold text-gray-700 dark:text-slate-300 w-10 shrink-0">{d.code}</span>
+                <span className="text-gray-500 dark:text-slate-400 truncate">{d.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Phone number input */}
       <input
         type="tel"
         value={local}
@@ -83,12 +137,9 @@ export default function PhoneInput({
         placeholder={placeholder ?? (dialCode === '+243' ? '9X XXX XXXX' : 'N° local')}
         style={inputStyle}
         className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
-        aria-label="Numéro de téléphone"
+        aria-label="Numero de telephone"
       />
 
-      <span className="sr-only">
-        {selectedEntry.flag} {selectedEntry.label}
-      </span>
     </div>
   );
 }
