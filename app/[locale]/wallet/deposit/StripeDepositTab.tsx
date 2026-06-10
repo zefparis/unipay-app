@@ -178,9 +178,19 @@ export default function StripeDepositTab({ usdBalance }: { usdBalance: number })
 
   if (loadFailed) {
     return (
-      <div className="mx-4 my-5 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
-        ⚠️ Stripe n&apos;a pas pu se charger.<br />
-        <span className="text-xs opacity-75">Désactivez les extensions navigateur (MetaMask, etc.) ou ouvrez un onglet de navigation privée.</span>
+      <div className="mx-4 my-5 flex flex-col gap-3 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
+        <p className="font-semibold">⚠️ Stripe n&apos;a pas pu se charger.</p>
+        <p className="text-xs opacity-80">
+          Une extension navigateur (MetaMask, ad-blocker…) bloque le script de paiement.
+          Essayez en navigation privée ou désactivez les extensions pour cette page.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="self-start rounded-lg bg-yellow-200 dark:bg-yellow-800 px-4 py-2 text-xs font-semibold text-yellow-900 dark:text-yellow-100 hover:opacity-80 transition"
+        >
+          🔄 Réessayer
+        </button>
       </div>
     );
   }
