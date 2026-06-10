@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { useState, useCallback } from 'react';
+import Script from 'next/script';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import {
   Elements,
   CardElement,
@@ -11,9 +12,6 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
-const stripePromise   = PUBLISHABLE_KEY
-  ? loadStripe(PUBLISHABLE_KEY).catch(() => null)
-  : Promise.resolve(null);
 const MIN_USD = 5;
 
 const CARD_ELEMENT_OPTIONS = {
@@ -37,8 +35,8 @@ function Spinner() {
   );
 }
 
-function CardForm({ usdBalance }: { usdBalance: number }) {
-  const stripe   = useStripe();
+function CardForm({ usdBalance, stripe: stripeProp }: { usdBalance: number; stripe: Stripe }) {
+  const stripe   = useStripe() ?? stripeProp;
   const elements = useElements();
   const router   = useRouter();
   const { locale } = useParams<{ locale: string }>();
@@ -63,7 +61,6 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
 
     setLoading(true);
     try {
-      // 1. Créer le PaymentIntent côté serveur
       const intentRes = await fetch('/api/wallet/stripe/create-intent', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +74,6 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
       }
       const { client_secret } = await intentRes.json();
 
-      // 2. Confirmer le paiement avec la carte
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: { card },
       });
@@ -88,7 +84,7 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        setSuccess(`✓ Paiement de ${amountNum.toFixed(2)} USD confirmé ! Votre solde USD sera mis à jour dans quelques secondes.`);
+        setSuccess(`✓ Paiement de ${amountNum.toFixed(2)} USD confirmé ! Votre solde sera mis à jour dans quelques secondes.`);
         setTimeout(() => router.push(`/${locale}/wallet`), 4000);
       }
     } catch {
@@ -101,7 +97,6 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
 
-      {/* Solde actuel */}
       {usdBalance > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-2 flex justify-between text-xs">
           <span className="text-blue-700 dark:text-blue-400">Solde USD actuel</span>
@@ -109,7 +104,6 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
         </div>
       )}
 
-      {/* Montant */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
           Montant (USD) <span className="text-gray-400 font-normal">— min {MIN_USD} USD</span>
@@ -126,7 +120,6 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
         />
       </div>
 
-      {/* Carte bancaire */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de carte</label>
         <div style={{
@@ -138,7 +131,7 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
         }}>
           <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
-        <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1">
+        <p className="text-xs text-gray-400 dark:text-slate-500">
           🔒 Paiement sécurisé par Stripe · Visa, Mastercard, Amex
         </p>
       </div>
@@ -148,7 +141,7 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
 
       <button
         type="submit"
-        disabled={loading || !!success || !stripe}
+        disabled={loading || !!success}
         className="w-full h-[52px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
       >
         {loading && <Spinner />}
@@ -158,14 +151,12 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
   );
 }
 
-export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
-  const [loadFailed, setLoadFailed] = useState(false);
+/* ─── Composant principal ─────────────────────────────────────────────────── */
+type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
-  useEffect(() => {
-    stripePromise.then((s) => {
-      if (s === null && PUBLISHABLE_KEY) setLoadFailed(true);
-    });
-  }, []);
+export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
+  const [state,           setState]           = useState<LoadState>('idle');
+  const [stripeInstance,  setStripeInstance]  = useState<Stripe | null>(null);
 
   if (!PUBLISHABLE_KEY) {
     return (
@@ -176,28 +167,54 @@ export default function StripeDepositTab({ usdBalance }: { usdBalance: number })
     );
   }
 
-  if (loadFailed) {
-    return (
-      <div className="mx-4 my-5 flex flex-col gap-3 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
-        <p className="font-semibold">⚠️ Stripe n&apos;a pas pu se charger.</p>
-        <p className="text-xs opacity-80">
-          Une extension navigateur (MetaMask, ad-blocker…) bloque le script de paiement.
-          Essayez en navigation privée ou désactivez les extensions pour cette page.
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="self-start rounded-lg bg-yellow-200 dark:bg-yellow-800 px-4 py-2 text-xs font-semibold text-yellow-900 dark:text-yellow-100 hover:opacity-80 transition"
-        >
-          🔄 Réessayer
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <Elements stripe={stripePromise} options={{ locale: 'fr' }}>
-      <CardForm usdBalance={usdBalance} />
-    </Elements>
+    <>
+      {/* Next.js Script charge https://js.stripe.com/v3/ via son pipeline interne  */}
+      {/* (ne passe pas par le document.createElement dynamique de loadStripe)      */}
+      <Script
+        src="https://js.stripe.com/v3/"
+        strategy="afterInteractive"
+        onReady={() => {
+          if (state !== 'idle') return;
+          setState('loading');
+          loadStripe(PUBLISHABLE_KEY)
+            .then((s) => {
+              if (s) { setStripeInstance(s); setState('ready'); }
+              else     setState('error');
+            })
+            .catch(() => setState('error'));
+        }}
+        onError={() => setState('error')}
+      />
+
+      {(state === 'idle' || state === 'loading') && (
+        <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-slate-400">
+          <Spinner />
+          Chargement du module de paiement…
+        </div>
+      )}
+
+      {state === 'error' && (
+        <div className="mx-4 my-5 flex flex-col gap-3 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
+          <p className="font-semibold">⚠️ Stripe n&apos;a pas pu se charger.</p>
+          <p className="text-xs opacity-80">
+            Vérifiez votre connexion internet ou désactivez les extensions navigateur pour cette page.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="self-start rounded-lg bg-yellow-200 dark:bg-yellow-800 px-4 py-2 text-xs font-semibold text-yellow-900 dark:text-yellow-100 hover:opacity-80 transition"
+          >
+            🔄 Réessayer
+          </button>
+        </div>
+      )}
+
+      {state === 'ready' && stripeInstance && (
+        <Elements stripe={stripeInstance} options={{ locale: 'fr' }}>
+          <CardForm usdBalance={usdBalance} stripe={stripeInstance} />
+        </Elements>
+      )}
+    </>
   );
 }
