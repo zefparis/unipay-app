@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { isValidPhoneNumber } from 'libphonenumber-js/min';
 import { DIAL_CODES, buildE164 } from '@/lib/phone';
 
@@ -87,18 +86,9 @@ export default function PhoneInput({
           aria-label="Indicatif pays"
           aria-expanded={open}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`https://flagcdn.com/24x18/${selected.iso}.png`}
-            alt={selected.name}
-            width={24}
-            height={18}
-            style={{ borderRadius: 2, display: 'block' }}
-          />
           <span className="text-sm font-semibold text-gray-900 dark:text-slate-100 whitespace-nowrap">
-            {dialCode}
+            {dialCode} · {selected.name}
           </span>
-          <ChevronDown size={13} className="text-gray-400 dark:text-slate-500" />
         </button>
 
         {open && (
@@ -112,16 +102,9 @@ export default function PhoneInput({
                   dialCode === d.code ? 'bg-green-50 dark:bg-green-900/20' : ''
                 }`}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://flagcdn.com/24x18/${d.iso}.png`}
-                  alt={d.name}
-                  width={24}
-                  height={18}
-                  style={{ borderRadius: 2, flexShrink: 0 }}
-                />
-                <span className="font-semibold text-gray-700 dark:text-slate-300 w-10 shrink-0">{d.code}</span>
-                <span className="text-gray-500 dark:text-slate-400 truncate">{d.name}</span>
+                <span className="font-semibold text-gray-700 dark:text-slate-300">{d.code}</span>
+                <span className="text-gray-400 dark:text-slate-500">·</span>
+                <span className="text-gray-600 dark:text-slate-400 truncate">{d.name}</span>
               </button>
             ))}
           </div>

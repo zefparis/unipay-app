@@ -10,8 +10,8 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 // ─── Translations (FR / EN / LN / SW) ────────────────────────────────────────
 const T = {
   fr: {
-    tagline:    'Le wallet financier de la République Démocratique du Congo',
-    subtitle:   'CDF · USD · USDT · CGLT — tout dans votre téléphone',
+    tagline:    "Le wallet financier de l'Afrique Centrale et de sa diaspora",
+    subtitle:   'Envoyez, recevez et échangez — Mobile Money · Carte · Crypto',
     cta_create: 'Créer mon wallet',
     cta_login:  'Se connecter',
     feat_title: 'Tout ce dont vous avez besoin',
@@ -37,8 +37,8 @@ const T = {
     err_def:    'Numéro ou PIN incorrect',
   },
   en: {
-    tagline:    'The financial wallet of the Democratic Republic of Congo',
-    subtitle:   'CDF · USD · USDT · CGLT — all in your phone',
+    tagline:    'The financial wallet of Central Africa and its diaspora',
+    subtitle:   'Send, receive and exchange — Mobile Money · Card · Crypto',
     cta_create: 'Create my wallet',
     cta_login:  'Sign in',
     feat_title: 'Everything you need',
@@ -64,8 +64,8 @@ const T = {
     err_def:    'Incorrect number or PIN',
   },
   ln: {
-    tagline:    'Portefeuille ya mbongo ya Republique ya Congo Demokratiki',
-    subtitle:   'CDF · USD · USDT · CGLT — nyonso na telefone na yo',
+    tagline:    'Portefeuille ya mbongo ya Afrique Centrale na diaspora na yango',
+    subtitle:   'Tumela, kangela mpe sángola — Mobile Money · Carte · Crypto',
     cta_create: 'Sálá wallet na ngai',
     cta_login:  'Kótá',
     feat_title: 'Nyonso ozali na yango',
@@ -91,8 +91,8 @@ const T = {
     err_def:    'Nombolo to PIN ya bozoba',
   },
   sw: {
-    tagline:    'Pochi ya fedha ya Jamhuri ya Kidemokrasia ya Kongo',
-    subtitle:   'CDF · USD · USDT · CGLT — yote kwenye simu yako',
+    tagline:    'Pochi ya fedha ya Afrika ya Kati na diaspora yake',
+    subtitle:   'Tuma, pokea na badilisha — Mobile Money · Kadi · Crypto',
     cta_create: 'Fungua pochi yangu',
     cta_login:  'Ingia',
     feat_title: 'Kila unachohitaji',
