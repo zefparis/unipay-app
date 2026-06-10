@@ -1,30 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import Script from 'next/script';
-import { loadStripe, type Stripe } from '@stripe/stripe-js';
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
-const MIN_USD = 5;
-
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      color:           '#ffffff',
-      fontSize:        '16px',
-      fontFamily:      'Arial, sans-serif',
-      '::placeholder': { color: '#aaaaaa' },
-    },
-    invalid: { color: '#f87171' },
-  },
-} as const;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.unipaycongo.com';
+const MIN_USD  = 5;
 
 function Spinner() {
   return (
@@ -35,67 +15,53 @@ function Spinner() {
   );
 }
 
-function CardForm({ usdBalance, stripe: stripeProp }: { usdBalance: number; stripe: Stripe }) {
-  const stripe   = useStripe() ?? stripeProp;
-  const elements = useElements();
-  const router   = useRouter();
-  const { locale } = useParams<{ locale: string }>();
-
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Stripe Checkout — aucun JS Stripe côté client.
+ * On crée une Checkout Session sur le backend et on redirige vers session.url.
+ * Le webhook backend (payment_intent.succeeded) crédite usd_balance.
+ * ───────────────────────────────────────────────────────────────────────────── */
+export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
+  const router             = useRouter();
+  const { locale }         = useParams<{ locale: string }>();
   const [amount,  setAmount]  = useState('');
   const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const amountNum = Number(amount);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
-
-    if (!stripe || !elements) { setError('Stripe non chargé, réessayez.'); return; }
-    if (amountNum < MIN_USD)   { setError(`Montant minimum : ${MIN_USD} USD.`); return; }
-
-    const card = elements.getElement(CardElement);
-    if (!card) { setError('Champ carte introuvable.'); return; }
+    if (amountNum < MIN_USD) { setError(`Montant minimum : ${MIN_USD} USD.`); return; }
 
     setLoading(true);
     try {
-      const intentRes = await fetch('/api/wallet/stripe/create-intent', {
+      const res = await fetch('/api/wallet/stripe/create-checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ amount_usd: amountNum }),
+        body: JSON.stringify({
+          amount_usd:  amountNum,
+          success_url: `${APP_URL}/${locale}/wallet?payment=success`,
+          cancel_url:  `${APP_URL}/${locale}/wallet/deposit`,
+        }),
       });
-      if (intentRes.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-      if (!intentRes.ok) {
-        const d = await intentRes.json();
+      if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
+      if (!res.ok) {
+        const d = await res.json() as { error?: string };
         setError(d.error ?? 'Erreur lors de la création du paiement.');
         return;
       }
-      const { client_secret } = await intentRes.json();
-
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
-        payment_method: { card },
-      });
-
-      if (stripeError) {
-        setError(stripeError.message ?? 'Paiement refusé.');
-        return;
-      }
-
-      if (paymentIntent?.status === 'succeeded') {
-        setSuccess(`✓ Paiement de ${amountNum.toFixed(2)} USD confirmé ! Votre solde sera mis à jour dans quelques secondes.`);
-        setTimeout(() => router.push(`/${locale}/wallet`), 4000);
-      }
+      const { url } = await res.json() as { url: string };
+      window.location.href = url;
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
       setLoading(false);
     }
-  }, [stripe, elements, amountNum, router, locale]);
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
+    <form onSubmit={handlePay} className="flex flex-col gap-5 px-4 py-5">
 
       {usdBalance > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-2 flex justify-between text-xs">
@@ -104,6 +70,7 @@ function CardForm({ usdBalance, stripe: stripeProp }: { usdBalance: number; stri
         </div>
       )}
 
+      {/* Montant */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
           Montant (USD) <span className="text-gray-400 font-normal">— min {MIN_USD} USD</span>
@@ -120,101 +87,28 @@ function CardForm({ usdBalance, stripe: stripeProp }: { usdBalance: number; stri
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de carte</label>
-        <div style={{
-          borderRadius:    '12px',
-          border:          '2px solid #475569',
-          backgroundColor: '#1e293b',
-          padding:         '16px',
-          minHeight:       '48px',
-        }}>
-          <CardElement options={CARD_ELEMENT_OPTIONS} />
-        </div>
-        <p className="text-xs text-gray-400 dark:text-slate-500">
-          🔒 Paiement sécurisé par Stripe · Visa, Mastercard, Amex
-        </p>
+      {/* Info */}
+      <div className="rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-xs text-slate-300 flex flex-col gap-1">
+        <p className="font-semibold text-slate-100">💳 Paiement par carte bancaire</p>
+        <p className="opacity-75">Vous serez redirigé vers la page de paiement sécurisée Stripe. Votre solde USD sera crédité automatiquement après confirmation.</p>
+        <p className="opacity-60 mt-1">Visa · Mastercard · Amex · 3D Secure</p>
       </div>
 
-      {error   && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
-      {success && <p className="text-sm text-green-800 dark:text-green-300 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl px-4 py-3 font-medium">{success}</p>}
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
-        disabled={loading || !!success}
+        disabled={loading}
         className="w-full h-[52px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
       >
-        {loading && <Spinner />}
-        {loading ? 'Traitement…' : `Payer ${amountNum >= MIN_USD ? amountNum.toFixed(2) + ' USD' : ''}`}
+        {loading ? <><Spinner /> Redirection…</> : `Payer ${amountNum >= MIN_USD ? amountNum.toFixed(2) + ' USD' : ''} →`}
       </button>
+
+      <p className="text-center text-xs text-slate-500">🔒 Paiement hébergé et sécurisé par Stripe</p>
     </form>
-  );
-}
-
-/* ─── Composant principal ─────────────────────────────────────────────────── */
-type LoadState = 'idle' | 'loading' | 'ready' | 'error';
-
-export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
-  const [state,           setState]           = useState<LoadState>('idle');
-  const [stripeInstance,  setStripeInstance]  = useState<Stripe | null>(null);
-
-  if (!PUBLISHABLE_KEY) {
-    return (
-      <div className="mx-4 my-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-4 text-sm text-red-700 dark:text-red-400">
-        ⚠️ Paiement par carte non disponible — clé Stripe manquante.<br />
-        <span className="text-xs opacity-75">(Ajouter NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY dans les variables Vercel)</span>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {/* Next.js Script charge https://js.stripe.com/v3/ via son pipeline interne  */}
-      {/* (ne passe pas par le document.createElement dynamique de loadStripe)      */}
-      <Script
-        src="https://js.stripe.com/v3/"
-        strategy="afterInteractive"
-        onReady={() => {
-          if (state !== 'idle') return;
-          setState('loading');
-          loadStripe(PUBLISHABLE_KEY)
-            .then((s) => {
-              if (s) { setStripeInstance(s); setState('ready'); }
-              else     setState('error');
-            })
-            .catch(() => setState('error'));
-        }}
-        onError={() => setState('error')}
-      />
-
-      {(state === 'idle' || state === 'loading') && (
-        <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-slate-400">
-          <Spinner />
-          Chargement du module de paiement…
-        </div>
-      )}
-
-      {state === 'error' && (
-        <div className="mx-4 my-5 flex flex-col gap-3 rounded-xl border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-4 text-sm text-yellow-800 dark:text-yellow-300">
-          <p className="font-semibold">⚠️ Stripe n&apos;a pas pu se charger.</p>
-          <p className="text-xs opacity-80">
-            Vérifiez votre connexion internet ou désactivez les extensions navigateur pour cette page.
-          </p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="self-start rounded-lg bg-yellow-200 dark:bg-yellow-800 px-4 py-2 text-xs font-semibold text-yellow-900 dark:text-yellow-100 hover:opacity-80 transition"
-          >
-            🔄 Réessayer
-          </button>
-        </div>
-      )}
-
-      {state === 'ready' && stripeInstance && (
-        <Elements stripe={stripeInstance} options={{ locale: 'fr' }}>
-          <CardForm usdBalance={usdBalance} stripe={stripeInstance} />
-        </Elements>
-      )}
-    </>
   );
 }
