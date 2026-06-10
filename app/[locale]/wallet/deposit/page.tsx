@@ -9,7 +9,6 @@ import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 
 const StripeDepositTab   = dynamic(() => import('./StripeDepositTab'),   { ssr: false });
-const TransakDepositTab  = dynamic(() => import('./TransakDepositTab'),  { ssr: false });
 const CryptoDepositTab   = dynamic(() => import('./CryptoDepositTab'),   { ssr: false });
 
 const CDF_OPERATORS = [
@@ -44,7 +43,7 @@ export default function WalletDepositPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
-  const [tab, setTab]               = useState<'cdf' | 'usd' | 'card' | 'crypto' | 'bsc'>('cdf');
+  const [tab, setTab]               = useState<'cdf' | 'usd' | 'card' | 'bsc'>('cdf');
   const [operator, setOperator]     = useState<string>('orange');
   const [phone, setPhone]           = useState('');
   const [amount, setAmount]         = useState('');
@@ -70,7 +69,6 @@ export default function WalletDepositPage() {
 
   const isCdf      = tab === 'cdf';
   const isCard     = tab === 'card';
-  const isCrypto   = tab === 'crypto';
   const isBsc      = tab === 'bsc';
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
   const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
@@ -78,12 +76,12 @@ export default function WalletDepositPage() {
   const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
   const net        = amountNum > 0 ? Math.round((amountNum - fee) * 100) / 100 : 0;
 
-  function switchTab(t: 'cdf' | 'usd' | 'card' | 'crypto' | 'bsc') {
+  function switchTab(t: 'cdf' | 'usd' | 'card' | 'bsc') {
     setTab(t);
     setAmount('');
     setError('');
     setSuccess('');
-    if (t !== 'card' && t !== 'crypto' && t !== 'bsc') setOperator(t === 'cdf' ? 'orange' : 'airtel');
+    if (t !== 'card' && t !== 'bsc') setOperator(t === 'cdf' ? 'orange' : 'airtel');
   }
 
   function startPolling(preBalance: number) {
@@ -187,10 +185,6 @@ export default function WalletDepositPage() {
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'card' ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           💳 Carte
         </button>
-        <button type="button" onClick={() => switchTab('crypto')}
-          className={`flex-shrink-0 flex-1 min-w-[72px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'crypto' ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-          🪙 Crypto
-        </button>
         <button type="button" onClick={() => switchTab('bsc')}
           className={`flex-shrink-0 flex-1 min-w-[72px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'bsc' ? 'border-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           🔗 BSC
@@ -204,11 +198,10 @@ export default function WalletDepositPage() {
         </div>
       )}
 
-      {isCard   && <StripeDepositTab  usdBalance={usdBalance} />}
-      {isCrypto && <TransakDepositTab usdBalance={usdBalance} />}
-      {isBsc    && <CryptoDepositTab />}
+      {isCard && <StripeDepositTab usdBalance={usdBalance} />}
+      {isBsc  && <CryptoDepositTab />}
 
-      {!isCard && !isCrypto && !isBsc && <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
+      {!isCard && !isBsc && <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
 
         {/* Operator */}
         <div className="flex flex-col gap-2">
