@@ -95,7 +95,7 @@ export default function WalletSwapPage() {
   } else {
     grossOut = amountNum; // CDF<->CGLT 1:1
   }
-  const feeOut = (isCdfCglt || isCdfUsd || isUsdUsdt) ? 0 : grossOut * (feePct / 100);
+  const feeOut = isCdfCglt ? 0 : grossOut * (feePct / 100);
   const netOut = Math.max(grossOut - feeOut, 0);
 
   const availFrom = isCdfCglt ? (internalDir === 'cdf_to_cglt' ? cdfBalance : cgltBalance)
@@ -105,13 +105,21 @@ export default function WalletSwapPage() {
   const overBudget = availFrom !== null && amountNum > availFrom;
 
   function toggleDirection() {
-    setDirection((d) => (d === 'cglt_to_usdt' ? 'usdt_to_cglt' : 'cglt_to_usdt'));
+    if (mode === 'usd_usdt') {
+      setDirection((d) => (d === 'usd_to_usdt' ? 'usdt_to_usd' : 'usd_to_usdt'));
+    } else {
+      setDirection((d) => (d === 'cglt_to_usdt' ? 'usdt_to_cglt' : 'cglt_to_usdt'));
+    }
     setAmount('');
     setError('');
   }
 
   function toggleInternal() {
-    setInternalDir((d) => (d === 'cdf_to_cglt' ? 'cglt_to_cdf' : 'cdf_to_cglt'));
+    if (mode === 'cdf_usd') {
+      setInternalDir((d) => (d === 'cdf_to_usd' ? 'usd_to_cdf' : 'cdf_to_usd'));
+    } else {
+      setInternalDir((d) => (d === 'cdf_to_cglt' ? 'cglt_to_cdf' : 'cdf_to_cglt'));
+    }
     setAmount('');
     setError('');
   }
@@ -150,16 +158,20 @@ export default function WalletSwapPage() {
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
       if (!res.ok) { setError(data.error ?? T.err_swap_failed); return; }
 
-      if (isCdfCglt || isCdfUsd) {
-        const spent = internalDir === 'cdf_to_cglt' ? data.cdf_spent : (internalDir === 'cdf_to_usd' ? data.cdf_spent : data.usd_spent);
-        const received = internalDir === 'cdf_to_cglt' ? data.cglt_received : (internalDir === 'cdf_to_usd' ? data.usd_received : data.cdf_received);
-        setSuccess(`${fmt(Number(spent ?? amountNum))} ${fromSym} convertis en ${fmt(Number(received ?? amountNum))} ${toSym}.`);
-      } else {
-        setSuccess(`${fmt(data.amount_in)} ${fromSym} convertis en ${fmt(data.amount_out)} ${toSym}.`);
-      }
+      const sent = Number(data.amount_sent ?? amountNum);
+      const recv = Number(data.amount_received ?? amountNum);
+      setSuccess(`${fmt(sent)} ${fromSym} → ${fmt(recv, 4)} ${toSym}`);
       setAmount('');
-      // refresh balances
-      fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } });
+      // update balances from response (no second fetch needed)
+      if (data.new_balances) {
+        const b = data.new_balances;
+        setCdfBalance(Number(b.balance_cdf  ?? 0));
+        setCgltBalance(Number(b.cglt_balance ?? 0));
+        setUsdtBalance(Number(b.usdt_balance ?? 0));
+        setUsdBalance(Number(b.usd_balance   ?? 0));
+      } else {
+        fetch('/api/wallet/balance').then((r) => (r.ok ? r.json() : null)).then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } });
+      }
     } catch {
       setError(T.err_network);
     } finally {
@@ -240,14 +252,14 @@ export default function WalletSwapPage() {
         <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl px-5 py-4 text-white shadow-lg">
           <p className="text-xs opacity-80">{T.swap_rate_off}</p>
           <p className="text-xl font-bold mt-0.5">1 USD = {fmt(USD_CDF_RATE, 0)} CDF</p>
-          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_free}</p>
+          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_pct_lbl} {fmt(feePct)}%</p>
         </div>
       )}
       {isUsdUsdt && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl px-5 py-4 text-white shadow-lg">
           <p className="text-xs opacity-80">{T.swap_parity}</p>
           <p className="text-xl font-bold mt-0.5">1 USD = 1 USDT</p>
-          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_free}</p>
+          <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_pct_lbl} {fmt(feePct)}%</p>
         </div>
       )}
       {isAmm && (
@@ -345,11 +357,19 @@ export default function WalletSwapPage() {
               </div>
             </>
           )}
-          {(isCdfCglt || isCdfUsd || isUsdUsdt) && (
+          {isCdfCglt && (
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-slate-400">{T.swap_fee}</span>
               <span className="font-medium text-emerald-600">{T.swap_free}</span>
             </div>
+          )}
+          {(isCdfUsd || isUsdUsdt) && (
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">{T.swap_fee} ({fmt(feePct)}%)</span>
+                <span className="font-medium text-orange-500">− {fmt(feeOut, 4)} {toSym}</span>
+              </div>
+            </>
           )}
           <div className={`flex justify-between ${isAmm ? 'border-t border-gray-200 dark:border-slate-600 pt-2' : ''}`}>
             <span className="text-gray-600 dark:text-slate-300 font-semibold">{T.you_receive}</span>
