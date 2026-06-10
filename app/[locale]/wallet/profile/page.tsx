@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { Wallet, ExternalLink, X } from 'lucide-react';
 import { wT } from '@/lib/i18n-wallet';
+import { useNotifications } from '@/hooks/useNotifications';
 
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -127,6 +128,8 @@ export default function WalletProfilePage() {
 
   // Notifications toggle
   const [notifs, setNotifs]         = useState(false);
+  const [savingNotifs, setSavingNotifs] = useState(false);
+  const { requestPermission, subscribeToPush } = useNotifications();
 
   // Logout modal
   const [logoutModal, setLogoutModal] = useState(false);
@@ -137,8 +140,12 @@ export default function WalletProfilePage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setAvatar(localStorage.getItem('wallet_avatar'));
-      setNotifs(localStorage.getItem('wallet_notifs') === '1');
     }
+    // Load real notification preferences from backend
+    fetch('/api/wallet/pref/notifications')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setNotifs(d.notif_enabled !== false); })
+      .catch(() => {});
 
     Promise.all([
       fetch('/api/wallet/profile'),
@@ -234,10 +241,32 @@ export default function WalletProfilePage() {
     }
   };
 
-  function toggleNotifs() {
+  async function toggleNotifs() {
     const next = !notifs;
     setNotifs(next);
-    localStorage.setItem('wallet_notifs', next ? '1' : '0');
+    setSavingNotifs(true);
+    try {
+      await fetch('/api/wallet/pref/notifications', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ notif_enabled: next }),
+      });
+      if (next) {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+          await requestPermission();
+        } else if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+          showToast(
+            locale === 'en'
+              ? 'Enable notifications in your browser settings'
+              : 'Activez les notifications dans les paramètres de votre navigateur'
+          );
+        } else if (Notification.permission === 'granted') {
+          await subscribeToPush();
+        }
+      }
+    } finally {
+      setSavingNotifs(false);
+    }
   }
 
   async function doLogout() {
@@ -440,7 +469,7 @@ export default function WalletProfilePage() {
               <span className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{T.prof_notifs}</span>
             </div>
             <div className="flex-shrink-0 pr-0.5">
-              <button type="button" onClick={toggleNotifs} className={`relative block w-12 h-6 rounded-full overflow-hidden transition-colors ${notifs ? 'bg-[#00A651]' : 'bg-gray-300 dark:bg-slate-600'}`}>
+              <button type="button" onClick={toggleNotifs} disabled={savingNotifs} className={`relative block w-12 h-6 rounded-full overflow-hidden transition-colors disabled:opacity-60 ${notifs ? 'bg-[#00A651]' : 'bg-gray-300 dark:bg-slate-600'}`}>
                 <span className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notifs ? 'translate-x-6' : 'translate-x-0'}`} />
               </button>
             </div>

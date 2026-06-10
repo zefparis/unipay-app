@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2, Gamepad2 } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface Tx {
   id: string;
@@ -52,6 +53,14 @@ export default function WalletHomePage() {
   const router = useRouter();
   const T = wT(locale ?? 'fr');
   const base = `/${locale}/wallet`;
+  const { permission, requestPermission } = useNotifications();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const showBanner =
+    !bannerDismissed &&
+    typeof window !== 'undefined' &&
+    localStorage.getItem('notif_prompted') !== '1' &&
+    permission === 'default';
 
   const [balance, setBalance] = useState<number | null>(null);
   const [usdBalance, setUsdBalance] = useState(0);
@@ -92,6 +101,34 @@ export default function WalletHomePage() {
       <div className="relative z-10 flex items-center justify-between px-5 pt-6">
         <LanguageSwitcher />
       </div>
+
+      {/* Push notification activation banner */}
+      {showBanner && (
+        <div className="relative z-10 mx-4 mt-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex items-center gap-3">
+          <span className="text-xl shrink-0">🔔</span>
+          <p className="flex-1 text-xs text-white/90 leading-snug">
+            {locale === 'en'
+              ? 'Enable notifications to track your transactions'
+              : 'Activez les notifications pour suivre vos transactions'}
+          </p>
+          <button
+            onClick={async () => {
+              localStorage.setItem('notif_prompted', '1');
+              setBannerDismissed(true);
+              await requestPermission();
+            }}
+            className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#00A651] text-white hover:bg-[#00A651]/90 transition"
+          >
+            {locale === 'en' ? 'Enable' : 'Activer'}
+          </button>
+          <button
+            onClick={() => { localStorage.setItem('notif_prompted', '1'); setBannerDismissed(true); }}
+            className="shrink-0 text-white/50 hover:text-white transition text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Balance hero — glassmorphism */}
       <div className="relative z-10 px-4 pt-4">
