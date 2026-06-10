@@ -38,7 +38,7 @@ const withPWAConfig = withPWA({
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  customWorkerSrc: 'worker/index.ts',
+  customWorkerSrc: 'worker',
 });
 
 module.exports = withNextIntl(withPWAConfig(nextConfig));
