@@ -23,6 +23,7 @@ export default function WalletRegisterPage() {
   const T = wT(locale);
 
   const [fullName, setFullName]     = useState('');
+  const [email, setEmail]           = useState('');
   const [phone, setPhone]           = useState('+243');
   const [pin, setPin]               = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
@@ -43,7 +44,7 @@ export default function WalletRegisterPage() {
       const res = await fetch('/api/wallet/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, full_name: fullName || undefined, pin }),
+        body: JSON.stringify({ phone, full_name: fullName || undefined, pin, email: email.trim() || undefined, lang: locale === 'en' ? 'en' : 'fr' }),
       });
 
       const data = await res.json();
@@ -97,6 +98,21 @@ export default function WalletRegisterPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jean Dupont"
                   maxLength={100}
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+                  {T.reg_email_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{T.optional}</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="jean@email.com"
+                  maxLength={254}
+                  autoComplete="email"
                   className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
