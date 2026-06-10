@@ -8,7 +8,8 @@ import { ArrowLeft, ArrowDownCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 
-const StripeDepositTab = dynamic(() => import('./StripeDepositTab'), { ssr: false });
+const StripeDepositTab  = dynamic(() => import('./StripeDepositTab'),  { ssr: false });
+const TransakDepositTab = dynamic(() => import('./TransakDepositTab'), { ssr: false });
 
 const CDF_OPERATORS = [
   { key: 'orange',    label: 'Orange Money',  color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -42,7 +43,7 @@ export default function WalletDepositPage() {
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
-  const [tab, setTab]               = useState<'cdf' | 'usd' | 'card'>('cdf');
+  const [tab, setTab]               = useState<'cdf' | 'usd' | 'card' | 'crypto'>('cdf');
   const [operator, setOperator]     = useState<string>('orange');
   const [phone, setPhone]           = useState('');
   const [amount, setAmount]         = useState('');
@@ -68,18 +69,19 @@ export default function WalletDepositPage() {
 
   const isCdf      = tab === 'cdf';
   const isCard     = tab === 'card';
+  const isCrypto   = tab === 'crypto';
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
   const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
   const amountNum  = Number(amount);
   const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
   const net        = amountNum > 0 ? Math.round((amountNum - fee) * 100) / 100 : 0;
 
-  function switchTab(t: 'cdf' | 'usd' | 'card') {
+  function switchTab(t: 'cdf' | 'usd' | 'card' | 'crypto') {
     setTab(t);
     setAmount('');
     setError('');
     setSuccess('');
-    if (t !== 'card') setOperator(t === 'cdf' ? 'orange' : 'airtel');
+    if (t !== 'card' && t !== 'crypto') setOperator(t === 'cdf' ? 'orange' : 'airtel');
   }
 
   function startPolling(preBalance: number) {
@@ -183,6 +185,10 @@ export default function WalletDepositPage() {
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'card' ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           💳 Carte
         </button>
+        <button type="button" onClick={() => switchTab('crypto')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'crypto' ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          🪙 Crypto
+        </button>
       </div>
 
       {tab === 'usd' && (
@@ -192,9 +198,10 @@ export default function WalletDepositPage() {
         </div>
       )}
 
-      {isCard && <StripeDepositTab usdBalance={usdBalance} />}
+      {isCard   && <StripeDepositTab  usdBalance={usdBalance} />}
+      {isCrypto && <TransakDepositTab usdBalance={usdBalance} />}
 
-      {!isCard && <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
+      {!isCard && !isCrypto && <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
 
         {/* Operator */}
         <div className="flex flex-col gap-2">
