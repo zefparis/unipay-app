@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import { validatePhone } from '@/lib/phone';
+import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 function Spinner() {
@@ -20,7 +21,7 @@ export default function WalletRegisterPage() {
   const { locale } = useParams<{ locale: string }>();
 
   const [fullName, setFullName]     = useState('');
-  const [phone, setPhone]           = useState('');
+  const [phone, setPhone]           = useState('+243');
   const [pin, setPin]               = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [error, setError]           = useState('');
@@ -30,8 +31,8 @@ export default function WalletRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!validateDRCPhone(phone)) {
-      setError('Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX');
+    if (!validatePhone(phone)) {
+      setError('Numéro invalide. Exemples : +243 9X XXX XXXX, +33 6XX XXX XXX');
       return;
     }
     if (pin.length !== 6) {
@@ -45,13 +46,11 @@ export default function WalletRegisterPage() {
 
     setLoading(true);
 
-    const cleanPhone = normalizePhone(phone);
-
     try {
       const res = await fetch('/api/wallet/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: cleanPhone, full_name: fullName || undefined, pin }),
+        body: JSON.stringify({ phone, full_name: fullName || undefined, pin }),
       });
 
       const data = await res.json();
@@ -111,13 +110,9 @@ export default function WalletRegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de téléphone</label>
-                <input
-                  type="tel"
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+243 XXX XXX XXX"
-                  required
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  onChange={setPhone}
                 />
               </div>
 

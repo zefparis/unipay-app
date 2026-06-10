@@ -13,6 +13,7 @@
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "@yudiel/react-qr-scanner": "^2.6.0",
+    "libphonenumber-js": "^1.13.6",
     "lucide-react": "^0.390.0",
     "next": "14.2.4",
     "next-intl": "^3.15.0",

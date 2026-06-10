@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import { validatePhone } from '@/lib/phone';
+import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // ─── Translations (FR / EN / LN / SW) ────────────────────────────────────────
@@ -197,7 +198,7 @@ export default function LandingPage() {
   const { locale } = useParams<{ locale: string }>();
   const loginRef = useRef<HTMLDivElement>(null);
 
-  const [phone,   setPhone]   = useState('');
+  const [phone,   setPhone]   = useState('+243');
   const [pin,     setPin]     = useState('');
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
@@ -210,14 +211,14 @@ export default function LandingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!validateDRCPhone(phone)) { setError(t(locale, 'err_phone')); return; }
+    if (!validatePhone(phone)) { setError(t(locale, 'err_phone')); return; }
     if (pin.length !== 6)        { setError(t(locale, 'err_pin'));   return; }
     setLoading(true);
     try {
       const res  = await fetch('/api/wallet/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: normalizePhone(phone), pin }),
+        body: JSON.stringify({ phone, pin }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? t(locale, 'err_def')); return; }
@@ -336,15 +337,11 @@ export default function LandingPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-white/60 uppercase tracking-widest">{t(locale, 'phone_lbl')}</label>
-                <input
-                  id="unipay-phone"
-                  type="tel"
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+243 XXX XXX XXX"
-                  required
-                  className="rounded-xl px-4 py-3.5 text-base text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+                  onChange={setPhone}
+                  inputClassName="text-white placeholder:text-white/25"
+                  selectClassName="text-white"
                 />
               </div>
 

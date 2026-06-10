@@ -33,8 +33,18 @@ export async function POST(request: NextRequest) {
     secure: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60,
   });
+
+  if (data.refresh_token) {
+    response.cookies.set('wallet_refresh', data.refresh_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
 
   return response;
 }

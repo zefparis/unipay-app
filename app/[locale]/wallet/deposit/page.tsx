@@ -52,12 +52,18 @@ export default function WalletDepositPage() {
   const [loading, setLoading]       = useState(false);
   const [polling, setPolling]       = useState(false);
   const [usdBalance, setUsdBalance] = useState(0);
+  const [isDRC, setIsDRC]           = useState(true);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('wallet_phone');
-    if (saved) setPhone(saved);
+    if (saved) {
+      setPhone(saved);
+      const drc = saved.startsWith('+243');
+      setIsDRC(drc);
+      if (!drc) setTab('card');
+    }
 
     fetch('/api/wallet/balance')
       .then((r) => (r.ok ? r.json() : null))
@@ -171,16 +177,30 @@ export default function WalletDepositPage() {
         </h1>
       </div>
 
+      {/* Diaspora banner */}
+      {!isDRC && (
+        <div className="mx-4 mt-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 flex items-start gap-2 text-xs">
+          <span className="text-lg leading-none">🌍</span>
+          <p className="text-blue-700 dark:text-blue-300">
+            Depuis l&apos;étranger, rechargez par <strong>carte bancaire</strong> ou via <strong>BSC (USDT/wCGLT)</strong>.
+          </p>
+        </div>
+      )}
+
       {/* Currency tab — scrollable on mobile */}
       <div className="flex gap-2 px-4 pt-4 overflow-x-auto scrollbar-hide">
-        <button type="button" onClick={() => switchTab('cdf')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cdf' ? 'border-[#00A651] bg-green-50 text-[#00A651] dark:bg-green-900/30 dark:text-green-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-          CDF
-        </button>
-        <button type="button" onClick={() => switchTab('usd')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-          USD
-        </button>
+        {isDRC && (
+          <button type="button" onClick={() => switchTab('cdf')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cdf' ? 'border-[#00A651] bg-green-50 text-[#00A651] dark:bg-green-900/30 dark:text-green-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+            CDF
+          </button>
+        )}
+        {isDRC && (
+          <button type="button" onClick={() => switchTab('usd')}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+            USD
+          </button>
+        )}
         <button type="button" onClick={() => switchTab('card')}
           className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'card' ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           💳 Carte
