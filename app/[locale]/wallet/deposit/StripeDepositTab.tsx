@@ -11,8 +11,20 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
-const stripePromise   = loadStripe(PUBLISHABLE_KEY);
+const stripePromise   = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 const MIN_USD         = 5;
+
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      color:           '#ffffff',
+      fontSize:        '16px',
+      fontFamily:      'Arial, sans-serif',
+      '::placeholder': { color: '#aaaaaa' },
+    },
+    invalid: { color: '#f87171' },
+  },
+} as const;
 
 function Spinner() {
   return (
@@ -114,23 +126,13 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
 
       {/* Carte bancaire */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Carte bancaire</label>
-        <div className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 bg-white dark:bg-slate-800">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize:       '16px',
-                  color:          '#1e293b',
-                  fontFamily:     'system-ui, sans-serif',
-                  '::placeholder': { color: '#94a3b8' },
-                },
-                invalid: { color: '#ef4444' },
-              },
-            }}
-          />
+        <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de carte</label>
+        <div className="rounded-xl border-2 border-slate-600 bg-[#1e293b] px-4 py-4">
+          <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
-        <p className="text-xs text-gray-400 dark:text-slate-500">Paiement sécurisé par Stripe · Visa, Mastercard, Amex</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1">
+          🔒 Paiement sécurisé par Stripe · Visa, Mastercard, Amex
+        </p>
       </div>
 
       {error   && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
@@ -149,6 +151,14 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
 }
 
 export default function StripeDepositTab({ usdBalance }: { usdBalance: number }) {
+  if (!PUBLISHABLE_KEY) {
+    return (
+      <div className="mx-4 my-5 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-4 text-sm text-red-700 dark:text-red-400">
+        ⚠️ Paiement par carte non disponible — clé Stripe manquante.<br />
+        <span className="text-xs opacity-75">(Ajouter NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY dans les variables Vercel)</span>
+      </div>
+    );
+  }
   return (
     <Elements stripe={stripePromise}>
       <CardForm usdBalance={usdBalance} />
