@@ -392,9 +392,9 @@ export default function LandingPage() {
       <footer className="relative z-10 px-4 pb-8 pt-2 flex flex-col items-center gap-3">
         <p className="text-[11px] text-white/25 text-center">{t(locale, 'footer')}</p>
         <div className="flex gap-4">
-          {(['cgu','priv','support'] as const).map((k) => (
-            <span key={k} className="text-[11px] text-white/30 cursor-pointer hover:text-white/60 transition">{t(locale, k)}</span>
-          ))}
+          <Link href={`/${locale}/terms`} className="text-[11px] text-white/30 hover:text-white/60 transition">{t(locale, 'cgu')}</Link>
+          <Link href={`/${locale}/privacy`} className="text-[11px] text-white/30 hover:text-white/60 transition">{t(locale, 'priv')}</Link>
+          <a href="mailto:support@unipaycongo.com" className="text-[11px] text-white/30 hover:text-white/60 transition">{t(locale, 'support')}</a>
         </div>
       </footer>
 

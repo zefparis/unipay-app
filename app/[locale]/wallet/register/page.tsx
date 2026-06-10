@@ -29,6 +29,7 @@ export default function WalletRegisterPage() {
   const [pinConfirm, setPinConfirm] = useState('');
   const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -168,10 +169,33 @@ export default function WalletRegisterPage() {
                 <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>
               )}
 
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="accept-terms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded cursor-pointer"
+                  style={{ accentColor: '#00A651' }}
+                />
+                <label htmlFor="accept-terms" className="text-sm leading-snug text-gray-500 dark:text-slate-400 cursor-pointer select-none">
+                  {locale === 'en' ? (
+                    <>I have read and accept the{' '}
+                      <a href={`/${locale}/terms`} target="_blank" className="font-semibold underline" style={{ color: '#00A651' }}>Terms of Service</a>
+                    </>
+                  ) : (
+                    <>J&apos;ai lu et j&apos;accepte les{' '}
+                      <a href={`/${locale}/terms`} target="_blank" className="font-semibold underline" style={{ color: '#00A651' }}>Conditions Générales d&apos;Utilisation</a>
+                    </>
+                  )}
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
+                disabled={loading || !acceptedTerms}
+                title={!acceptedTerms ? (locale === 'en' ? 'You must accept the Terms of Service to continue' : 'Vous devez accepter les CGU pour continuer') : undefined}
+                className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading && <Spinner />}
                 {loading ? T.reg_loading : T.reg_cta}
