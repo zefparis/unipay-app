@@ -127,7 +127,13 @@ function CardForm({ usdBalance }: { usdBalance: number }) {
       {/* Carte bancaire */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro de carte</label>
-        <div className="rounded-xl border-2 border-slate-600 bg-[#1e293b] px-4 py-4">
+        <div style={{
+          borderRadius:    '12px',
+          border:          '2px solid #475569',
+          backgroundColor: '#1e293b',
+          padding:         '16px',
+          minHeight:       '48px',
+        }}>
           <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
         <p className="text-xs text-gray-400 dark:text-slate-500 flex items-center gap-1">
