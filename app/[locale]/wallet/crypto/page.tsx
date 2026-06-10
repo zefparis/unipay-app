@@ -15,12 +15,15 @@ interface CoinPrice {
   icon: string;
 }
 
+const WCGLT_FALLBACK_PRICE = 0.002; // 1 wCGLT = 1/500 USDT (taux interne fixe)
+
 interface WCGLTData {
   price: number;
   change24h: number;
   volume24h: number;
   liquidity: number;
   txns24h: number;
+  usingFallback: boolean;
 }
 
 function fmt(n: number, decimals = 2) {
@@ -94,19 +97,20 @@ export default function CryptoPage() {
       );
       const dexData = await dexRes.json();
       const pair = dexData?.pairs?.[0];
-      if (pair) {
-        setWcglt({
-          price:     parseFloat(pair.priceUsd ?? '0'),
-          change24h: pair.priceChange?.h24 ?? 0,
-          volume24h: pair.volume?.h24 ?? 0,
-          liquidity: pair.liquidity?.usd ?? 0,
-          txns24h:   (pair.txns?.h24?.buys ?? 0) + (pair.txns?.h24?.sells ?? 0),
-        });
-      }
+      const livePrice = pair ? parseFloat(pair.priceUsd ?? '0') : 0;
+      setWcglt({
+        price:         livePrice > 0 ? livePrice : WCGLT_FALLBACK_PRICE,
+        change24h:     pair?.priceChange?.h24 ?? 0,
+        volume24h:     pair?.volume?.h24 ?? 0,
+        liquidity:     pair?.liquidity?.usd ?? 0,
+        txns24h:       (pair?.txns?.h24?.buys ?? 0) + (pair?.txns?.h24?.sells ?? 0),
+        usingFallback: !pair || livePrice === 0,
+      });
 
       setLastUpdate(new Date().toLocaleTimeString('fr-FR'));
     } catch (e) {
       console.error('fetch error', e);
+      setWcglt((prev) => prev ?? { price: WCGLT_FALLBACK_PRICE, change24h: 0, volume24h: 0, liquidity: 0, txns24h: 0, usingFallback: true });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -160,8 +164,11 @@ export default function CryptoPage() {
             </div>
 
             <p className="text-3xl font-bold mb-1">
-              {wcglt ? `$${wcglt.price.toFixed(6)}` : '—'}
+              {wcglt ? `$${wcglt.price.toFixed(4)}` : '—'}
             </p>
+            {wcglt?.usingFallback && (
+              <p className="text-purple-300 text-xs mb-1">Taux indicatif interne · 1 wCGLT = 1/500 USDT</p>
+            )}
 
             {wcglt && (
               <div className="grid grid-cols-3 gap-3 mt-4 text-center">
