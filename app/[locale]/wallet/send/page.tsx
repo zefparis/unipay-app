@@ -192,7 +192,7 @@ export default function WalletSendPage() {
                 {note && (
                   <div className="flex justify-between">
                     <span className="text-gray-500 dark:text-slate-400">Note</span>
-                    <span className="text-gray-700 dark:text-slate-300 truncate max-w-[180px]">{note}</span>
+                    <span className="text-gray-700 dark:text-slate-300 truncate min-w-0 flex-1 text-right">{note}</span>
                   </div>
                 )}
               </div>

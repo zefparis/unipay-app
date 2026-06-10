@@ -233,7 +233,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: BG }}>
+    <div className="flex flex-col min-h-screen overflow-x-hidden" style={{ background: BG }}>
 
       {/* ════════════════════════════════════════════
           HERO
@@ -251,7 +251,7 @@ export default function LandingPage() {
         <img
           src="/logodark.png"
           alt="UniPay Congo"
-          style={{ width: '100vw', display: 'block', objectFit: 'cover', marginLeft: 'calc(-50vw + 50%)' }}
+          style={{ width: '100%', display: 'block', objectFit: 'cover' }}
         />
 
         {/* Hero text + CTAs — padded & centred */}
@@ -342,6 +342,8 @@ export default function LandingPage() {
                   onChange={setPhone}
                   inputClassName="text-white placeholder:text-white/25"
                   selectClassName="text-white"
+                  inputStyle={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)' }}
+                  selectStyle={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)' }}
                 />
               </div>
 

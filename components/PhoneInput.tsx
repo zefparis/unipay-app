@@ -11,6 +11,8 @@ interface Props {
   placeholder?: string;
   inputClassName?: string;
   selectClassName?: string;
+  inputStyle?: React.CSSProperties;
+  selectStyle?: React.CSSProperties;
   disabled?: boolean;
 }
 
@@ -21,6 +23,8 @@ export default function PhoneInput({
   placeholder,
   inputClassName = '',
   selectClassName = '',
+  inputStyle,
+  selectStyle,
   disabled = false,
 }: Props) {
   const [dialCode, setDialCode] = useState('+243');
@@ -55,12 +59,13 @@ export default function PhoneInput({
   const selectedEntry = DIAL_CODES.find((d) => d.code === dialCode) ?? DIAL_CODES[0];
 
   return (
-    <div className="flex gap-2">
+    <div className="flex w-full gap-2 min-w-0">
       <select
         value={dialCode}
         onChange={(e) => handleDialChange(e.target.value)}
         disabled={disabled}
-        className={`shrink-0 rounded-xl px-2 py-3.5 text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border-gray-200 dark:border-slate-600 ${selectClassName}`}
+        style={selectStyle}
+        className={`w-[100px] shrink-0 rounded-xl px-2 py-3.5 text-sm font-semibold border focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border-gray-200 dark:border-slate-600 ${selectClassName}`}
         aria-label="Indicatif pays"
       >
         {DIAL_CODES.map((d) => (
@@ -76,7 +81,8 @@ export default function PhoneInput({
         onChange={(e) => handleLocalChange(e.target.value)}
         disabled={disabled}
         placeholder={placeholder ?? (dialCode === '+243' ? '9X XXX XXXX' : 'N° local')}
-        className={`flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
+        style={inputStyle}
+        className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
         aria-label="Numéro de téléphone"
       />
 

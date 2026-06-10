@@ -161,7 +161,7 @@ export default function WalletWithdrawPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0f172a] transition-colors duration-200">
+    <div className="flex flex-col min-h-screen overflow-x-hidden bg-white dark:bg-[#0f172a] transition-colors duration-200">
       <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-gray-50 dark:border-[#334155]">
         <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-all duration-200">
           <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
@@ -240,7 +240,7 @@ export default function WalletWithdrawPage() {
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Numéro Mobile Money</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
               placeholder="+243 XXX XXX XXX" required
-              className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200" />
+              className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200" />
           </div>
         )}
 
@@ -249,7 +249,7 @@ export default function WalletWithdrawPage() {
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Adresse BSC (MetaMask)</label>
             <input type="text" value={bscAddress} onChange={(e) => setBscAddress(e.target.value)}
               placeholder="0x..." required
-              className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all" />
+              className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all break-all" />
           </div>
         )}
 
@@ -259,7 +259,7 @@ export default function WalletWithdrawPage() {
           </label>
           <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
             placeholder={isCdf ? '100' : isUsd ? '10.00' : '10'} min={minAmt} step={isCdf ? '1' : isUsd ? '0.01' : '1'} required
-            className={`border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-orange-400'}`} />
+            className={`w-full border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-orange-400'}`} />
           {overBudget && <p className="text-xs text-red-500">Solde insuffisant.</p>}
         </div>
 

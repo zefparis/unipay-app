@@ -107,9 +107,9 @@ export default function WalletHomePage() {
           {loadingBal ? (
             <div className="h-14 mt-2"><Spinner /></div>
           ) : (
-            <p className="mt-1 leading-none" style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-1px' }}>
+            <p className="mt-1 leading-none break-all" style={{ fontSize: 'clamp(28px, 10.5vw, 52px)', fontWeight: 800, letterSpacing: '-1px' }}>
               {balance !== null ? fmt(balance) : '—'}
-              <span className="text-2xl font-normal text-white/50 ml-2">CDF</span>
+              <span className="text-xl font-normal text-white/50 ml-1">CDF</span>
             </p>
           )}
           {!loadingBal && (
@@ -190,7 +190,7 @@ export default function WalletHomePage() {
             >
               {icon}
             </div>
-            <span className="text-xs font-semibold text-white/80 text-center leading-tight">{label}</span>
+            <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{label}</span>
           </Link>
         ))}
         <a
@@ -211,7 +211,7 @@ export default function WalletHomePage() {
           >
             <Gamepad2 className="text-violet-400" size={24} />
           </div>
-          <span className="text-xs font-semibold text-white/80 text-center leading-tight">Gagner CGLT</span>
+          <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">Gagner CGLT</span>
         </a>
       </div>
 
