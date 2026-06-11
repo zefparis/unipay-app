@@ -22,3 +22,11 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Oxygen, Ubuntu, sans-serif;
 }
+
+/* Masquer le badge flottant du widget HCS — on a notre propre SecurityBadge sur la card */
+#hcs-badge,
+[id^="hcs-widget-badge"],
+[class*="hcs-badge"],
+[data-hcs-badge] {
+  display: none !important;
+}
