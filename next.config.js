@@ -19,7 +19,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self' https://unipay-api.onrender.com https://api.coingecko.com https://api.dexscreener.com https://api.stripe.com https://m.stripe.com https://m.stripe.network https://q.stripe.com",
+      "connect-src 'self' https://unipay-api.onrender.com https://api.coingecko.com https://api.dexscreener.com https://api.stripe.com https://m.stripe.com https://m.stripe.network https://q.stripe.com https://hcs-widget-mvp.vercel.app https://api.hcs-u7.org",
       "frame-src https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://*.stripe.network",
       "frame-ancestors 'none'",
     ].join('; '),
