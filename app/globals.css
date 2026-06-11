@@ -24,9 +24,7 @@ body {
 }
 
 /* Masquer le badge flottant du widget HCS — on a notre propre SecurityBadge sur la card */
-#hcs-badge,
-[id^="hcs-widget-badge"],
-[class*="hcs-badge"],
-[data-hcs-badge] {
+#hcs-u7-badge,
+#hcs-u7-card {
   display: none !important;
 }
