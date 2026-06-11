@@ -211,6 +211,14 @@ export default function LandingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+
+    // Vérification HCS-U7
+    const hcsStatus = (window as any).HCS_STATUS;
+    if (hcsStatus?.ready && hcsStatus?.lastDecision === 'block') {
+      setError('Accès refusé par le système de sécurité.');
+      return;
+    }
+
     if (!validatePhone(phone)) { setError(t(locale, 'err_phone')); return; }
     if (pin.length !== 6)        { setError(t(locale, 'err_pin'));   return; }
     setLoading(true);
