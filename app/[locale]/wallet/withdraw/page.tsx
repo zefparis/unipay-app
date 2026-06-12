@@ -284,35 +284,51 @@ export default function WalletWithdrawPage() {
 
       {/* USDT Confirmation Dialog */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 flex flex-col gap-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Confirmer le retrait</h3>
-            <div className="flex flex-col gap-2 bg-gray-50 dark:bg-slate-700 rounded-xl px-4 py-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Montant envoyé</span>
-                <span className="font-bold text-gray-900 dark:text-slate-100">{usdtGross.toFixed(4)} USDT</span>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowConfirm(false); }}
+        >
+          <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl flex flex-col"
+            style={{ maxHeight: 'calc(85vh - env(safe-area-inset-bottom, 0px))' }}>
+
+            {/* ── En-tête fixe ── */}
+            <div className="px-6 pt-6 pb-3 flex-shrink-0">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Confirmer le retrait</h3>
+            </div>
+
+            {/* ── Contenu scrollable ── */}
+            <div className="flex-1 overflow-y-auto px-6 pb-2 flex flex-col gap-3 min-h-0">
+              <div className="flex flex-col gap-2 bg-gray-50 dark:bg-slate-700 rounded-xl px-4 py-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Montant envoyé</span>
+                  <span className="font-bold text-gray-900 dark:text-slate-100">{usdtGross.toFixed(4)} USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Frais réseau ({network})</span>
+                  <span className="text-orange-500 font-medium">−{netFee} USDT</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 dark:border-slate-600 pt-2 mt-1">
+                  <span className="font-bold text-gray-800 dark:text-slate-200">Vous recevez</span>
+                  <span className="font-bold text-cyan-600 dark:text-cyan-400">{usdtNet.toFixed(4)} USDT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Réseau</span>
+                  <span className="font-mono text-xs text-gray-700 dark:text-slate-300 bg-gray-200 dark:bg-slate-600 px-2 py-0.5 rounded">{network}</span>
+                </div>
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-gray-500 dark:text-slate-400 flex-shrink-0">Adresse</span>
+                  <span className="font-mono text-xs text-gray-700 dark:text-slate-300 break-all text-right">{destAddress.slice(0, 10)}…{destAddress.slice(-8)}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Frais réseau ({network})</span>
-                <span className="text-orange-500 font-medium">−{netFee} USDT</span>
-              </div>
-              <div className="flex justify-between border-t border-gray-200 dark:border-slate-600 pt-2 mt-1">
-                <span className="font-bold text-gray-800 dark:text-slate-200">Vous recevez</span>
-                <span className="font-bold text-cyan-600 dark:text-cyan-400">{usdtNet.toFixed(4)} USDT</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-slate-400">Réseau</span>
-                <span className="font-mono text-xs text-gray-700 dark:text-slate-300 bg-gray-200 dark:bg-slate-600 px-2 py-0.5 rounded">{network}</span>
-              </div>
-              <div className="flex justify-between items-start gap-2">
-                <span className="text-gray-500 dark:text-slate-400 flex-shrink-0">Adresse</span>
-                <span className="font-mono text-xs text-gray-700 dark:text-slate-300 break-all text-right">{destAddress.slice(0, 10)}…{destAddress.slice(-8)}</span>
+
+              <div className="rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                ⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).
               </div>
             </div>
-            <div className="rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-              ⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).
-            </div>
-            <div className="flex gap-3">
+
+            {/* ── Boutons ancrés — toujours visibles ── */}
+            <div className="flex-shrink-0 flex gap-3 px-6 pt-3 pb-6 border-t border-gray-100 dark:border-slate-700"
+              style={{ paddingBottom: 'max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)))' }}>
               <button type="button" onClick={() => setShowConfirm(false)}
                 className="flex-1 h-12 rounded-xl border-2 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold transition hover:bg-gray-50 dark:hover:bg-slate-700">
                 Annuler
@@ -320,9 +336,10 @@ export default function WalletWithdrawPage() {
               <button type="button" onClick={handleUsdtWithdraw} disabled={loading}
                 className="flex-1 h-12 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-xl transition disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <Spinner />}
-                {loading ? 'Envoi…' : 'Confirmer'}
+                {loading ? 'Envoi…' : 'Confirmer le retrait'}
               </button>
             </div>
+
           </div>
         </div>
       )}
