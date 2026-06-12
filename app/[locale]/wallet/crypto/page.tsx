@@ -75,28 +75,23 @@ export default function CryptoPage() {
   async function fetchData(isRefresh = false) {
     if (isRefresh) setRefreshing(true);
     try {
-      // CoinGecko — top coins
-      const cgRes = await fetch(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${COIN_IDS.join(',')}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true`
-      );
-      const cgData = await cgRes.json();
-      const coinList: CoinPrice[] = COIN_IDS.map((id) => ({
-        id,
-        symbol:   COIN_META[id].symbol,
-        name:     COIN_META[id].name,
-        icon:     COIN_META[id].icon,
-        price:    cgData[id]?.usd ?? 0,
-        change24h: cgData[id]?.usd_24h_change ?? 0,
-        volume24h: cgData[id]?.usd_24h_vol ?? 0,
-      }));
-      setCoins(coinList);
+      const res = await fetch('/api/wallet/market-prices', { cache: 'no-store' });
+      const { coins: cgData, dex: dexData } = res.ok ? await res.json() : { coins: null, dex: null };
 
-      // DexScreener — wCGLT pool
-      const dexRes = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${WCGLT_CONTRACT}`
-      );
-      const dexData = await dexRes.json();
-      const pair = dexData?.pairs?.[0];
+      if (cgData) {
+        const coinList: CoinPrice[] = COIN_IDS.map((id) => ({
+          id,
+          symbol:    COIN_META[id].symbol,
+          name:      COIN_META[id].name,
+          icon:      COIN_META[id].icon,
+          price:     cgData[id]?.usd ?? 0,
+          change24h: cgData[id]?.usd_24h_change ?? 0,
+          volume24h: cgData[id]?.usd_24h_vol ?? 0,
+        }));
+        setCoins(coinList);
+      }
+
+      const pair      = dexData?.pairs?.[0];
       const livePrice = pair ? parseFloat(pair.priceUsd ?? '0') : 0;
       setWcglt({
         price:         livePrice > 0 ? livePrice : WCGLT_FALLBACK_PRICE,

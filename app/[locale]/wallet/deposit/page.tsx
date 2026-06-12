@@ -24,7 +24,7 @@ const USD_OPERATORS = [
   { key: 'orange',   label: 'Orange USD',   color: 'bg-orange-500', active: 'ring-orange-500' },
 ] as const;
 
-const FEE_RATE = 0.03;
+const FEE_RATE = 0.04;
 const MIN_CDF_AMOUNT = 500;
 const MIN_USD_AMOUNT = 1;
 

@@ -32,6 +32,8 @@ export default function WalletSwapPage() {
   const [rate, setRate]               = useState<number | null>(null);
   const [feePct, setFeePct]           = useState(0.5);
   const [paused, setPaused]           = useState(false);
+  const [usdCdfRate, setUsdCdfRate]   = useState<number>(2850);
+  const [usdCdfFallback, setUsdCdfFallback] = useState(true);
   const [cdfBalance, setCdfBalance]   = useState<number | null>(null);
   const [cgltBalance, setCgltBalance] = useState<number | null>(null);
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
@@ -54,8 +56,15 @@ export default function WalletSwapPage() {
           setFeePct(Number(d.fee ?? 0.5));
           setPaused(Boolean(d.paused));
         }
+        const pairRate = d?.pairs?.CDF_USD?.rate;
+        if (pairRate && typeof pairRate === 'number' && pairRate > 0) {
+          setUsdCdfRate(pairRate);
+          setUsdCdfFallback(false);
+        } else {
+          setUsdCdfFallback(true);
+        }
       })
-      .catch(() => {})
+      .catch(() => { setUsdCdfFallback(true); })
       .finally(() => setLoadingRate(false));
   }
 
@@ -73,8 +82,6 @@ export default function WalletSwapPage() {
   const isUsdUsdt = mode === 'usd_usdt';
   const isAmm     = mode === 'cglt_usdt';
 
-  const USD_CDF_RATE = 2850;
-
   const fromSym = isCdfCglt ? (internalDir === 'cdf_to_cglt' ? 'CDF' : 'CGLT')
                : isCdfUsd  ? (internalDir === 'cdf_to_usd' ? 'CDF' : 'USD')
                : isUsdUsdt ? (direction === 'usd_to_usdt' ? 'USD' : 'USDT')
@@ -89,7 +96,7 @@ export default function WalletSwapPage() {
   if (isAmm && rate) {
     grossOut = direction === 'cglt_to_usdt' ? amountNum / rate : amountNum * rate;
   } else if (isCdfUsd) {
-    grossOut = internalDir === 'cdf_to_usd' ? amountNum / USD_CDF_RATE : amountNum * USD_CDF_RATE;
+    grossOut = internalDir === 'cdf_to_usd' ? amountNum / usdCdfRate : amountNum * usdCdfRate;
   } else if (isUsdUsdt) {
     grossOut = amountNum; // 1:1
   } else {
@@ -251,7 +258,7 @@ export default function WalletSwapPage() {
       {isCdfUsd && (
         <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl px-5 py-4 text-white shadow-lg">
           <p className="text-xs opacity-80">{T.swap_rate_off}</p>
-          <p className="text-xl font-bold mt-0.5">1 USD = {fmt(USD_CDF_RATE, 0)} CDF</p>
+          <p className="text-xl font-bold mt-0.5">1 USD = {fmt(usdCdfRate, 0)} CDF{usdCdfFallback && <span className="text-[11px] font-normal opacity-70 ml-1">(indicatif)</span>}</p>
           <p className="text-[11px] opacity-70 mt-1">{T.swap_fee_pct_lbl} {fmt(feePct)}%</p>
         </div>
       )}

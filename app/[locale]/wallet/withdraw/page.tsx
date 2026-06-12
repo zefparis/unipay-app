@@ -27,7 +27,11 @@ const MIN_CGLT_AMOUNT  = 500;
 const CGLT_PER_WCGLT   = 500;
 const WCGLT_PRICE_USD  = 0.109;
 
-type Tab = 'cdf' | 'usd' | 'cglt';
+type Tab = 'cdf' | 'usd' | 'cglt' | 'usdt';
+type Network = 'BSC' | 'TRC20' | 'ERC20';
+
+const NETWORK_FEE: Record<Network, number> = { BSC: 0.5, TRC20: 1, ERC20: 5 };
+const MIN_NET_USDT = 5;
 
 function fmt(n: number, max = 0) { return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: max }).format(n); }
 
@@ -53,6 +57,11 @@ export default function WalletWithdrawPage() {
   const [phone, setPhone]             = useState('');
   const [amount, setAmount]           = useState('');
   const [bscAddress, setBscAddress]   = useState('');
+  const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
+  const [network, setNetwork]         = useState<Network>('BSC');
+  const [destAddress, setDestAddress] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [withdrawalId, setWithdrawalId] = useState('');
   const [error, setError]             = useState('');
   const [success, setSuccess]         = useState('');
   const [loading, setLoading]         = useState(false);
@@ -63,7 +72,7 @@ export default function WalletWithdrawPage() {
 
     fetch('/api/wallet/balance')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
-      .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } })
+      .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {});
 
     fetch('/api/wallet/cglt/balance')
@@ -75,27 +84,73 @@ export default function WalletWithdrawPage() {
   const isCdf  = tab === 'cdf';
   const isUsd  = tab === 'usd';
   const isCglt = tab === 'cglt';
+  const isUsdt = tab === 'usdt';
 
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
   const minAmt     = isCdf ? MIN_CDF_AMOUNT : isUsd ? MIN_USD_AMOUNT : MIN_CGLT_AMOUNT;
   const amountNum  = Number(amount);
   const fee        = isCglt ? 0 : amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
   const totalCost  = amountNum > 0 ? Math.round((amountNum + fee) * 100) / 100 : 0;
-  const activeBal  = isCdf ? balance : isUsd ? usdBalance : cgltBalance;
+  const activeBal  = isCdf ? balance : isUsd ? usdBalance : isCglt ? cgltBalance : usdtBalance;
   const overBudget = activeBal !== null && amountNum > 0 && amountNum > activeBal;
+
+  const netFee        = NETWORK_FEE[network];
+  const usdtGross     = Number(amount) || 0;
+  const usdtNet       = Math.max(usdtGross - netFee, 0);
+  const usdtCanSubmit = usdtNet >= MIN_NET_USDT && usdtGross > 0
+    && (usdtBalance !== null ? usdtGross <= usdtBalance : true)
+    && (/^0x[a-fA-F0-9]{40}$/.test(destAddress) || /^T[a-zA-Z0-9]{33}$/.test(destAddress));
+  const usdtAddrValid = destAddress === ''
+    || (network === 'TRC20' ? /^T[a-zA-Z0-9]{33}$/.test(destAddress) : /^0x[a-fA-F0-9]{40}$/.test(destAddress));
 
   function switchTab(t: Tab) {
     setTab(t);
     setAmount('');
     setError('');
     setSuccess('');
+    setWithdrawalId('');
+    setShowConfirm(false);
     setOperator(t === 'cdf' ? 'orange' : 'airtel');
+  }
+
+  async function handleUsdtWithdraw() {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/wallet/crypto-withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: usdtGross, network, destination_address: destAddress }),
+      });
+      const data = await res.json() as { error?: string; withdrawal_id?: string; net_amount?: number; fee?: number };
+      if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
+      if (!res.ok) { setError(data.error ?? 'Retrait USDT échoué'); return; }
+      setWithdrawalId(data.withdrawal_id ?? '');
+      setSuccess(`Retrait de ${usdtGross} USDT initié. Vous recevrez ~${(data.net_amount ?? usdtNet).toFixed(4)} USDT sur ${network}.`);
+      setUsdtBalance((b) => b !== null ? Math.max(b - usdtGross, 0) : b);
+      setAmount('');
+      setDestAddress('');
+      setTimeout(() => router.push(`/${locale}/wallet`), 6000);
+    } catch {
+      setError('Erreur réseau, réessayez.');
+    } finally {
+      setLoading(false);
+      setShowConfirm(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (isUsdt) {
+      if (!usdtAddrValid || destAddress === '') { setError(`Adresse ${network} invalide.`); return; }
+      if (usdtNet < MIN_NET_USDT) { setError(`Montant insuffisant. Minimum ${MIN_NET_USDT} USDT net (après frais ${netFee} USDT).`); return; }
+      if (usdtBalance !== null && usdtGross > usdtBalance) { setError(`Solde USDT insuffisant. Disponible : ${usdtBalance.toFixed(4)} USDT.`); return; }
+      setShowConfirm(true);
+      return;
+    }
 
     if (isCglt) {
       if (amountNum < 500) { setError(T.err_wd_cglt_min); return; }
@@ -175,26 +230,32 @@ export default function WalletWithdrawPage() {
       </div>
 
       {/* Currency tabs */}
-      <div className="flex gap-2 px-4 pt-4">
+      <div className="flex gap-1.5 px-4 pt-4 flex-wrap">
         <button type="button" onClick={() => switchTab('cdf')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cdf' ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cdf' ? 'border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           CDF
         </button>
         <button type="button" onClick={() => switchTab('usd')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           USD
         </button>
         <button type="button" onClick={() => switchTab('cglt')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cglt' ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cglt' ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           CGLT
+        </button>
+        <button type="button" onClick={() => switchTab('usdt')}
+          className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usdt' ? 'border-cyan-500 bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+          USDT
         </button>
       </div>
 
       {activeBal !== null && (
-        <div className="mx-4 mt-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-orange-700 dark:text-orange-400">{T.wd_avail.replace('{cur}', isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT')}</span>
-          <span className="text-sm font-bold text-orange-700 dark:text-orange-400">
-            {isCdf ? fmt(activeBal) : isUsd ? activeBal.toFixed(2) : fmt(activeBal)} {isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}
+        <div className={`mx-4 mt-4 border rounded-xl px-4 py-3 flex items-center justify-between ${isUsdt ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-100 dark:border-cyan-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
+          <span className={`text-sm ${isUsdt ? 'text-cyan-700 dark:text-cyan-400' : 'text-orange-700 dark:text-orange-400'}`}>
+            {T.wd_avail.replace('{cur}', isCdf ? 'CDF' : isUsd ? 'USD' : isCglt ? 'CGLT' : 'USDT')}
+          </span>
+          <span className={`text-sm font-bold ${isUsdt ? 'text-cyan-700 dark:text-cyan-400' : 'text-orange-700 dark:text-orange-400'}`}>
+            {isCdf ? fmt(activeBal) : isUsd ? activeBal.toFixed(2) : isCglt ? fmt(activeBal) : activeBal.toFixed(4)} {isCdf ? 'CDF' : isUsd ? 'USD' : isCglt ? 'CGLT' : 'USDT'}
           </span>
         </div>
       )}
@@ -221,9 +282,129 @@ export default function WalletWithdrawPage() {
         </div>
       )}
 
+      {/* USDT Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-slate-800 rounded-t-3xl p-6 flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Confirmer le retrait</h3>
+            <div className="flex flex-col gap-2 bg-gray-50 dark:bg-slate-700 rounded-xl px-4 py-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Montant envoyé</span>
+                <span className="font-bold text-gray-900 dark:text-slate-100">{usdtGross.toFixed(4)} USDT</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Frais réseau ({network})</span>
+                <span className="text-orange-500 font-medium">−{netFee} USDT</span>
+              </div>
+              <div className="flex justify-between border-t border-gray-200 dark:border-slate-600 pt-2 mt-1">
+                <span className="font-bold text-gray-800 dark:text-slate-200">Vous recevez</span>
+                <span className="font-bold text-cyan-600 dark:text-cyan-400">{usdtNet.toFixed(4)} USDT</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Réseau</span>
+                <span className="font-mono text-xs text-gray-700 dark:text-slate-300 bg-gray-200 dark:bg-slate-600 px-2 py-0.5 rounded">{network}</span>
+              </div>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-gray-500 dark:text-slate-400 flex-shrink-0">Adresse</span>
+                <span className="font-mono text-xs text-gray-700 dark:text-slate-300 break-all text-right">{destAddress.slice(0, 10)}…{destAddress.slice(-8)}</span>
+              </div>
+            </div>
+            <div className="rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+              ⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowConfirm(false)}
+                className="flex-1 h-12 rounded-xl border-2 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold transition hover:bg-gray-50 dark:hover:bg-slate-700">
+                Annuler
+              </button>
+              <button type="button" onClick={handleUsdtWithdraw} disabled={loading}
+                className="flex-1 h-12 bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-xl transition disabled:opacity-60 flex items-center justify-center gap-2">
+                {loading && <Spinner />}
+                {loading ? 'Envoi…' : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 px-4 py-5">
 
-        {!isCglt && (
+        {isUsdt && (
+          <div className="flex flex-col gap-4">
+            {/* Network selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Réseau de destination</label>
+              <div className="flex gap-2">
+                {(['BSC', 'TRC20', 'ERC20'] as Network[]).map((net) => (
+                  <button key={net} type="button" onClick={() => { setNetwork(net); setDestAddress(''); setError(''); }}
+                    className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border-2 text-xs font-bold transition ${
+                      network === net
+                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                        : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400'
+                    }`}>
+                    {net}
+                    <span className="text-[10px] font-normal mt-0.5 opacity-70">Frais {NETWORK_FEE[net]} USDT</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Destination address */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+                Adresse {network} <span className="text-gray-400 font-normal">({network === 'TRC20' ? 'commence par T' : '0x...'})</span>
+              </label>
+              <input type="text" value={destAddress}
+                onChange={(e) => setDestAddress(e.target.value)}
+                placeholder={network === 'TRC20' ? 'TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' : '0x...'}
+                required
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all break-all ${
+                  !usdtAddrValid ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-cyan-400'
+                }`} />
+              {!usdtAddrValid && destAddress !== '' && (
+                <p className="text-xs text-red-500">Format invalide pour {network}.</p>
+              )}
+            </div>
+
+            {/* Amount */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
+                Montant USDT <span className="text-gray-400 font-normal">— min {MIN_NET_USDT + netFee} USDT brut</span>
+              </label>
+              <input type="number" value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={(MIN_NET_USDT + netFee).toFixed(1)}
+                min={MIN_NET_USDT + netFee} step="0.01" required
+                className={`w-full border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all ${
+                  (usdtBalance !== null && usdtGross > usdtBalance) ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-cyan-400'
+                }`} />
+              {usdtBalance !== null && usdtGross > usdtBalance && (
+                <p className="text-xs text-red-500">Solde insuffisant.</p>
+              )}
+            </div>
+
+            {/* Summary */}
+            {usdtGross > 0 && (
+              <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Montant brut</span><span>{usdtGross.toFixed(4)} USDT</span>
+                </div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400">
+                  <span>Frais réseau {network}</span><span className="text-orange-500">−{netFee} USDT</span>
+                </div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
+                  <span>Vous recevez</span>
+                  <span className={usdtNet < MIN_NET_USDT ? 'text-red-500' : 'text-cyan-600 dark:text-cyan-400'}>
+                    {usdtNet.toFixed(4)} USDT
+                    {usdtNet < MIN_NET_USDT && <span className="text-xs font-normal ml-1">(min {MIN_NET_USDT})</span>}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isCglt && !isUsdt && (
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_operator}</label>
             <div className="flex flex-wrap gap-2">
@@ -237,7 +418,7 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {!isCglt && (
+        {!isCglt && !isUsdt && (
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_phone}</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
@@ -246,7 +427,7 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {isCglt && (
+        {isCglt && !isUsdt && (
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_bsc}</label>
             <input type="text" value={bscAddress} onChange={(e) => setBscAddress(e.target.value)}
@@ -255,7 +436,7 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
+        {!isUsdt && <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
             Montant ({isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}) <span className="text-gray-400 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}</span>
           </label>
@@ -263,9 +444,9 @@ export default function WalletWithdrawPage() {
             placeholder={isCdf ? '100' : isUsd ? '10.00' : '10'} min={minAmt} step={isCdf ? '1' : isUsd ? '0.01' : '1'} required
             className={`w-full border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-orange-400'}`} />
           {overBudget && <p className="text-xs text-red-500">Solde insuffisant.</p>}
-        </div>
+        </div>}
 
-        {amountNum >= minAmt && !isCglt && (
+        {amountNum >= minAmt && !isCglt && !isUsdt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             {isCdf ? (
               <>
@@ -286,15 +467,21 @@ export default function WalletWithdrawPage() {
 
         {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
         {success && (
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl px-4 py-3">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl px-4 py-3 flex flex-col gap-1">
             <p className="text-sm text-green-800 dark:text-green-300 font-medium">✓ {success}</p>
+            {withdrawalId && (
+              <p className="text-xs text-green-600 dark:text-green-400 font-mono">ID : {withdrawalId}</p>
+            )}
           </div>
         )}
 
-        <button type="submit" disabled={loading || !!success || overBudget}
-          className={`w-full h-[52px] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2 ${isCglt ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-500 hover:bg-orange-600'}`}>
+        <button type="submit"
+          disabled={loading || !!success || (isUsdt ? !usdtCanSubmit : overBudget)}
+          className={`w-full h-[52px] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2 ${
+            isUsdt ? 'bg-cyan-600 hover:bg-cyan-700' : isCglt ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-500 hover:bg-orange-600'
+          }`}>
           {loading && <Spinner />}
-          {loading ? T.wd_processing : isCglt ? T.wd_cta_cglt : T.wd_cta}
+          {loading ? T.wd_processing : isUsdt ? 'Retirer USDT' : isCglt ? T.wd_cta_cglt : T.wd_cta}
         </button>
       </form>
     </div>
