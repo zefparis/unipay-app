@@ -31,6 +31,7 @@ type Tab = 'cdf' | 'usd' | 'cglt' | 'usdt';
 type Network = 'BSC' | 'TRC20' | 'ERC20';
 
 const NETWORK_FEE: Record<Network, number> = { BSC: 0.5, TRC20: 1, ERC20: 5 };
+const NETWORK_ENABLED: Record<Network, boolean> = { BSC: true, TRC20: false, ERC20: false };
 const MIN_NET_USDT = 5;
 
 function fmt(n: number, max = 0) { return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: max }).format(n); }
@@ -343,34 +344,43 @@ export default function WalletWithdrawPage() {
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Réseau de destination</label>
               <div className="flex gap-2">
-                {(['BSC', 'TRC20', 'ERC20'] as Network[]).map((net) => (
-                  <button key={net} type="button" onClick={() => { setNetwork(net); setDestAddress(''); setError(''); }}
-                    className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border-2 text-xs font-bold transition ${
-                      network === net
-                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
-                        : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400'
-                    }`}>
-                    {net}
-                    <span className="text-[10px] font-normal mt-0.5 opacity-70">Frais {NETWORK_FEE[net]} USDT</span>
-                  </button>
-                ))}
+                {(['BSC', 'TRC20', 'ERC20'] as Network[]).map((net) => {
+                  const enabled = NETWORK_ENABLED[net];
+                  return (
+                    <button key={net} type="button"
+                      disabled={!enabled}
+                      onClick={() => { if (enabled) { setNetwork(net); setDestAddress(''); setError(''); } }}
+                      className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border-2 text-xs font-bold transition ${
+                        !enabled
+                          ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 text-gray-300 dark:text-slate-600 cursor-not-allowed'
+                          : network === net
+                            ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                            : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400'
+                      }`}>
+                      {net}
+                      <span className="text-[10px] font-normal mt-0.5">
+                        {enabled ? `Frais ${NETWORK_FEE[net]} USDT` : 'Bientôt dispo'}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Destination address */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                Adresse {network} <span className="text-gray-400 font-normal">({network === 'TRC20' ? 'commence par T' : '0x...'})</span>
+                Adresse BSC <span className="text-gray-400 font-normal">(commence par 0x)</span>
               </label>
               <input type="text" value={destAddress}
                 onChange={(e) => setDestAddress(e.target.value)}
-                placeholder={network === 'TRC20' ? 'TXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' : '0x...'}
+                placeholder="0x..."
                 required
                 className={`w-full border rounded-xl px-4 py-3 text-sm font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all break-all ${
                   !usdtAddrValid ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-cyan-400'
                 }`} />
               {!usdtAddrValid && destAddress !== '' && (
-                <p className="text-xs text-red-500">Format invalide pour {network}.</p>
+                <p className="text-xs text-red-500">Adresse BSC invalide (doit commencer par 0x, 42 caractères).</p>
               )}
             </div>
 
