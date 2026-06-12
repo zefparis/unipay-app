@@ -23,11 +23,7 @@ const USD_OPERATORS = [
 const FEE_RATE       = 0.03;
 const MIN_CDF_AMOUNT = 100;
 const MIN_USD_AMOUNT = 1;
-const MIN_CGLT_AMOUNT  = 500;
-const CGLT_PER_WCGLT   = 500;
-const WCGLT_PRICE_USD  = 0.109;
-
-type Tab = 'cdf' | 'usd' | 'cglt' | 'usdt';
+type Tab = 'cdf' | 'usd' | 'usdt';
 type Network = 'BSC' | 'TRC20' | 'ERC20';
 
 const NETWORK_FEE: Record<Network, number> = { BSC: 0.5, TRC20: 1, ERC20: 5 };
@@ -53,11 +49,9 @@ export default function WalletWithdrawPage() {
   const [tab, setTab]                 = useState<Tab>('cdf');
   const [balance, setBalance]         = useState<number | null>(null);
   const [usdBalance, setUsdBalance]   = useState<number | null>(null);
-  const [cgltBalance, setCgltBalance] = useState<number | null>(null);
   const [operator, setOperator]       = useState<string>('orange');
   const [phone, setPhone]             = useState('');
   const [amount, setAmount]           = useState('');
-  const [bscAddress, setBscAddress]   = useState('');
   const [usdtBalance, setUsdtBalance] = useState<number | null>(null);
   const [network, setNetwork]         = useState<Network>('BSC');
   const [destAddress, setDestAddress] = useState('');
@@ -76,23 +70,18 @@ export default function WalletWithdrawPage() {
       .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {});
 
-    fetch('/api/wallet/cglt/balance')
-      .then((r) => r.json())
-      .then((d: { cglt_balance?: number }) => setCgltBalance(Number(d.cglt_balance ?? 0)))
-      .catch(() => {});
-  }, []);
+  }, [])
 
   const isCdf  = tab === 'cdf';
   const isUsd  = tab === 'usd';
-  const isCglt = tab === 'cglt';
   const isUsdt = tab === 'usdt';
 
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
-  const minAmt     = isCdf ? MIN_CDF_AMOUNT : isUsd ? MIN_USD_AMOUNT : MIN_CGLT_AMOUNT;
+  const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
   const amountNum  = Number(amount);
-  const fee        = isCglt ? 0 : amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
+  const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
   const totalCost  = amountNum > 0 ? Math.round((amountNum + fee) * 100) / 100 : 0;
-  const activeBal  = isCdf ? balance : isUsd ? usdBalance : isCglt ? cgltBalance : usdtBalance;
+  const activeBal  = isCdf ? balance : isUsd ? usdBalance : usdtBalance;
   const overBudget = activeBal !== null && amountNum > 0 && amountNum > activeBal;
 
   const netFee        = NETWORK_FEE[network];
@@ -150,30 +139,6 @@ export default function WalletWithdrawPage() {
       if (usdtNet < MIN_NET_USDT) { setError(`Montant insuffisant. Minimum ${MIN_NET_USDT} USDT net (après frais ${netFee} USDT).`); return; }
       if (usdtBalance !== null && usdtGross > usdtBalance) { setError(`Solde USDT insuffisant. Disponible : ${usdtBalance.toFixed(4)} USDT.`); return; }
       setShowConfirm(true);
-      return;
-    }
-
-    if (isCglt) {
-      if (amountNum < 500) { setError(T.err_wd_cglt_min); return; }
-      if (overBudget) { setError(`Solde CGLT insuffisant. Disponible : ${cgltBalance} CGLT.`); return; }
-      if (!/^0x[0-9a-fA-F]{40}$/.test(bscAddress)) { setError(T.err_wd_bsc); return; }
-      setLoading(true);
-      try {
-        const res = await fetch('/api/wallet/cglt/withdraw-bsc', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: amountNum, bsc_address: bscAddress }),
-        });
-        const data = await res.json();
-        if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? T.err_wd_cglt_failed); return; }
-        setSuccess(`${amountNum} wCGLT envoyés sur BSC. Tx: ${String(data.bsc_tx_hash ?? '').slice(0, 14)}...`);
-        setTimeout(() => router.push(`/${locale}/wallet`), 5000);
-      } catch {
-        setError('Erreur réseau, réessayez.');
-      } finally {
-        setLoading(false);
-      }
       return;
     }
 
@@ -240,48 +205,31 @@ export default function WalletWithdrawPage() {
           className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usd' ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           USD
         </button>
-        <button type="button" onClick={() => switchTab('cglt')}
-          className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'cglt' ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
-          CGLT
-        </button>
         <button type="button" onClick={() => switchTab('usdt')}
           className={`flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-bold border-2 transition ${tab === 'usdt' ? 'border-cyan-500 bg-cyan-50 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400' : 'border-gray-200 bg-white text-gray-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
           USDT
         </button>
       </div>
 
+      {/* CGLT hint */}
+      <p className="px-4 pt-2 pb-1 text-xs text-gray-400 dark:text-slate-500">
+        {T.wd_cglt_hint}{' '}
+        <Link href={`/${locale}/wallet/exchange`} className="text-purple-500 dark:text-purple-400 font-medium hover:underline">
+          {T.home_exchange}
+        </Link>
+      </p>
+
       {activeBal !== null && (
         <div className={`mx-4 mt-4 border rounded-xl px-4 py-3 flex items-center justify-between ${isUsdt ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-100 dark:border-cyan-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800'}`}>
           <span className={`text-sm ${isUsdt ? 'text-cyan-700 dark:text-cyan-400' : 'text-orange-700 dark:text-orange-400'}`}>
-            {T.wd_avail.replace('{cur}', isCdf ? 'CDF' : isUsd ? 'USD' : isCglt ? 'CGLT' : 'USDT')}
+            {T.wd_avail.replace('{cur}', isCdf ? 'CDF' : isUsd ? 'USD' : 'USDT')}
           </span>
           <span className={`text-sm font-bold ${isUsdt ? 'text-cyan-700 dark:text-cyan-400' : 'text-orange-700 dark:text-orange-400'}`}>
-            {isCdf ? fmt(activeBal) : isUsd ? activeBal.toFixed(2) : isCglt ? fmt(activeBal) : activeBal.toFixed(4)} {isCdf ? 'CDF' : isUsd ? 'USD' : isCglt ? 'CGLT' : 'USDT'}
+            {isCdf ? fmt(activeBal) : isUsd ? activeBal.toFixed(2) : activeBal.toFixed(4)} {isCdf ? 'CDF' : isUsd ? 'USD' : 'USDT'}
           </span>
         </div>
       )}
 
-      {isCglt && (
-        <div className="mx-4 mt-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-xl px-4 py-3 flex flex-col gap-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_rate}</span>
-            <span className="font-bold text-purple-800 dark:text-purple-200">{CGLT_PER_WCGLT} CGLT = 1 wCGLT</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_value}</span>
-            <span className="font-bold text-purple-800 dark:text-purple-200">~${WCGLT_PRICE_USD}</span>
-          </div>
-          {amountNum >= 500 && (
-            <div className="border-t border-purple-200 dark:border-purple-700 pt-2 flex justify-between text-sm">
-              <span className="text-purple-700 dark:text-purple-300">{T.wd_cglt_receive}</span>
-              <span className="font-bold text-purple-800 dark:text-purple-200">
-                {(amountNum / CGLT_PER_WCGLT).toFixed(4)} wCGLT (~${((amountNum / CGLT_PER_WCGLT) * WCGLT_PRICE_USD).toFixed(3)})
-              </span>
-            </div>
-          )}
-          <p className="text-xs text-purple-500 dark:text-purple-400">{T.wd_cglt_bsc}</p>
-        </div>
-      )}
 
       {/* USDT Confirmation Dialog */}
       {showConfirm && (
@@ -422,7 +370,7 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {!isCglt && !isUsdt && (
+        {!isUsdt && (
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_operator}</label>
             <div className="flex flex-wrap gap-2">
@@ -436,7 +384,7 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {!isCglt && !isUsdt && (
+        {!isUsdt && (
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_phone}</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
@@ -445,26 +393,18 @@ export default function WalletWithdrawPage() {
           </div>
         )}
 
-        {isCglt && !isUsdt && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_bsc}</label>
-            <input type="text" value={bscAddress} onChange={(e) => setBscAddress(e.target.value)}
-              placeholder="0x..." required
-              className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all break-all" />
-          </div>
-        )}
 
         {!isUsdt && <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            Montant ({isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}) <span className="text-gray-400 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : isUsd ? 'USD' : 'CGLT'}</span>
+            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-400 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
           </label>
           <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
-            placeholder={isCdf ? '100' : isUsd ? '10.00' : '10'} min={minAmt} step={isCdf ? '1' : isUsd ? '0.01' : '1'} required
+            placeholder={isCdf ? '100' : '10.00'} min={minAmt} step={isCdf ? '1' : '0.01'} required
             className={`w-full border rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-2 transition-all duration-200 ${overBudget ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-orange-400'}`} />
           {overBudget && <p className="text-xs text-red-500">Solde insuffisant.</p>}
         </div>}
 
-        {amountNum >= minAmt && !isCglt && !isUsdt && (
+        {amountNum >= minAmt && !isUsdt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             {isCdf ? (
               <>
@@ -496,10 +436,10 @@ export default function WalletWithdrawPage() {
         <button type="submit"
           disabled={loading || !!success || (isUsdt ? !usdtCanSubmit : overBudget)}
           className={`w-full h-[52px] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2 ${
-            isUsdt ? 'bg-cyan-600 hover:bg-cyan-700' : isCglt ? 'bg-purple-600 hover:bg-purple-700' : 'bg-orange-500 hover:bg-orange-600'
+            isUsdt ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-orange-500 hover:bg-orange-600'
           }`}>
           {loading && <Spinner />}
-          {loading ? T.wd_processing : isUsdt ? 'Retirer USDT' : isCglt ? T.wd_cta_cglt : T.wd_cta}
+          {loading ? T.wd_processing : isUsdt ? 'Retirer USDT' : T.wd_cta}
         </button>
       </form>
     </div>

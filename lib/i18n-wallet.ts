@@ -211,6 +211,7 @@ const dict = {
     err_wd_bsc:       'Adresse BSC invalide (format 0x...).',
     err_wd_cglt_min:  'Montant minimum : 500 CGLT (= 1 wCGLT).',
     err_wd_cglt_failed:'Retrait CGLT échoué',
+    wd_cglt_hint:     'Pour retirer des CGLT vers BSC, utilisez',
 
     // ── Swap ───────────────────────────────────────────────────────────────────────
     swap_title:       'Convertir',
@@ -503,6 +504,7 @@ const dict = {
     err_wd_bsc:       'Invalid BSC address (format 0x...).',
     err_wd_cglt_min:  'Minimum amount: 500 CGLT (= 1 wCGLT).',
     err_wd_cglt_failed:'CGLT withdrawal failed',
+    wd_cglt_hint:     'To withdraw CGLT to BSC, use',
 
     // ── Swap ───────────────────────────────────────────────────────────────────────
     swap_title:       'Convert',
