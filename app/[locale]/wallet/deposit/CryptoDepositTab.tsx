@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, CheckCheck, ExternalLink, RefreshCw } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 
 interface DepositAddress {
   bsc_address: string;
@@ -45,6 +47,9 @@ function formatDate(iso: string) {
  * Polling for new deposits every 30 s.
  * ───────────────────────────────────────────────────────────────────────────── */
 export default function CryptoDepositTab() {
+  const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
+
   const [addrData, setAddrData]   = useState<DepositAddress | null>(null);
   const [deposits, setDeposits]   = useState<CryptoDeposit[]>([]);
   const [loading,  setLoading]    = useState(true);
@@ -113,6 +118,14 @@ export default function CryptoDepositTab() {
   return (
     <div className="flex flex-col gap-5 px-4 py-5">
 
+      {/* Title */}
+      <h2 className="text-base font-bold text-slate-100">{T.dep_bsc_title}</h2>
+
+      {/* Help text */}
+      <div className="rounded-xl border border-blue-700/40 bg-blue-900/20 px-4 py-3 text-xs text-blue-200 leading-relaxed">
+        {T.dep_bsc_help}
+      </div>
+
       {/* Network badge */}
       <div className="flex items-center gap-2">
         <span className="bg-yellow-500 text-black text-xs font-bold px-2.5 py-1 rounded-full">BSC</span>
@@ -126,7 +139,7 @@ export default function CryptoDepositTab() {
         </div>
 
         <div className="w-full">
-          <p className="text-xs text-slate-400 mb-1.5">Votre adresse de dépôt BSC</p>
+          <p className="text-xs text-slate-400 mb-1.5">{T.dep_bsc_addr_label}</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs font-mono bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-slate-200 break-all">
               {addrData.bsc_address}
@@ -163,7 +176,7 @@ export default function CryptoDepositTab() {
       {/* Warning */}
       <div className="rounded-xl border border-red-700/60 bg-red-900/20 px-4 py-3 flex gap-2">
         <span className="text-red-400 text-base flex-shrink-0">⚠️</span>
-        <p className="text-xs text-red-300 leading-relaxed">{addrData.warning}</p>
+        <p className="text-xs text-red-300 leading-relaxed">{T.dep_bsc_warn_static}</p>
       </div>
 
       {/* Info */}

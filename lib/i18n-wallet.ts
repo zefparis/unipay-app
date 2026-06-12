@@ -172,6 +172,14 @@ const dict = {
     recv_bsc_info:    "Cette adresse est compatible BNB Chain (BSC). Partagez-la pour recevoir des wCGLT depuis n'importe quel wallet.",
     recv_auto:        'Les wCGLT reçus apparaîtront automatiquement dans votre solde CGLT.',
     recv_bscscan:     'Voir sur BscScan',
+    recv_help:        "Ceci est votre adresse personnelle pour recevoir des wCGLT depuis un portefeuille externe (ex : MetaMask). Les wCGLT reçus apparaîtront dans votre solde CGLT.",
+    recv_not_deposit: "Cette adresse sert à RECEVOIR des wCGLT, pas à déposer de l'USDT (pour cela, utilisez Déposer).",
+
+    // ── Deposit (onglet Crypto) ────────────────────────────────────────────────────
+    dep_bsc_title:      "Déposer de l'USDT (BNB Chain)",
+    dep_bsc_help:       "Envoyez uniquement de l'USDT (réseau BNB Chain / BEP-20) à cette adresse. Votre solde USDT sera crédité automatiquement.",
+    dep_bsc_addr_label: "Votre adresse de dépôt USDT",
+    dep_bsc_warn_static:"N'envoyez que de l'USDT. Tout autre token sera perdu.",
 
     // ── Home ────────────────────────────────────────────────────────────────────────────
     home_deposit:     'Déposer',
@@ -465,6 +473,14 @@ const dict = {
     recv_bsc_info:    'This address is BNB Chain (BSC) compatible. Share it to receive wCGLT from any wallet.',
     recv_auto:        'Received wCGLT will automatically appear in your CGLT balance.',
     recv_bscscan:     'View on BscScan',
+    recv_help:        'This is your personal address for receiving wCGLT from an external wallet (e.g. MetaMask). Received wCGLT will appear in your CGLT balance.',
+    recv_not_deposit: 'This address is for RECEIVING wCGLT, not for depositing USDT (for that, use Deposit).',
+
+    // ── Deposit (Crypto tab) ───────────────────────────────────────────────────
+    dep_bsc_title:      'Deposit USDT (BNB Chain)',
+    dep_bsc_help:       'Send only USDT (BNB Chain / BEP-20 network) to this address. Your USDT balance will be credited automatically.',
+    dep_bsc_addr_label: 'Your USDT deposit address',
+    dep_bsc_warn_static:'Only send USDT. Any other token will be lost.',
 
     // ── Home ────────────────────────────────────────────────────────────────────────────
     home_deposit:     'Deposit',

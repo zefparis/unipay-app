@@ -76,6 +76,11 @@ export default function ReceivePage() {
           </div>
         ) : (
           <>
+            {/* Help text */}
+            <div className="w-full rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50 dark:bg-purple-900/20 px-4 py-3 text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
+              {T.recv_help}
+            </div>
+
             {/* QR card */}
             <div className="w-full rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-sm p-6 flex flex-col items-center gap-5">
               <div className="p-3 bg-white rounded-xl shadow-inner">
@@ -114,6 +119,11 @@ export default function ReceivePage() {
               <p className="text-xs text-purple-200 mt-3 leading-relaxed">
                 {T.recv_auto}
               </p>
+            </div>
+
+            {/* Not deposit note */}
+            <div className="w-full rounded-xl border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+              {T.recv_not_deposit}
             </div>
 
             {/* BscScan */}
