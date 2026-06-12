@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2, Gamepad2 } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, TrendingUp, Wallet, Repeat2, Gamepad2, ChevronDown } from 'lucide-react';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -69,6 +69,7 @@ export default function WalletHomePage() {
   const [cgltBalance, setCgltBalance] = useState(0);
   const [txList, setTxList] = useState<Tx[]>([]);
   const [loadingBal, setLoadingBal] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     fetch('/api/wallet/balance')
@@ -188,7 +189,7 @@ export default function WalletHomePage() {
               </p>
             </div>
             <Link
-              href={`${base}/send-usdt`}
+              href={`${base}/send?tab=usdt`}
               className="px-4 py-2 rounded-full text-sm font-semibold text-white transition active:scale-95 hover:bg-white/[0.16]"
               style={{
                 background: 'rgba(255,255,255,0.1)',
@@ -203,21 +204,40 @@ export default function WalletHomePage() {
         </div>
       </div>
 
-      {/* Action grid — 3 + 2 centered, glass tiles */}
-      <div className="relative z-10 flex flex-wrap justify-center gap-3 px-4 py-6">
-        {([
-          { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-400" size={24} />, label: T.home_deposit },
-          { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-400"  size={24} />, label: T.home_withdraw },
-          { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: T.home_send },
-          { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: T.home_convert },
-          { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: T.home_scan },
-          { href: `${base}/receive`,  icon: <Wallet          className="text-teal-400"    size={24} />, label: T.home_receive },
-          { href: `${base}/exchange`, icon: <Repeat2         className="text-amber-400"   size={24} />, label: T.home_exchange },
-          { href: `${base}/crypto`,   icon: <TrendingUp      className="text-purple-400"  size={24} />, label: T.home_crypto },
-        ] as const).map(({ href, icon, label }) => (
-          <Link
-            key={label}
-            href={href}
+      {/* Action grid — 6 main tiles */}
+      <div className="relative z-10 px-4 pt-6">
+        <div className="flex flex-wrap justify-center gap-3">
+          {([
+            { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-400" size={24} />, label: T.home_deposit },
+            { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-400"  size={24} />, label: T.home_withdraw },
+            { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: T.home_send },
+            { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: T.home_convert },
+            { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: T.home_scan },
+          ] as const).map(({ href, icon, label }) => (
+            <Link
+              key={label}
+              href={href}
+              className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+              >
+                {icon}
+              </div>
+              <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{label}</span>
+            </Link>
+          ))}
+          <a
+            href="https://congogaming.com"
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
             style={{
               background: 'rgba(255,255,255,0.06)',
@@ -230,31 +250,62 @@ export default function WalletHomePage() {
               className="w-12 h-12 rounded-full flex items-center justify-center"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              {icon}
+              <Gamepad2 className="text-violet-400" size={24} />
             </div>
-            <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{label}</span>
-          </Link>
-        ))}
-        <a
-          href="https://congogaming.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
-          style={{
-            background: 'rgba(255,255,255,0.06)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-          }}
-        >
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+            <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{T.home_gaming}</span>
+          </a>
+        </div>
+
+        {/* Advanced Crypto — toggle button */}
+        <div className="flex justify-center mt-4 mb-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium text-white/50 hover:text-white/80 transition-all duration-200"
+            style={{ border: '1px solid rgba(255,255,255,0.12)' }}
           >
-            <Gamepad2 className="text-violet-400" size={24} />
+            <span>{T.home_advanced}</span>
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-300 ${showAdvanced ? 'rotate-180' : 'rotate-0'}`}
+            />
+          </button>
+        </div>
+
+        {/* Advanced tiles — collapsible */}
+        <div
+          className={`overflow-hidden transition-all duration-300 ${
+            showAdvanced ? 'max-h-[300px] opacity-100 pb-6' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            {([
+              { href: `${base}/receive`,  icon: <Wallet     className="text-teal-400"   size={24} />, label: T.home_receive },
+              { href: `${base}/exchange`, icon: <Repeat2    className="text-amber-400"  size={24} />, label: T.home_exchange },
+              { href: `${base}/crypto`,   icon: <TrendingUp className="text-purple-400" size={24} />, label: T.home_crypto },
+            ] as const).map(({ href, icon, label }) => (
+              <Link
+                key={label}
+                href={href}
+                className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  {icon}
+                </div>
+                <span className="text-[11px] font-semibold text-white/60 text-center leading-tight break-words">{label}</span>
+              </Link>
+            ))}
           </div>
-          <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{T.home_gaming}</span>
-        </a>
+        </div>
       </div>
 
       {/* Recent transactions */}

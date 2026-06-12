@@ -16,7 +16,7 @@ const dict = {
     optional:         '(optionnel)',
     balance_avail:    'Solde disponible',
     min_amount:       'min',
-    fee_pct:          'Frais (3%)',
+    fee_pct:          'Frais (4%)',
     you_receive:      'Vous recevez',
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -182,7 +182,8 @@ const dict = {
     home_receive:     'Recevoir wCGLT',
     home_exchange:    'Échanger CGLT',
     home_crypto:      'Marchés Crypto',
-    home_gaming:      'Gagner CGLT',
+    home_gaming:      'Jouer & Gagner',
+    home_advanced:    'Crypto avancé',
     home_usd_lbl:     'Solde USD',
     home_cglt_lbl:    'Solde CGLT',
     home_usdt_lbl:    'Solde USDT',
@@ -307,7 +308,7 @@ const dict = {
     optional:         '(optional)',
     balance_avail:    'Available balance',
     min_amount:       'min',
-    fee_pct:          'Fee (3%)',
+    fee_pct:          'Fee (4%)',
     you_receive:      'You receive',
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -473,7 +474,8 @@ const dict = {
     home_receive:     'Receive wCGLT',
     home_exchange:    'Exchange CGLT',
     home_crypto:      'Crypto Markets',
-    home_gaming:      'Earn CGLT',
+    home_gaming:      'Play & Earn',
+    home_advanced:    'Advanced Crypto',
     home_usd_lbl:     'USD balance',
     home_cglt_lbl:    'CGLT balance',
     home_usdt_lbl:    'USDT balance',
