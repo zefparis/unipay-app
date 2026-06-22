@@ -27,6 +27,7 @@ export default function middleware(request: NextRequest) {
 
         const url = request.nextUrl.clone();
         url.pathname = `/${locale}/wallet/login`;
+        url.searchParams.set('next', pathname);
         return NextResponse.redirect(url);
       }
     }
