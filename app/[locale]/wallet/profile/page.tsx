@@ -18,6 +18,7 @@ interface Profile {
   is_verified: boolean;
   balance_cdf: number;
   blockchain_address: string | null;
+  cdp_wallet_address: string | null;
   created_at: string;
 }
 interface Tx { direction: string; status: string; amount: number; net_amount: number }
@@ -215,6 +216,11 @@ export default function WalletProfilePage() {
   function copyBscAddress() {
     if (!profile?.blockchain_address) return;
     navigator.clipboard.writeText(profile.blockchain_address).then(() => showToast(T.prof_bsc_copied));
+  }
+
+  function copyCdpAddress() {
+    if (!profile?.cdp_wallet_address) return;
+    navigator.clipboard.writeText(profile.cdp_wallet_address).then(() => showToast(T.prof_cdp_copied));
   }
 
   function copyWalletId() {
@@ -475,6 +481,38 @@ export default function WalletProfilePage() {
             </div>
           </div>
         </Card>
+
+        {/* ── Section CDP : Adresse de dépôt USDC/Base ── */}
+        {profile?.cdp_wallet_address && (
+          <Card title={T.prof_cdp_lbl}>
+            <div className="flex flex-col items-center gap-4 py-5 px-4">
+              <div className="max-w-[160px] mx-auto p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
+                <QRCodeSVG
+                  value={profile.cdp_wallet_address}
+                  size={140}
+                  level="M"
+                />
+              </div>
+              <div className="flex items-center gap-2 w-full bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3 py-2.5">
+                <span className="flex-1 font-mono text-xs text-gray-700 dark:text-slate-300 break-all leading-relaxed">
+                  {profile.cdp_wallet_address}
+                </span>
+                <button
+                  onClick={copyCdpAddress}
+                  className="shrink-0 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-500 dark:text-slate-400 transition"
+                  aria-label="Copier l'adresse"
+                >
+                  <IcCopy />
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 dark:text-slate-500 text-center">
+                {locale === 'en'
+                  ? 'Send USDC on Base network to this address'
+                  : 'Envoyez des USDC sur le réseau Base à cette adresse'}
+              </p>
+            </div>
+          </Card>
+        )}
 
         {/* ── Section 3 : Statistiques ── */}
         <Card title={T.prof_stats}>
