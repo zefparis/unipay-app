@@ -4,25 +4,27 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { Home, ArrowLeftRight, ArrowDownUp, List, Bell, User } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
+import { wT } from '@/lib/i18n-wallet';
 
-const NAV_ITEMS = [
-  { key: 'home',          segment: '',               Icon: Home,           label: 'Accueil' },
-  { key: 'send',          segment: '/send',          Icon: ArrowLeftRight, label: 'Envoyer' },
-  { key: 'swap',          segment: '/swap',          Icon: ArrowDownUp,    label: 'Swap' },
-  { key: 'transactions',  segment: '/transactions',  Icon: List,           label: 'Historique' },
-  { key: 'notifications', segment: '/notifications', Icon: Bell,           label: 'Notifs' },
-  { key: 'profile',       segment: '/profile',       Icon: User,           label: 'Profil' },
+const NAV_KEYS = [
+  { key: 'home',          segment: '',               Icon: Home,           labelKey: 'nav_home'    },
+  { key: 'send',          segment: '/send',          Icon: ArrowLeftRight, labelKey: 'nav_send'    },
+  { key: 'swap',          segment: '/swap',          Icon: ArrowDownUp,    labelKey: 'nav_swap'    },
+  { key: 'transactions',  segment: '/transactions',  Icon: List,           labelKey: 'nav_history' },
+  { key: 'notifications', segment: '/notifications', Icon: Bell,           labelKey: 'nav_notifs'  },
+  { key: 'profile',       segment: '/profile',       Icon: User,           labelKey: 'nav_profile' },
 ] as const;
 
 export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
   const homeHref = isLoggedIn ? `/${locale}/wallet` : `/${locale}`;
   const { unreadCount } = useNotifications();
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] flex items-center z-50 transition-colors duration-200">
-      {NAV_ITEMS.map(({ key, segment, Icon, label }) => {
+      {NAV_KEYS.map(({ key, segment, Icon, labelKey }) => {
         const href = key === 'home' ? homeHref : `/${locale}/wallet${segment}`;
         const isActive =
           key === 'home'
@@ -47,7 +49,7 @@ export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: b
               )}
             </div>
             <span className={`text-[11px] transition-all duration-200 ${isActive ? 'text-[#00A651] font-semibold' : 'text-gray-400 dark:text-slate-500'}`}>
-              {label}
+              {T[labelKey]}
             </span>
           </Link>
         );

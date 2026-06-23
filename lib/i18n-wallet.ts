@@ -194,6 +194,15 @@ const dict = {
     home_crypto:      'Marchés Crypto',
     home_gaming:      'Jouer & Gagner',
     home_advanced:    'Crypto avancé',
+
+    // ── Bottom nav ──────────────────────────────────────────────────────────
+    nav_home:         'Accueil',
+    nav_send:         'Envoyer',
+    nav_swap:         'Swap',
+    nav_history:      'Historique',
+    nav_notifs:       'Notifs',
+    nav_profile:      'Profil',
+
     home_usd_lbl:     'Solde USD',
     home_cglt_lbl:    'Solde CGLT',
     home_usdt_lbl:    'Solde USDT',
@@ -497,6 +506,15 @@ const dict = {
     home_crypto:      'Crypto Markets',
     home_gaming:      'Play & Earn',
     home_advanced:    'Advanced Crypto',
+
+    // ── Bottom nav ──────────────────────────────────────────────────────────
+    nav_home:         'Home',
+    nav_send:         'Send',
+    nav_swap:         'Swap',
+    nav_history:      'History',
+    nav_notifs:       'Notifs',
+    nav_profile:      'Profile',
+
     home_usd_lbl:     'USD balance',
     home_cglt_lbl:    'CGLT balance',
     home_usdt_lbl:    'USDT balance',
