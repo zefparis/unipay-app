@@ -35,7 +35,7 @@ export default async function LocaleLayout({
         </NextIntlClientProvider>
         <Script
           src="https://hcs-widget-mvp.vercel.app/widget/v3/hcs-widget.js"
-          data-widget="wid_252792d76ceaa21f2d263aab"
+          data-widget="443fe996-6651-48d8-8e17-3cf0a80cc5e0"
           strategy="afterInteractive"
         />
       </body>
