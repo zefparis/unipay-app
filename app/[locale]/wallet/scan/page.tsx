@@ -16,7 +16,6 @@ export default function WalletScanPage() {
   const [error, setError]         = useState('');
   const [scanned, setScanned]     = useState(false);
   const [active, setActive]       = useState(false);
-  const [loading, setLoading]     = useState(false);
   const [manual, setManual]       = useState(false);
   const [manualInput, setManualInput] = useState('');
 
@@ -76,7 +75,7 @@ export default function WalletScanPage() {
     [T],
   );
 
-  async function startCamera() {
+  function startCamera() {
     if (!isSecure) {
       setError(T.scan_https);
       return;
@@ -86,28 +85,13 @@ export default function WalletScanPage() {
       setManual(true);
       return;
     }
-
-    setLoading(true);
     setError('');
     setManual(false);
-
-    try {
-      // Explicit permission request with user gesture (required on iOS Safari).
-      await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-      });
-      setActive(true);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
-        setError(T.scan_permission);
-      } else {
-        setError(T.scan_err);
-      }
-      setManual(true);
-    } finally {
-      setLoading(false);
-    }
+    // Set active synchronously inside the user gesture handler so the
+    // Scanner's internal getUserMedia call stays within the gesture scope
+    // (required by iOS Safari). Do NOT call getUserMedia here — that would
+    // open a competing stream that blocks Scanner's own stream.
+    setActive(true);
   }
 
   function handleManualSubmit(e: React.FormEvent) {
@@ -180,11 +164,10 @@ export default function WalletScanPage() {
             </div>
             <button
               onClick={startCamera}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-[#00A651] text-white rounded-xl font-semibold text-sm active:scale-95 transition disabled:opacity-60"
+              className="flex items-center gap-2 px-6 py-3 bg-[#00A651] text-white rounded-xl font-semibold text-sm active:scale-95 transition"
             >
               <Camera size={20} />
-              {loading ? '…' : T.scan_enable}
+              {T.scan_enable}
             </button>
             <button
               onClick={() => setManual(true)}
