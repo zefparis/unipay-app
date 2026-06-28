@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Scanner, type IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { X, Camera, QrCode, Keyboard } from 'lucide-react';
@@ -18,6 +18,18 @@ export default function WalletScanPage() {
   const [active, setActive]       = useState(false);
   const [manual, setManual]       = useState(false);
   const [manualInput, setManualInput] = useState('');
+
+  // After the camera has been streaming for 1.5 s we know it works;
+  // any subsequent onError calls are ZXing decode failures (no QR in frame)
+  // and should be silently ignored.
+  const cameraReadyRef = useRef(false);
+  const cameraTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cameraTimerRef.current) clearTimeout(cameraTimerRef.current);
+    };
+  }, []);
 
   const isSecure = typeof window !== 'undefined' && window.isSecureContext;
   const hasMediaDevices = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
@@ -63,12 +75,26 @@ export default function WalletScanPage() {
 
   const handleError = useCallback(
     (err: unknown) => {
+      // Once the camera has been running, errors are ZXing decode failures
+      // (NotFoundException) — not real camera problems. Ignore them.
+      if (cameraReadyRef.current) return;
+
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('denied')) {
-        setActive(false);
+      const msgLow = msg.toLowerCase();
+
+      // Silently ignore benign ZXing / stream events
+      if (
+        msgLow.includes('aborted') ||
+        msgLow.includes('track') ||
+        msgLow.includes('notfound') ||
+        msgLow.includes('no multiformat') ||
+        msgLow.includes('unable to decode')
+      ) return;
+
+      setActive(false);
+      if (msgLow.includes('permission') || msgLow.includes('denied') || msgLow.includes('notallowed')) {
         setError(T.scan_permission);
-      } else if (!msg.toLowerCase().includes('aborted') && !msg.toLowerCase().includes('track')) {
-        setActive(false);
+      } else {
         setError(T.scan_err);
       }
     },
@@ -87,10 +113,13 @@ export default function WalletScanPage() {
     }
     setError('');
     setManual(false);
+    cameraReadyRef.current = false;
+    if (cameraTimerRef.current) clearTimeout(cameraTimerRef.current);
+    // Mark camera as "ready" after 1.5 s — from this point onError is decode noise
+    cameraTimerRef.current = setTimeout(() => { cameraReadyRef.current = true; }, 1500);
     // Set active synchronously inside the user gesture handler so the
     // Scanner's internal getUserMedia call stays within the gesture scope
-    // (required by iOS Safari). Do NOT call getUserMedia here — that would
-    // open a competing stream that blocks Scanner's own stream.
+    // (required by iOS Safari).
     setActive(true);
   }
 
