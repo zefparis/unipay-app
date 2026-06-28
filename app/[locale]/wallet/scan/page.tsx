@@ -6,7 +6,7 @@ import { Scanner, type IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { X, Camera, QrCode, Keyboard } from 'lucide-react';
 import { wT } from '@/lib/i18n-wallet';
 
-const SCHEME = 'unipaycongo://send';
+const DRC_PHONE_RE = /^\+?243[0-9]{9}$|^0[0-9]{9}$/;
 
 export default function WalletScanPage() {
   const router = useRouter();
@@ -37,30 +37,54 @@ export default function WalletScanPage() {
   const processQr = useCallback(
     (result: string) => {
       if (scanned) return;
+      const raw = result.trim();
 
-      if (!result.startsWith(SCHEME)) {
+      let phone = '';
+      let name  = '';
+
+      try {
+        // Case 1: HTTPS URL (profile QR) or unipaycongo:// deep-link
+        // e.g. https://app.unipaycongo.com/fr/wallet/send?phone=+243...&name=...
+        //      unipaycongo://send?phone=+243...
+        const normalised = raw.startsWith('unipaycongo://')
+          ? raw.replace('unipaycongo://', 'https://unipaycongo.com/')
+          : raw;
+
+        const url = new URL(normalised);
+        const hasWalletSendPath = url.pathname.includes('/wallet/send');
+        const hasPhone = url.searchParams.has('phone');
+
+        if (hasWalletSendPath || hasPhone) {
+          phone = url.searchParams.get('phone') ?? '';
+          name  = url.searchParams.get('name')  ?? '';
+        } else {
+          // URL found but no usable phone param → invalid
+          setError(T.scan_qr_invalid);
+          return;
+        }
+      } catch {
+        // Case 2: plain phone number (no URL)
+        const digits = raw.replace(/[\s\-().]/g, '');
+        if (DRC_PHONE_RE.test(digits)) {
+          phone = digits;
+        } else {
+          setError(T.scan_qr_invalid);
+          return;
+        }
+      }
+
+      if (!phone) {
         setError(T.scan_qr_invalid);
-        setScanned(false);
         return;
       }
 
       setScanned(true);
       setError('');
 
-      try {
-        const url   = new URL(result.replace('unipaycongo://', 'https://unipaycongo.com/'));
-        const phone = url.searchParams.get('phone') ?? '';
-        const name  = url.searchParams.get('name')  ?? '';
-
-        const dest = new URLSearchParams();
-        if (phone) dest.set('phone', phone);
-        if (name)  dest.set('name', name);
-
-        router.push(`/${locale}/wallet/send?${dest.toString()}`);
-      } catch {
-        setScanned(false);
-        setError(T.scan_qr_invalid);
-      }
+      const dest = new URLSearchParams();
+      dest.set('phone', phone);
+      if (name) dest.set('name', name);
+      router.push(`/${locale}/wallet/send?${dest.toString()}`);
     },
     [scanned, locale, router, T],
   );
