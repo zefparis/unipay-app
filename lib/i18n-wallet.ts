@@ -255,6 +255,21 @@ const dict = {
     err_swap_paused:  'Les conversions sont temporairement suspendues.',
     err_swap_failed:  'Conversion échouée',
 
+    // ── Scan QR ─────────────────────────────────────────────────────────────
+    scan_title:       'Scanner un QR',
+    scan_point:       'Pointez la caméra vers le QR code',
+    scan_enable:      'Activer la caméra',
+    scan_permission:  'Accès caméra refusé',
+    scan_permission_sub: 'Autorisez l\'accès à la caméra dans les paramètres de votre navigateur pour scanner un QR code.',
+    scan_manual:      'Saisie manuelle',
+    scan_manual_label: 'Collez le lien UniPay ou le numéro du destinataire',
+    scan_manual_cta:  'Continuer',
+    scan_detected:    'QR détecté — Redirection…',
+    scan_unsupported: 'Votre appareil ne supporte pas le scan de QR code.',
+    scan_err:         "Impossible d'accéder à la caméra. Vérifiez les permissions.",
+    scan_qr_invalid:  'QR code non compatible UniPay.',
+    scan_https:       'Le scan de QR nécessite une connexion sécurisée (HTTPS).',
+
     // ── Send USDT ────────────────────────────────────────────────────────────────
     usdt_title:       'Envoyer USDT',
     usdt_bal:         'Solde USDT disponible',
@@ -566,6 +581,21 @@ const dict = {
     err_swap_invalid: 'Invalid amount.',
     err_swap_paused:  'Conversions are temporarily suspended.',
     err_swap_failed:  'Conversion failed',
+
+    // ── Scan QR ─────────────────────────────────────────────────────────────
+    scan_title:       'Scan QR',
+    scan_point:       'Point the camera at the QR code',
+    scan_enable:      'Enable camera',
+    scan_permission:  'Camera access denied',
+    scan_permission_sub: 'Allow camera access in your browser settings to scan a QR code.',
+    scan_manual:      'Manual entry',
+    scan_manual_label: 'Paste UniPay link or recipient phone number',
+    scan_manual_cta:  'Continue',
+    scan_detected:    'QR detected — Redirecting…',
+    scan_unsupported: 'Your device does not support QR scanning.',
+    scan_err:         'Unable to access camera. Please check permissions.',
+    scan_qr_invalid:  'QR code is not compatible with UniPay.',
+    scan_https:       'QR scanning requires a secure connection (HTTPS).',
 
     // ── Send USDT ────────────────────────────────────────────────────────────────
     usdt_title:       'Send USDT',
