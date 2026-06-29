@@ -59,7 +59,7 @@ const COIN_META: Record<string, { symbol: string; name: string; icon: string }> 
   tether:       { symbol: 'USDT', name: 'Tether',    icon: '₮' },
 };
 
-const WCGLT_CONTRACT = '0x6b402687B45f98913dF7409660A8f04f81752f8B';
+const WCGLT_CONTRACT = '0xBf0535d21E59E4BB026f6848cc71Db971B120374';
 const PANCAKE_URL = `https://pancakeswap.finance/swap?outputCurrency=${WCGLT_CONTRACT}`;
 const BSCSCAN_URL = `https://bscscan.com/token/${WCGLT_CONTRACT}`;
 const DEXSCREENER_URL = `https://dexscreener.com/bsc/${WCGLT_CONTRACT}`;
