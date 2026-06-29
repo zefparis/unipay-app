@@ -11,6 +11,7 @@ const PANCAKE_FEE_RATE = 0.0025; // 0.25%
 
 const BLOCKED_ADDRESSES = new Set([
   '0x7851e44d4a8b0939cf10ede3922a762722437ea5',
+  '0x2b8a431b540c41d2af83301287e5b18dd1f221cb',
 ]);
 
 function Spinner() {
