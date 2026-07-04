@@ -7,6 +7,10 @@ export async function POST(request: NextRequest) {
   const t = request.cookies.get('wallet_token')?.value;
   if (!t) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (process.env.NODE_ENV === 'production' && !process.env.API_URL) {
+    return NextResponse.json({ error: 'Server misconfiguration: API_URL not set' }, { status: 503 });
+  }
+
   // Forward raw multipart body with original content-type (preserves boundary)
   const contentType = request.headers.get('content-type') ?? '';
   const body = await request.arrayBuffer();

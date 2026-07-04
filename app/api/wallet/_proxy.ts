@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const _API_URL = process.env.API_URL;
-if (!_API_URL && process.env.NODE_ENV === 'production') {
-  throw new Error('API_URL environment variable is required in production');
-}
-export const API_URL = _API_URL ?? 'https://unipay-api.onrender.com';
+export const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
 
 const TIMEOUT_MS = 10_000;
 
@@ -15,6 +11,15 @@ export async function upstreamFetch(
   url: string,
   init: RequestInit = {}
 ): Promise<FetchSuccess | FetchFailure> {
+  if (process.env.NODE_ENV === 'production' && !process.env.API_URL) {
+    return {
+      ok: false,
+      errorResponse: NextResponse.json(
+        { error: 'Server misconfiguration: API_URL not set' },
+        { status: 503 }
+      ),
+    };
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
