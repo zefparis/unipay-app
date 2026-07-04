@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_URL, upstreamFetch } from '../../_proxy';
 
-const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const walletToken = request.cookies.get('wallet_token')?.value;
@@ -8,15 +9,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const upstream = await fetch(`${API_URL}/v1/wallet/swap/rate`, {
+  const result = await upstreamFetch(`${API_URL}/v1/wallet/swap/rate`, {
     headers: { Authorization: `Bearer ${walletToken}` },
-    cache: 'no-store',
   });
 
-  const data = await upstream.json();
+  if (!result.ok) return result.errorResponse;
+  const { res, data } = result;
 
-  if (!upstream.ok) {
-    return NextResponse.json({ error: data.error ?? 'Rate unavailable' }, { status: upstream.status });
+  if (!res.ok) {
+    return NextResponse.json({ error: (data as { error?: string }).error ?? 'Rate unavailable' }, { status: res.status });
   }
 
   return NextResponse.json(data);
