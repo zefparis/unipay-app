@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   description: "Déposez, retirez et envoyez de l'argent avec UniPay Congo.",
 };
 
-export default function WalletLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies();
+export default async function WalletLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
   const isLoggedIn = !!cookieStore.get('wallet_token')?.value;
 
   return (

@@ -51,7 +51,10 @@ function LoginForm() {
   const router       = useRouter();
   const { locale }   = useParams<{ locale: string }>();
   const searchParams = useSearchParams();
-  const next         = searchParams.get('next') ?? `/${locale}/wallet`;
+  const rawNext      = searchParams.get('next') ?? `/${locale}/wallet`;
+  const next         = (rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://'))
+    ? rawNext
+    : `/${locale}/wallet`;
   const lang         = locale === 'en' ? 'en' : 'fr';
   const tt           = T[lang];
 
@@ -79,6 +82,7 @@ function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? tt.err_def); return; }
+      // PII: phone number stored in clear text for form pre-fill. Cleared on logout (see profile/page.tsx doLogout).
       localStorage.setItem('wallet_phone', phone);
       router.refresh();
       router.replace(next);

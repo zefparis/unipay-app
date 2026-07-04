@@ -15,11 +15,12 @@ export default async function LocaleLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const messages = await getMessages();
   return (
-    <html lang={params.locale}>
+    <html lang={locale}>
       <head>
         <meta name="theme-color" content="#00A651" />
         <meta name="mobile-web-app-capable" content="yes" />

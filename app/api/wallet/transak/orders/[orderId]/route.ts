@@ -4,13 +4,19 @@ import { API_URL, upstreamFetch } from '../../../_proxy';
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { orderId: string } },
+  { params }: { params: Promise<{ orderId: string }> },
 ) {
   const token = (await cookies()).get('wallet_token')?.value;
   if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
+  const { orderId } = await params;
+  const isValidOrderId = /^[a-zA-Z0-9-]{1,64}$/.test(orderId);
+  if (!isValidOrderId) {
+    return NextResponse.json({ error: 'Invalid orderId' }, { status: 400 });
+  }
+
   const result = await upstreamFetch(
-    `${API_URL}/v1/wallet/transak/orders/${params.orderId}`,
+    `${API_URL}/v1/wallet/transak/orders/${orderId}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!result.ok) return result.errorResponse;

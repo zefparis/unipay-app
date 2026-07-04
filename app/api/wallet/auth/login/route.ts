@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
+import { API_URL, upstreamFetch } from '../../_proxy';
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -10,25 +9,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const upstream = await fetch(`${API_URL}/v1/wallet/login`, {
+  const result = await upstreamFetch(`${API_URL}/v1/wallet/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
 
-  const data = await upstream.json();
+  if (!result.ok) return result.errorResponse;
+  const { res, data } = result;
 
-  if (!upstream.ok) {
-    return NextResponse.json({ error: data.error ?? 'Login failed' }, { status: upstream.status });
+  if (!res.ok) {
+    return NextResponse.json({ error: (data as { error?: string }).error ?? 'Login failed' }, { status: res.status });
   }
 
+  const d = data as { wallet_id: string; phone: string; access_token: string; refresh_token?: string };
   const response = NextResponse.json({
     ok: true,
-    wallet_id: data.wallet_id,
-    phone: data.phone,
+    wallet_id: d.wallet_id,
+    phone: d.phone,
   });
 
-  response.cookies.set('wallet_token', data.access_token, {
+  response.cookies.set('wallet_token', d.access_token, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
@@ -36,8 +37,8 @@ export async function POST(request: NextRequest) {
     maxAge: 60 * 60,
   });
 
-  if (data.refresh_token) {
-    response.cookies.set('wallet_refresh', data.refresh_token, {
+  if (d.refresh_token) {
+    response.cookies.set('wallet_refresh', d.refresh_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
