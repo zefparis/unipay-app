@@ -164,7 +164,7 @@ export default function KycPage() {
     );
   }
 
-  if (status === 'approved') {
+  if (status === 'approved' || (kycStatus && kycStatus.kyc_level >= 1)) {
     const kycLevel = kycStatus?.kyc_level ?? 1;
 
     if (showUpgradeFlow) {
