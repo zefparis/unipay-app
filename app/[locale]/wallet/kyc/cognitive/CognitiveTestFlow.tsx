@@ -18,7 +18,7 @@ export interface CognitiveData {
 
 type Props = { onComplete: (data: CognitiveData) => void };
 
-type Stage = 'reflex' | 'stroop' | 'digit_span' | 'mic_intro' | 'voice';
+type Stage = 'reflex' | 'stroop' | 'digit_span' | 'voice';
 
 export function CognitiveTestFlow({ onComplete }: Props) {
   const [stage, setStage] = useState<Stage>('reflex');
@@ -28,7 +28,6 @@ export function CognitiveTestFlow({ onComplete }: Props) {
     reflex: 1,
     stroop: 2,
     digit_span: 3,
-    mic_intro: 4,
     voice: 4,
   };
 
@@ -81,29 +80,9 @@ export function CognitiveTestFlow({ onComplete }: Props) {
         <DigitSpanStep
           onComplete={(score) => {
             setData(d => ({ ...d, digit_span_score: score }));
-            setStage('mic_intro');
+            setStage('voice');
           }}
         />
-      )}
-
-      {stage === 'mic_intro' && (
-        <div className="text-center px-6 py-12">
-          <div className="text-5xl mb-6">🎤</div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-            Test vocal
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 max-w-xs mx-auto leading-relaxed">
-            Nous allons vous demander d'autoriser le microphone pour un test vocal
-            de quelques secondes — cela nous aide à confirmer votre identité de façon
-            sécurisée.
-          </p>
-          <button
-            onClick={() => setStage('voice')}
-            className="w-full rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition"
-          >
-            Continuer
-          </button>
-        </div>
       )}
 
       {stage === 'voice' && (
