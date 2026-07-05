@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
+import { CognitiveTestFlow, type CognitiveData } from './cognitive/CognitiveTestFlow';
 
 interface Submission {
   id: string;
@@ -21,6 +22,7 @@ interface KycStatus {
 const KYC_LIMITS = {
   0: { deposit: '5 000 CDF/jour', withdraw: '5 000 CDF/jour', p2p: '2 000 CDF' },
   1: { deposit: '500 000 CDF/jour', withdraw: '200 000 CDF/jour', p2p: '100 000 CDF' },
+  2: { deposit: 'Illimité', withdraw: 'Illimité', p2p: 'Illimité' },
 };
 
 const DOC_TYPES = [
@@ -98,6 +100,7 @@ export default function KycPage() {
   const [docNumber, setDocNumber] = useState('');
   const [selfie, setSelfie] = useState<File | null>(null);
   const [selfiePrev, setSelfiePrev] = useState<string | null>(null);
+  const [cognitiveData, setCognitiveData] = useState<CognitiveData | null>(null);
 
   useEffect(() => {
     fetch('/api/wallet/kyc/status')
@@ -125,7 +128,10 @@ export default function KycPage() {
     if (step === 0) {
       return fullName.trim().length >= 2 && birthDate.length > 0 && docType.length > 0 && docNumber.trim().length > 0;
     }
-    return !!selfie;
+    if (step === 1) {
+      return !!selfie;
+    }
+    return !!cognitiveData;
   }
 
   async function handleSubmit() {
@@ -144,6 +150,10 @@ export default function KycPage() {
     fd.append('doc_number', docNumber.trim());
     fd.append('selfie', selfie, 'selfie.jpg');
 
+    if (cognitiveData) {
+      fd.append('cognitive_data', JSON.stringify(cognitiveData));
+    }
+
     const res = await fetch('/api/wallet/kyc/submit', { method: 'POST', body: fd });
     const data = await res.json();
     setSubmitting(false);
@@ -157,7 +167,7 @@ export default function KycPage() {
           submitted_at: new Date().toISOString(),
           reviewer_note: null,
         },
-        kyc_level: approved ? 1 : prev?.kyc_level ?? 0,
+        kyc_level: approved ? (data.kyc_level ?? 1) : prev?.kyc_level ?? 0,
         is_verified: approved ? true : prev?.is_verified ?? false,
       }));
     } else {
@@ -234,32 +244,34 @@ export default function KycPage() {
 
       <div className="mx-auto max-w-md space-y-5 px-4 pt-6">
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white dark:border-slate-700 dark:bg-slate-800">
-          <div className="grid grid-cols-3 text-center">
+          <div className="grid grid-cols-4 text-center">
             <div className="bg-gray-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:bg-slate-700/50 dark:text-slate-400" />
             <div className="border-x border-gray-100 bg-amber-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-amber-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-amber-400">{T.kyc_lvl0}</div>
             <div className="bg-green-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-green-600 dark:bg-green-900/20 dark:text-green-400">{T.kyc_lvl1}</div>
+            <div className="bg-blue-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">KYC 2</div>
           </div>
           {[
-            { label: T.kyc_dep_day, l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit },
-            { label: T.kyc_wd_day, l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw },
-            { label: T.kyc_p2p_max, l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p },
-          ].map(({ label, l0, l1 }) => (
-            <div key={label} className="grid grid-cols-3 border-t border-gray-50 text-center dark:border-slate-700">
+            { label: T.kyc_dep_day, l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit, l2: KYC_LIMITS[2].deposit },
+            { label: T.kyc_wd_day, l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw, l2: KYC_LIMITS[2].withdraw },
+            { label: T.kyc_p2p_max, l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p, l2: KYC_LIMITS[2].p2p },
+          ].map(({ label, l0, l1, l2 }) => (
+            <div key={label} className="grid grid-cols-4 border-t border-gray-50 text-center dark:border-slate-700">
               <div className="px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-slate-400">{label}</div>
               <div className="border-x border-gray-50 px-3 py-3 text-xs text-gray-500 dark:border-slate-700 dark:text-slate-500">{l0}</div>
-              <div className="px-3 py-3 text-xs font-semibold text-green-600 dark:text-green-400">{l1}</div>
+              <div className="border-r border-gray-50 px-3 py-3 text-xs font-semibold text-green-600 dark:border-slate-700 dark:text-green-400">{l1}</div>
+              <div className="px-3 py-3 text-xs font-bold text-blue-600 dark:text-blue-400">{l2}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
           <div className="mb-6 flex items-center gap-2">
-            {[0, 1].map((item) => (
+            {[0, 1, 2].map((item) => (
               <div key={item} className="flex flex-1 items-center gap-2">
                 <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item <= step ? 'bg-[#00A651] text-white' : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-500'}`}>
                   {item < step ? '✓' : item + 1}
                 </div>
-                {item === 0 && <div className={`h-0.5 flex-1 ${step > 0 ? 'bg-[#00A651]' : 'bg-gray-100 dark:bg-slate-700'}`} />}
+                {item < 2 && <div className={`h-0.5 flex-1 ${step > item ? 'bg-[#00A651]' : 'bg-gray-100 dark:bg-slate-700'}`} />}
               </div>
             ))}
           </div>
@@ -288,18 +300,22 @@ export default function KycPage() {
 
           {step === 1 && <SelfiePicker T={T} preview={selfiePrev} onChange={setSelfieFile} />}
 
+          {step === 2 && (
+            <CognitiveTestFlow onComplete={(data) => setCognitiveData(data)} />
+          )}
+
           <div className="mt-6 flex gap-3">
             {step > 0 && (
-              <button onClick={() => setStep(0)} className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
+              <button onClick={() => setStep(step - 1)} className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
                 {T.kyc_back}
               </button>
             )}
-            {step === 0 ? (
-              <button onClick={() => setStep(1)} disabled={!canProceed()} className="flex-1 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
+            {step < 2 ? (
+              <button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="flex-1 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
                 {T.kyc_continue}
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={submitting || !canProceed()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
+              <button onClick={handleSubmit} disabled={submitting || !cognitiveData} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
                 {submitting ? <><Spinner sm /> {T.kyc_submitting}</> : T.kyc_submit}
               </button>
             )}
