@@ -63,7 +63,7 @@ function Card({ title, children }: { title?: string; children: React.ReactNode }
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
       {title && (
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">{title}</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-slate-500">{title}</p>
         </div>
       )}
       {children}
@@ -79,7 +79,7 @@ function Row({ icon, label, value, action }: { icon: React.ReactNode; label: str
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-400 dark:text-slate-500">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-slate-500">{label}</p>
         {value && <div className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{value}</div>}
       </div>
       {action}
@@ -342,7 +342,7 @@ export default function WalletProfilePage() {
           {avatar && (
             <button
               onClick={removeAvatar}
-              className="flex items-center gap-1 text-xs text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition"
+              className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition"
             >
               <X size={12} /> {T.prof_delete_photo}
             </button>
@@ -362,18 +362,18 @@ export default function WalletProfilePage() {
               </div>
             ) : (
               <button onClick={() => setEditName(true)} className="flex items-center gap-1.5 text-lg font-bold text-gray-900 dark:text-white">
-                {profile?.full_name ?? T.prof_user} <span className="text-gray-400 dark:text-slate-500"><IcPencil /></span>
+                {profile?.full_name ?? T.prof_user} <span className="text-gray-500 dark:text-slate-500"><IcPencil /></span>
               </button>
             )}
             <div className="flex items-center justify-center gap-1.5 mt-1">
-              <p className="text-sm text-gray-400 dark:text-slate-500">{profile?.phone}</p>
+              <p className="text-sm text-gray-500 dark:text-slate-500">{profile?.phone}</p>
               {profile?.is_verified ? (
                 <span className="inline-flex items-center gap-0.5 text-xs text-green-600 dark:text-green-400 font-medium">
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                   {T.prof_verified}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-0.5 text-xs text-gray-400 dark:text-slate-500 font-medium">{T.prof_unverified}</span>
+                <span className="inline-flex items-center gap-0.5 text-xs text-gray-500 dark:text-slate-500 font-medium">{T.prof_unverified}</span>
               )}
             </div>
           </div>
@@ -387,7 +387,7 @@ export default function WalletProfilePage() {
             label={T.prof_name}
             value={profile?.full_name ?? '—'}
             action={
-              <button onClick={() => setEditName(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 transition">
+              <button onClick={() => setEditName(true)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition">
                 <IcPencil />
               </button>
             }
@@ -401,7 +401,7 @@ export default function WalletProfilePage() {
               </span>
             }
             action={
-              <button onClick={copyWalletId} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 transition">
+              <button onClick={copyWalletId} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition">
                 <IcCopy />
               </button>
             }
@@ -422,7 +422,7 @@ export default function WalletProfilePage() {
                 </a>
               }
               action={
-                <button onClick={copyBscAddress} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-400 transition">
+                <button onClick={copyBscAddress} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition">
                   <IcCopy />
                 </button>
               }
@@ -444,14 +444,14 @@ export default function WalletProfilePage() {
             <button onClick={() => setPinOpen(v => !v)} className="flex items-center gap-3 w-full">
               <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 shrink-0"><IcLock /></div>
               <span className="flex-1 text-left text-sm font-medium text-gray-800 dark:text-slate-200">{T.prof_pin_change}</span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-4 h-4 text-gray-400 transition-transform ${pinOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`w-4 h-4 text-gray-500 transition-transform ${pinOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             {pinOpen && (
               <div className="mt-4 space-y-3">
                 {pinError && <p className="text-xs text-red-500 font-medium">{pinError}</p>}
                 {(['current_pin', 'new_pin', 'confirm_pin'] as const).map((field) => (
                   <div key={field}>
-                    <label className="text-xs text-gray-400 dark:text-slate-500 mb-1 block">
+                    <label className="text-xs text-gray-500 dark:text-slate-500 mb-1 block">
                       {field === 'current_pin' ? T.prof_pin_current : field === 'new_pin' ? T.prof_pin_new : T.prof_pin_cfm}
                     </label>
                     <input
@@ -505,7 +505,7 @@ export default function WalletProfilePage() {
                   <IcCopy />
                 </button>
               </div>
-              <p className="text-xs text-gray-400 dark:text-slate-500 text-center">
+              <p className="text-xs text-gray-500 dark:text-slate-500 text-center">
                 {locale === 'en'
                   ? 'Send USDC on Base network to this address'
                   : 'Envoyez des USDC sur le réseau Base à cette adresse'}
@@ -523,7 +523,7 @@ export default function WalletProfilePage() {
               { label: 'Tx',      value: stats ? String(stats.count) : '—' },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col items-center py-4 px-2">
-                <p className="text-xs text-gray-400 dark:text-slate-500 mb-1">{label}</p>
+                <p className="text-xs text-gray-500 dark:text-slate-500 mb-1">{label}</p>
                 <p className="text-sm font-bold text-gray-800 dark:text-white text-center leading-tight">{value}</p>
               </div>
             ))}

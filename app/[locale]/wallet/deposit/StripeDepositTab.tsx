@@ -73,7 +73,7 @@ export default function StripeDepositTab({ usdBalance }: { usdBalance: number })
       {/* Montant */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-          Montant (USD) <span className="text-gray-400 font-normal">— min {MIN_USD} USD</span>
+          Montant (USD) <span className="text-gray-500 font-normal">— min {MIN_USD} USD</span>
         </label>
         <input
           type="number"

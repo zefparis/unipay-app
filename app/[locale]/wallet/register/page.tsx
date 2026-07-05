@@ -91,7 +91,7 @@ export default function WalletRegisterPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  {T.reg_name_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{T.optional}</span>
+                  {T.reg_name_lbl} <span className="text-gray-500 dark:text-slate-500 font-normal">{T.optional}</span>
                 </label>
                 <input
                   type="text"
@@ -99,13 +99,13 @@ export default function WalletRegisterPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jean Dupont"
                   maxLength={100}
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  {T.reg_email_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{T.optional}</span>
+                  {T.reg_email_lbl} <span className="text-gray-500 dark:text-slate-500 font-normal">{T.optional}</span>
                 </label>
                 <input
                   type="email"
@@ -114,7 +114,7 @@ export default function WalletRegisterPage() {
                   placeholder="jean@email.com"
                   maxLength={254}
                   autoComplete="email"
-                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+                  className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
                 />
               </div>
 
@@ -128,7 +128,7 @@ export default function WalletRegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  {T.reg_pin_lbl} <span className="text-gray-400 dark:text-slate-500 font-normal">{pin.length}/6</span>
+                  {T.reg_pin_lbl} <span className="text-gray-500 dark:text-slate-500 font-normal">{pin.length}/6</span>
                 </label>
                 <input
                   type="password"
@@ -144,7 +144,7 @@ export default function WalletRegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                  {T.reg_pin_confirm} <span className="text-gray-400 dark:text-slate-500 font-normal">{pinConfirm.length}/6</span>
+                  {T.reg_pin_confirm} <span className="text-gray-500 dark:text-slate-500 font-normal">{pinConfirm.length}/6</span>
                 </label>
                 <input
                   type="password"

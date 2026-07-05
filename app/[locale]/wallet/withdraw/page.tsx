@@ -212,7 +212,7 @@ export default function WalletWithdrawPage() {
       </div>
 
       {/* CGLT hint */}
-      <p className="px-4 pt-2 pb-1 text-xs text-gray-400 dark:text-slate-500">
+      <p className="px-4 pt-2 pb-1 text-xs text-gray-500 dark:text-slate-500">
         {T.wd_cglt_hint}{' '}
         <Link href={`/${locale}/wallet/exchange`} className="text-purple-500 dark:text-purple-400 font-medium hover:underline">
           {T.home_exchange}
@@ -239,31 +239,31 @@ export default function WalletWithdrawPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">Confirmer le retrait</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f1f5f9] mb-4">{T.wd_usdt_confirm_title}</h2>
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Montant envoyé</span>
+                  <span className="text-gray-500 dark:text-slate-400">{T.wd_usdt_amount_sent}</span>
                   <span className="font-bold text-gray-900 dark:text-slate-100">{usdtGross.toFixed(4)} USDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Frais réseau ({network})</span>
+                  <span className="text-gray-500 dark:text-slate-400">{T.wd_usdt_network_fee.replace('{network}', network)}</span>
                   <span className="text-orange-500 font-medium">−{netFee} USDT</span>
                 </div>
                 <div className="flex justify-between border-t border-gray-100 dark:border-slate-700 pt-2 mt-1">
-                  <span className="font-bold text-gray-800 dark:text-slate-200">Vous recevez</span>
+                  <span className="font-bold text-gray-800 dark:text-slate-200">{T.wd_you_receive}</span>
                   <span className="font-bold text-cyan-600 dark:text-cyan-400">{usdtNet.toFixed(4)} USDT</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-slate-400">Réseau</span>
+                  <span className="text-gray-500 dark:text-slate-400">{T.wd_usdt_network}</span>
                   <span className="font-mono text-xs text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded">{network}</span>
                 </div>
                 <div className="flex justify-between items-start gap-2">
-                  <span className="text-gray-500 dark:text-slate-400 flex-shrink-0">Adresse</span>
+                  <span className="text-gray-500 dark:text-slate-400 flex-shrink-0">{T.wd_usdt_address}</span>
                   <span className="font-mono text-xs text-gray-700 dark:text-slate-300 break-all text-right">{destAddress.slice(0, 10)}…{destAddress.slice(-8)}</span>
                 </div>
               </div>
               <div className="mt-4 rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
-                ⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).
+                {T.wd_usdt_warning}
               </div>
             </div>
             <div
@@ -277,7 +277,7 @@ export default function WalletWithdrawPage() {
               <button type="button" onClick={handleUsdtWithdraw} disabled={loading}
                 className="flex-1 h-[48px] rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-semibold transition disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <Spinner />}
-                {loading ? 'Envoi…' : 'Confirmer le retrait'}
+                {loading ? T.wd_loading : T.wd_usdt_confirm_btn}
               </button>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function WalletWithdrawPage() {
           <div className="flex flex-col gap-4">
             {/* Network selector */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Réseau de destination</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_usdt_dest_network}</label>
               <div className="flex gap-2">
                 {(['BSC', 'TRC20', 'ERC20'] as Network[]).map((net) => {
                   const enabled = NETWORK_ENABLED[net];
@@ -307,7 +307,7 @@ export default function WalletWithdrawPage() {
                       }`}>
                       {net}
                       <span className="text-[10px] font-normal mt-0.5">
-                        {enabled ? `Frais ${NETWORK_FEE[net]} USDT` : 'Bientôt dispo'}
+                        {enabled ? T.wd_usdt_fee_label.replace('{fee}', String(NETWORK_FEE[net])) : T.wd_usdt_soon}
                       </span>
                     </button>
                   );
@@ -318,24 +318,24 @@ export default function WalletWithdrawPage() {
             {/* Destination address */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                Adresse BSC <span className="text-gray-400 font-normal">(commence par 0x)</span>
+                {T.wd_usdt_addr_label} <span className="text-gray-500 font-normal">{T.wd_usdt_addr_hint}</span>
               </label>
               <input type="text" value={destAddress}
                 onChange={(e) => setDestAddress(e.target.value)}
                 placeholder="0x..."
                 required
-                className={`w-full border rounded-xl px-4 py-3 text-sm font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all break-all ${
+                className={`w-full border rounded-xl px-4 py-3 text-sm font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all break-all ${
                   !usdtAddrValid ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 dark:border-slate-600 focus:ring-cyan-400'
                 }`} />
               {!usdtAddrValid && destAddress !== '' && (
-                <p className="text-xs text-red-500">Adresse BSC invalide (doit commencer par 0x, 42 caractères).</p>
+                <p className="text-xs text-red-500">{T.wd_usdt_addr_invalid}</p>
               )}
             </div>
 
             {/* Amount */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-                Montant USDT <span className="text-gray-400 font-normal">— min {MIN_NET_USDT + netFee} USDT brut</span>
+                {T.wd_usdt_amount_label} <span className="text-gray-500 font-normal">{T.wd_usdt_amount_hint.replace('{min}', (MIN_NET_USDT + netFee).toFixed(1))}</span>
               </label>
               <input type="number" value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -353,13 +353,13 @@ export default function WalletWithdrawPage() {
             {usdtGross > 0 && (
               <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
                 <div className="flex justify-between text-gray-500 dark:text-slate-400">
-                  <span>Montant brut</span><span>{usdtGross.toFixed(4)} USDT</span>
+                  <span>{T.wd_usdt_gross}</span><span>{usdtGross.toFixed(4)} USDT</span>
                 </div>
                 <div className="flex justify-between text-gray-500 dark:text-slate-400">
-                  <span>Frais réseau {network}</span><span className="text-orange-500">−{netFee} USDT</span>
+                  <span>{T.wd_usdt_net_fee.replace('{network}', network)}</span><span className="text-orange-500">−{netFee} USDT</span>
                 </div>
                 <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">
-                  <span>Vous recevez</span>
+                  <span>{T.wd_you_receive}</span>
                   <span className={usdtNet < MIN_NET_USDT ? 'text-red-500' : 'text-cyan-600 dark:text-cyan-400'}>
                     {usdtNet.toFixed(4)} USDT
                     {usdtNet < MIN_NET_USDT && <span className="text-xs font-normal ml-1">(min {MIN_NET_USDT})</span>}
@@ -389,14 +389,14 @@ export default function WalletWithdrawPage() {
             <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.wd_phone}</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
               placeholder="+243 XXX XXX XXX" required
-              className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200" />
+              className="w-full border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200" />
           </div>
         )}
 
 
         {!isUsdt && <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-400 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
+            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-500 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
           </label>
           <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)}
             placeholder={isCdf ? '100' : '10.00'} min={minAmt} step={isCdf ? '1' : '0.01'} required
@@ -439,7 +439,7 @@ export default function WalletWithdrawPage() {
             isUsdt ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-orange-500 hover:bg-orange-600'
           }`}>
           {loading && <Spinner />}
-          {loading ? T.wd_processing : isUsdt ? 'Retirer USDT' : T.wd_cta}
+          {loading ? T.wd_processing : isUsdt ? T.wd_usdt_cta : T.wd_cta}
         </button>
       </form>
     </div>

@@ -46,12 +46,12 @@ function SelfiePicker({ T, preview, onChange }: { T: WalletDict; preview: string
     <div className="space-y-3">
       <div>
         <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">{T.kyc_selfie}</p>
-        <p className="text-xs text-gray-400 dark:text-slate-500">{T.kyc_selfie_hint}</p>
+        <p className="text-xs text-gray-500 dark:text-slate-500">{T.kyc_selfie_hint}</p>
       </div>
       <button
         type="button"
         onClick={() => ref.current?.click()}
-        className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 text-gray-400 transition hover:border-[#00A651] hover:text-[#00A651] dark:border-slate-600 dark:text-slate-500"
+        className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 text-gray-500 transition hover:border-[#00A651] hover:text-[#00A651] dark:border-slate-600 dark:text-slate-500"
       >
         {preview ? (
           <img src={preview} alt="Selfie" className="absolute inset-0 h-full w-full object-cover" />
@@ -228,7 +228,7 @@ export default function KycPage() {
         </Link>
         <div>
           <h1 className="text-lg font-bold text-gray-900 dark:text-white">{T.kyc_title}</h1>
-          <p className="text-xs text-gray-400 dark:text-slate-500">{T.kyc_subtitle}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-500">{T.kyc_subtitle}</p>
         </div>
       </div>
 
@@ -256,7 +256,7 @@ export default function KycPage() {
           <div className="mb-6 flex items-center gap-2">
             {[0, 1].map((item) => (
               <div key={item} className="flex flex-1 items-center gap-2">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item <= step ? 'bg-[#00A651] text-white' : 'bg-gray-100 text-gray-400 dark:bg-slate-700 dark:text-slate-500'}`}>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item <= step ? 'bg-[#00A651] text-white' : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-500'}`}>
                   {item < step ? '✓' : item + 1}
                 </div>
                 {item === 0 && <div className={`h-0.5 flex-1 ${step > 0 ? 'bg-[#00A651]' : 'bg-gray-100 dark:bg-slate-700'}`} />}
@@ -368,7 +368,7 @@ function StatusScreen({ locale, T, color, icon, badge, title, message, limits, o
             {T.kyc_retry}
           </button>
         )}
-        <Link href={`/${locale}/wallet`} className="text-sm text-gray-400 underline dark:text-slate-500">
+        <Link href={`/${locale}/wallet`} className="text-sm text-gray-500 underline dark:text-slate-500">
           {T.kyc_wallet_back}
         </Link>
       </div>

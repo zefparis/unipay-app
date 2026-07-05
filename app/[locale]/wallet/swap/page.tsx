@@ -297,39 +297,39 @@ export default function WalletSwapPage() {
         {/* Direction toggle */}
         {isCdfCglt ? (
           <div className="flex items-center justify-center gap-3">
-            <span className={`text-sm font-semibold ${internalDir === 'cdf_to_cglt' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CDF → CGLT</span>
+            <span className={`text-sm font-semibold ${internalDir === 'cdf_to_cglt' ? 'text-indigo-600' : 'text-gray-500 dark:text-slate-500'}`}>CDF → CGLT</span>
             <button type="button" onClick={toggleInternal}
               className="w-12 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/40 relative transition">
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-indigo-600 transition-all duration-200 ${internalDir === 'cdf_to_cglt' ? 'left-1' : 'left-6'}`} />
             </button>
-            <span className={`text-sm font-semibold ${internalDir === 'cglt_to_cdf' ? 'text-indigo-600' : 'text-gray-400 dark:text-slate-500'}`}>CGLT → CDF</span>
+            <span className={`text-sm font-semibold ${internalDir === 'cglt_to_cdf' ? 'text-indigo-600' : 'text-gray-500 dark:text-slate-500'}`}>CGLT → CDF</span>
           </div>
         ) : isCdfUsd ? (
           <div className="flex items-center justify-center gap-3">
-            <span className={`text-sm font-semibold ${internalDir === 'cdf_to_usd' ? 'text-emerald-600' : 'text-gray-400 dark:text-slate-500'}`}>CDF → USD</span>
+            <span className={`text-sm font-semibold ${internalDir === 'cdf_to_usd' ? 'text-emerald-600' : 'text-gray-500 dark:text-slate-500'}`}>CDF → USD</span>
             <button type="button" onClick={toggleInternal}
               className="w-12 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 relative transition">
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-emerald-600 transition-all duration-200 ${internalDir === 'cdf_to_usd' ? 'left-1' : 'left-6'}`} />
             </button>
-            <span className={`text-sm font-semibold ${internalDir === 'usd_to_cdf' ? 'text-emerald-600' : 'text-gray-400 dark:text-slate-500'}`}>USD → CDF</span>
+            <span className={`text-sm font-semibold ${internalDir === 'usd_to_cdf' ? 'text-emerald-600' : 'text-gray-500 dark:text-slate-500'}`}>USD → CDF</span>
           </div>
         ) : isUsdUsdt ? (
           <div className="flex items-center justify-center gap-3">
-            <span className={`text-sm font-semibold ${direction === 'usd_to_usdt' ? 'text-teal-600' : 'text-gray-400 dark:text-slate-500'}`}>USD → USDT</span>
+            <span className={`text-sm font-semibold ${direction === 'usd_to_usdt' ? 'text-teal-600' : 'text-gray-500 dark:text-slate-500'}`}>USD → USDT</span>
             <button type="button" onClick={toggleDirection}
               className="w-12 h-7 rounded-full bg-teal-100 dark:bg-teal-900/40 relative transition">
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-teal-600 transition-all duration-200 ${direction === 'usd_to_usdt' ? 'left-1' : 'left-6'}`} />
             </button>
-            <span className={`text-sm font-semibold ${direction === 'usdt_to_usd' ? 'text-teal-600' : 'text-gray-400 dark:text-slate-500'}`}>USDT → USD</span>
+            <span className={`text-sm font-semibold ${direction === 'usdt_to_usd' ? 'text-teal-600' : 'text-gray-500 dark:text-slate-500'}`}>USDT → USD</span>
           </div>
         ) : (
           <div className="flex items-center justify-center gap-3">
-            <span className={`text-sm font-semibold ${direction === 'cglt_to_usdt' ? 'text-purple-600' : 'text-gray-400 dark:text-slate-500'}`}>CGLT → USDT</span>
+            <span className={`text-sm font-semibold ${direction === 'cglt_to_usdt' ? 'text-purple-600' : 'text-gray-500 dark:text-slate-500'}`}>CGLT → USDT</span>
             <button type="button" onClick={toggleDirection}
               className="w-12 h-7 rounded-full bg-purple-100 dark:bg-purple-900/40 relative transition">
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-purple-600 transition-all duration-200 ${direction === 'cglt_to_usdt' ? 'left-1' : 'left-6'}`} />
             </button>
-            <span className={`text-sm font-semibold ${direction === 'usdt_to_cglt' ? 'text-purple-600' : 'text-gray-400 dark:text-slate-500'}`}>USDT → CGLT</span>
+            <span className={`text-sm font-semibold ${direction === 'usdt_to_cglt' ? 'text-purple-600' : 'text-gray-500 dark:text-slate-500'}`}>USDT → CGLT</span>
           </div>
         )}
 
@@ -403,27 +403,27 @@ export default function WalletSwapPage() {
 
       {/* Balances */}
       <div className="px-4 pb-8">
-        <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-3">{T.swap_balances}</h2>
+        <h2 className="text-xs font-semibold text-gray-500 dark:text-slate-500 uppercase tracking-widest mb-3">{T.swap_balances}</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
-            <p className="text-xs text-gray-400 dark:text-slate-500">Solde CDF</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">Solde CDF</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{cdfBalance !== null ? fmt(cdfBalance) : '—'}</p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">CDF</p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-500 mt-0.5">CDF</p>
           </div>
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
-            <p className="text-xs text-gray-400 dark:text-slate-500">Solde USD</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">Solde USD</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{usdBalance !== null ? fmt(usdBalance, 2) : '—'}</p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">USD</p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-500 mt-0.5">USD</p>
           </div>
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
-            <p className="text-xs text-gray-400 dark:text-slate-500">Solde CGLT</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">Solde CGLT</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{cgltBalance !== null ? fmt(cgltBalance) : '—'}</p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">CGLT</p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-500 mt-0.5">CGLT</p>
           </div>
           <div className="rounded-2xl border border-gray-100 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-sm p-4">
-            <p className="text-xs text-gray-400 dark:text-slate-500">Solde USDT</p>
+            <p className="text-xs text-gray-500 dark:text-slate-500">Solde USDT</p>
             <p className="text-lg font-bold text-gray-800 dark:text-slate-100 mt-1">{usdtBalance !== null ? fmt(usdtBalance, 2) : '—'}</p>
-            <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-0.5">USDT</p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-500 mt-0.5">USDT</p>
           </div>
         </div>
 

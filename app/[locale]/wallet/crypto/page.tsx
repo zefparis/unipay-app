@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, TrendingUp, TrendingDown, ExternalLink, RefreshCw } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 
 interface CoinPrice {
   id: string;
@@ -66,6 +67,7 @@ const DEXSCREENER_URL = `https://dexscreener.com/bsc/${WCGLT_CONTRACT}`;
 
 export default function CryptoPage() {
   const { locale } = useParams<{ locale: string }>();
+  const T = wT(locale ?? 'fr');
   const [coins, setCoins]       = useState<CoinPrice[]>([]);
   const [wcglt, setWcglt]       = useState<WCGLTData | null>(null);
   const [loading, setLoading]   = useState(true);
@@ -126,7 +128,7 @@ export default function CryptoPage() {
           <Link href={`/${locale}/wallet`} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition">
             <ArrowLeft size={20} className="text-gray-600 dark:text-slate-300" />
           </Link>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-slate-100">Marchés Crypto</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-slate-100">{T.mkt_title}</h1>
         </div>
         <button onClick={() => fetchData(true)} disabled={refreshing}
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition">
@@ -135,7 +137,7 @@ export default function CryptoPage() {
       </div>
 
       {lastUpdate && (
-        <p className="text-xs text-gray-400 dark:text-slate-500 px-4 pt-2">Mis à jour à {lastUpdate} · Auto-refresh 60s</p>
+        <p className="text-xs text-gray-500 dark:text-slate-500 px-4 pt-2">{T.mkt_updated.replace('{time}', lastUpdate)}</p>
       )}
 
       {loading ? (
@@ -152,7 +154,7 @@ export default function CryptoPage() {
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg">W</div>
                 <div>
                   <p className="font-bold text-lg">wCGLT</p>
-                  <p className="text-purple-200 text-xs">Wrapped CGLT · BSC</p>
+                  <p className="text-purple-200 text-xs">{T.mkt_wcglt_name}</p>
                 </div>
               </div>
               {wcglt && <PriceChange value={wcglt.change24h} />}
@@ -162,21 +164,21 @@ export default function CryptoPage() {
               {wcglt ? `$${wcglt.price.toFixed(4)}` : '—'}
             </p>
             {wcglt?.usingFallback && (
-              <p className="text-purple-300 text-xs mb-1">Taux indicatif interne · 1 wCGLT = 1/500 USDT</p>
+              <p className="text-purple-300 text-xs mb-1">{T.mkt_wcglt_fallback}</p>
             )}
 
             {wcglt && (
               <div className="grid grid-cols-3 gap-3 mt-4 text-center">
                 <div className="bg-white/10 rounded-xl py-2">
-                  <p className="text-purple-200 text-xs">Volume 24h</p>
+                  <p className="text-purple-200 text-xs">{T.mkt_volume_24h}</p>
                   <p className="font-bold text-sm">{fmt(wcglt.volume24h)}</p>
                 </div>
                 <div className="bg-white/10 rounded-xl py-2">
-                  <p className="text-purple-200 text-xs">Liquidité</p>
+                  <p className="text-purple-200 text-xs">{T.mkt_liquidity}</p>
                   <p className="font-bold text-sm">{fmt(wcglt.liquidity)}</p>
                 </div>
                 <div className="bg-white/10 rounded-xl py-2">
-                  <p className="text-purple-200 text-xs">Tx 24h</p>
+                  <p className="text-purple-200 text-xs">{T.mkt_txns_24h}</p>
                   <p className="font-bold text-sm">{wcglt.txns24h}</p>
                 </div>
               </div>
@@ -186,7 +188,7 @@ export default function CryptoPage() {
             <div className="flex gap-2 mt-4">
               <a href={PANCAKE_URL} target="_blank" rel="noopener noreferrer"
                 className="flex-1 bg-white text-purple-700 font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-purple-50 transition">
-                Acheter sur PancakeSwap <ExternalLink size={14} />
+                {T.mkt_buy_pancake} <ExternalLink size={14} />
               </a>
               <a href={DEXSCREENER_URL} target="_blank" rel="noopener noreferrer"
                 className="px-3 bg-white/20 text-white rounded-xl flex items-center justify-center hover:bg-white/30 transition">
@@ -196,7 +198,7 @@ export default function CryptoPage() {
 
             <div className="flex gap-3 mt-2 text-xs text-purple-300 justify-center">
               <a href={BSCSCAN_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white flex items-center gap-1">
-                BscScan <ExternalLink size={10} />
+                {T.exc_bscscan} <ExternalLink size={10} />
               </a>
               <span>·</span>
               <span className="font-mono">{WCGLT_CONTRACT.slice(0, 10)}...{WCGLT_CONTRACT.slice(-6)}</span>
@@ -205,7 +207,7 @@ export default function CryptoPage() {
 
           {/* Top Coins */}
           <div>
-            <h2 className="text-sm font-bold text-gray-500 dark:text-slate-400 mb-3 uppercase tracking-wide">Marchés</h2>
+            <h2 className="text-sm font-bold text-gray-500 dark:text-slate-400 mb-3 uppercase tracking-wide">{T.mkt_markets}</h2>
             <div className="flex flex-col gap-2">
               {coins.map((coin) => (
                 <div key={coin.id}
@@ -216,7 +218,7 @@ export default function CryptoPage() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-900 dark:text-slate-100">{coin.symbol}</p>
-                      <p className="text-xs text-gray-400 dark:text-slate-500">{coin.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-500">{coin.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -233,7 +235,7 @@ export default function CryptoPage() {
           {/* Info banner */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-3">
             <p className="text-xs text-blue-700 dark:text-blue-300">
-              💡 Gagnez du <strong>CGLT</strong> en jouant sur Congo Gaming, puis retirez-le en <strong>wCGLT</strong> sur BSC depuis la page Retrait.
+              {T.mkt_gaming_hint}
             </p>
           </div>
 

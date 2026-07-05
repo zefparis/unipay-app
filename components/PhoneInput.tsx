@@ -103,7 +103,7 @@ export default function PhoneInput({
                 }`}
               >
                 <span className="font-semibold text-gray-700 dark:text-slate-300">{d.code}</span>
-                <span className="text-gray-400 dark:text-slate-500">·</span>
+                <span className="text-gray-500 dark:text-slate-500">·</span>
                 <span className="text-gray-600 dark:text-slate-400 truncate">{d.name}</span>
               </button>
             ))}
@@ -119,7 +119,7 @@ export default function PhoneInput({
         disabled={disabled}
         placeholder={placeholder ?? (dialCode === '+243' ? '9X XXX XXXX' : 'N° local')}
         style={inputStyle}
-        className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
+        className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
         aria-label="Numero de telephone"
       />
 

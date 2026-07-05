@@ -40,7 +40,7 @@ export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: b
             <div className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isActive ? 'bg-[#00A651]/10' : ''}`}>
               <Icon
                 size={20}
-                className={isActive ? 'text-[#00A651]' : 'text-gray-400 dark:text-slate-500'}
+                className={isActive ? 'text-[#00A651]' : 'text-gray-500 dark:text-slate-500'}
               />
               {key === 'notifications' && unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
@@ -48,7 +48,7 @@ export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: b
                 </span>
               )}
             </div>
-            <span className={`text-[11px] transition-all duration-200 ${isActive ? 'text-[#00A651] font-semibold' : 'text-gray-400 dark:text-slate-500'}`}>
+            <span className={`text-[11px] transition-all duration-200 ${isActive ? 'text-[#00A651] font-semibold' : 'text-gray-500 dark:text-slate-500'}`}>
               {T[labelKey]}
             </span>
           </Link>

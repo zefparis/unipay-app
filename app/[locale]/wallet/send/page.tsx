@@ -214,9 +214,9 @@ export default function WalletSendPage() {
           <input type="tel" value={recipientPhone}
             onChange={(e) => setRecipientPhone(e.target.value)}
             placeholder="+243 XXX XXX XXX" required
-            className={`border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-${accent}-400 transition-all duration-200`}
+            className={`border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-${accent}-400 transition-all duration-200`}
           />
-          <p className="text-xs text-gray-400 dark:text-slate-500">{T.send_rec_hint}</p>
+          <p className="text-xs text-gray-500 dark:text-slate-500">{T.send_rec_hint}</p>
         </div>
 
         {/* Amount */}
@@ -248,12 +248,12 @@ export default function WalletSendPage() {
         {/* Note */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            {T.send_note} <span className="font-normal text-gray-400 dark:text-slate-500">{T.optional}</span>
+            {T.send_note} <span className="font-normal text-gray-500 dark:text-slate-500">{T.optional}</span>
           </label>
           <input type="text" value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Remboursement, loyer…" maxLength={255}
-            className={`border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-${accent}-400 transition-all duration-200`}
+            className={`border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-${accent}-400 transition-all duration-200`}
           />
         </div>
 

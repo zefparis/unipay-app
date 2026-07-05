@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { wT } from '@/lib/i18n-wallet';
 
 const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.unipaycongo.com';
 const MIN_FIAT = 10;
@@ -38,6 +39,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
   const router         = useRouter();
   const { locale }     = useParams<{ locale: string }>();
   const searchParams   = useSearchParams();
+  const T = wT(locale ?? 'fr');
 
   // Returned from Transak redirect
   const returnedOrderId = searchParams.get('transak_done');
@@ -81,22 +83,22 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
           clearInterval(pollRef.current!);
           setPolling(false);
           const credited = data.is_custody && data.crypto_amount
-            ? `+${data.crypto_amount.toFixed(4)} USDT crédité sur votre solde USD.`
-            : `Transaction confirmée. USDT envoyé vers votre wallet BSC.`;
-          setSuccess(`✓ Paiement confirmé ! ${credited}`);
+            ? T.transak_custody_credited.replace('{amount}', data.crypto_amount.toFixed(4))
+            : T.transak_external_sent;
+          setSuccess(T.transak_success.replace('{detail}', credited));
           setTimeout(() => router.push(`/${locale}/wallet`), 4000);
           return;
         }
         if (data.status === 'FAILED' || data.status === 'CANCELLED') {
           clearInterval(pollRef.current!);
           setPolling(false);
-          setError(`Paiement ${data.status === 'FAILED' ? 'échoué' : 'annulé'}. Réessayez.`);
+          setError(data.status === 'FAILED' ? T.transak_failed : T.transak_cancelled);
         }
       } catch { /* ignore */ }
       if (attempts >= 40) { // 2 min max
         clearInterval(pollRef.current!);
         setPolling(false);
-        setSuccess('Votre paiement est en cours de traitement. Vérifiez votre solde dans quelques minutes.');
+        setSuccess(T.transak_processing);
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       }
     }, 3000);
@@ -114,9 +116,9 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (amountNum < MIN_FIAT) { setError(`Montant minimum : ${MIN_FIAT} USD.`); return; }
+    if (amountNum < MIN_FIAT) { setError(T.transak_err_min.replace('{min}', String(MIN_FIAT))); return; }
     if (showWallet && walletAddr && !/^0x[0-9a-fA-F]{40}$/.test(walletAddr)) {
-      setError('Adresse BSC invalide (format 0x…).');
+      setError(T.transak_err_addr);
       return;
     }
 
@@ -135,14 +137,14 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
       if (!res.ok) {
         const d = await res.json() as { error?: string; message?: string };
-        setError(d.message ?? d.error ?? 'Erreur création commande.');
+        setError(d.message ?? d.error ?? T.transak_err_generic);
         return;
       }
       const { transakUrl } = await res.json() as { transakUrl: string; orderId: string };
       // Full-page redirect — Transak hosted page handles the card form
       window.location.href = transakUrl;
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.transak_err_network);
     } finally {
       setLoading(false);
     }
@@ -154,13 +156,13 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
       <div className="flex flex-col gap-4 px-4 py-5">
         <div className="rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-4 flex flex-col gap-3">
           <p className="font-semibold text-slate-100 text-sm">
-            {success ? '✅ Paiement confirmé' : '⏳ Vérification du paiement…'}
+            {success ? T.transak_confirmed : T.transak_checking}
           </p>
           {order && (
             <div className="text-xs text-slate-400 flex flex-col gap-1">
-              <span>Statut : <span className="text-slate-200 font-medium">{order.status}</span></span>
+              <span>{T.transak_status} <span className="text-slate-200 font-medium">{order.status}</span></span>
               {order.crypto_amount && (
-                <span>USDT reçu : <span className="text-green-400 font-bold">{order.crypto_amount.toFixed(4)}</span></span>
+                <span>{T.transak_usdt_received} <span className="text-green-400 font-bold">{order.crypto_amount.toFixed(4)}</span></span>
               )}
             </div>
           )}
@@ -168,7 +170,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
           {error   && <p className="text-sm text-red-400">{error}</p>}
           {polling && !success && (
             <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Spinner /> Actualisation automatique toutes les 3 s…
+              <Spinner /> {T.transak_auto_refresh}
             </div>
           )}
         </div>
@@ -179,7 +181,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
             onClick={() => router.push(`/${locale}/wallet`)}
             className="w-full h-[48px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition text-sm"
           >
-            Retour au portefeuille
+            {T.transak_back_wallet}
           </button>
         )}
       </div>
@@ -192,14 +194,14 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
 
       {usdBalance > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl px-4 py-2 flex justify-between text-xs">
-          <span className="text-blue-700 dark:text-blue-400">Solde USD actuel</span>
+          <span className="text-blue-700 dark:text-blue-400">{T.transak_usd_balance}</span>
           <span className="font-bold text-blue-700 dark:text-blue-400">{usdBalance.toFixed(2)} USD</span>
         </div>
       )}
 
       {/* Currency selector */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">Devise fiat</label>
+        <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">{T.transak_fiat_currency}</label>
         <div className="flex gap-2">
           {(['USD', 'EUR'] as const).map((c) => (
             <button
@@ -221,7 +223,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
       {/* Amount */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-          Montant ({currency}) <span className="text-gray-400 font-normal">— min {MIN_FIAT} {currency}</span>
+          {T.transak_amount.replace('{currency}', currency)} <span className="text-gray-500 font-normal">{T.transak_amount_hint.replace('{min}', String(MIN_FIAT)).replace('{currency}', currency)}</span>
         </label>
         <input
           type="number"
@@ -235,7 +237,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
         />
         {amountNum >= MIN_FIAT && rate && (
           <p className="text-xs text-slate-400 pl-1">
-            ≈ {(amountNum / 1).toFixed(4)} USDT → <strong className="text-green-400">{(amountNum * rate).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} CDF</strong> si converti
+            {T.transak_rate_hint.replace('{usdt}', (amountNum / 1).toFixed(4)).replace('{cdf}', (amountNum * rate).toLocaleString('fr-FR', { maximumFractionDigits: 0 }))}
           </p>
         )}
       </div>
@@ -247,7 +249,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
           onClick={() => setShowWallet(!showWallet)}
           className="text-xs text-blue-500 dark:text-blue-400 text-left underline underline-offset-2"
         >
-          {showWallet ? '− Utiliser le wallet custody UniPay' : '+ Envoyer vers mon propre wallet BSC'}
+          {showWallet ? T.transak_custody_back : T.transak_custody_toggle}
         </button>
         {showWallet && (
           <input
@@ -260,16 +262,16 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
         )}
         {!showWallet && (
           <p className="text-xs text-slate-500">
-            Sans wallet personnalisé, l&apos;USDT sera crédité automatiquement sur votre solde UniPay.
+            {T.transak_custody_hint}
           </p>
         )}
       </div>
 
       {/* Info block */}
       <div className="rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-xs text-slate-300 flex flex-col gap-1">
-        <p className="font-semibold text-slate-100">🪙 Achat USDT via Transak</p>
-        <p className="opacity-75">Vous serez redirigé vers la page de paiement Transak sécurisée. Visa · Mastercard · 3D Secure.</p>
-        <p className="opacity-60 mt-0.5">Frais Transak : ~1.5–3.5% · Réseau BSC</p>
+        <p className="font-semibold text-slate-100">{T.transak_info_title}</p>
+        <p className="opacity-75">{T.transak_info_redirect}</p>
+        <p className="opacity-60 mt-0.5">{T.transak_info_fees}</p>
       </div>
 
       {error && (
@@ -283,10 +285,10 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
         disabled={loading}
         className="w-full h-[52px] bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
       >
-        {loading ? <><Spinner /> Préparation…</> : `Acheter ${amountNum >= MIN_FIAT ? amountNum.toFixed(2) + ' ' + currency + ' → USDT' : 'USDT'} →`}
+        {loading ? <><Spinner /> {T.transak_preparing}</> : `${T.transak_buy} ${amountNum >= MIN_FIAT ? amountNum.toFixed(2) + ' ' + currency + ' → USDT' : 'USDT'} →`}
       </button>
 
-      <p className="text-center text-xs text-slate-500">🔒 Paiement hébergé et sécurisé par Transak</p>
+      <p className="text-center text-xs text-slate-500">{T.transak_secured}</p>
     </form>
   );
 }

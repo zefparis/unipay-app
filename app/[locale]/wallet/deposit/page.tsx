@@ -253,14 +253,14 @@ export default function WalletDepositPage() {
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+243 XXX XXX XXX"
             required
-            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
+            className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00A651] transition-all duration-200"
           />
         </div>
 
         {/* Amount */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-gray-600 dark:text-slate-300">
-            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-400 dark:text-slate-500 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
+            Montant ({isCdf ? 'CDF' : 'USD'}) <span className="text-gray-500 dark:text-slate-500 font-normal">— min {isCdf ? fmt(minAmt) : minAmt} {isCdf ? 'CDF' : 'USD'}</span>
           </label>
           <input
             type="number"

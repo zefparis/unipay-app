@@ -126,10 +126,10 @@ export default function NotificationsPage() {
         {notifs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
             <span className="text-5xl">🔔</span>
-            <p className="text-gray-400 dark:text-slate-500 text-sm font-medium">
+            <p className="text-gray-500 dark:text-slate-500 text-sm font-medium">
               {isFr ? 'Aucune notification' : 'No notifications yet'}
             </p>
-            <p className="text-xs text-gray-300 dark:text-slate-600">
+            <p className="text-xs text-gray-500 dark:text-slate-600">
               {isFr
                 ? 'Vos dépôts, transferts et retraits apparaîtront ici'
                 : 'Your deposits, transfers and withdrawals will appear here'}
@@ -158,8 +158,8 @@ export default function NotificationsPage() {
                         <span className="shrink-0 w-2 h-2 rounded-full bg-[#00A651] mt-1.5" />
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5 line-clamp-2">{body}</p>
-                    <p className="text-[11px] text-gray-300 dark:text-slate-600 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5 line-clamp-2">{body}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-slate-600 mt-1">
                       {relativeTime(n.created_at, locale)}
                     </p>
                   </div>

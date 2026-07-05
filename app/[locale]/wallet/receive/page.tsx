@@ -67,7 +67,7 @@ export default function ReceivePage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <Spinner />
-            <p className="text-sm text-gray-400 dark:text-slate-500">{T.recv_loading}</p>
+            <p className="text-sm text-gray-500 dark:text-slate-500">{T.recv_loading}</p>
           </div>
         ) : !address ? (
           <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 px-5 py-6 text-center">

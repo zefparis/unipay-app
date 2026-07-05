@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRightLeft, ExternalLink, TrendingDown } from 'lucide-react';
+import { wT } from '@/lib/i18n-wallet';
 
 const CGLT_PER_WCGLT  = 500;
 const WCGLT_PRICE_USD = 0.109;
@@ -29,6 +30,7 @@ function fmt(n: number) {
 export default function ExchangePage() {
   const { locale } = useParams<{ locale: string }>();
   const router = useRouter();
+  const T = wT(locale ?? 'fr');
 
   const [cgltBalance, setCgltBalance]     = useState<number | null>(null);
   const [amount, setAmount]               = useState('');
@@ -71,19 +73,19 @@ export default function ExchangePage() {
     setTxHash('');
 
     if (amountNum < CGLT_PER_WCGLT) {
-      setError(`Minimum ${CGLT_PER_WCGLT} CGLT (= 1 wCGLT).`);
+      setError(T.exc_err_min.replace('{min}', String(CGLT_PER_WCGLT)));
       return;
     }
     if (amountNum % CGLT_PER_WCGLT !== 0) {
-      setError(`Le montant doit être un multiple de ${CGLT_PER_WCGLT} CGLT.`);
+      setError(T.exc_err_multiple.replace('{min}', String(CGLT_PER_WCGLT)));
       return;
     }
     if (overBudget) {
-      setError(`Solde insuffisant. Disponible : ${cgltBalance} CGLT.`);
+      setError(T.exc_err_balance.replace('{balance}', String(cgltBalance)));
       return;
     }
     if (!/^0x[0-9a-fA-F]{40}$/.test(bscAddress)) {
-      setError('Adresse BSC invalide (format 0x...).');
+      setError(T.exc_err_addr);
       return;
     }
 
@@ -96,10 +98,10 @@ export default function ExchangePage() {
       });
       const data = await res.json() as { error?: string; bsc_tx_hash?: string; wcglt_amount?: number };
       if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-      if (!res.ok) { setError(data.error ?? 'Échange échoué'); return; }
+      if (!res.ok) { setError(data.error ?? T.err_network); return; }
       const hash = data.bsc_tx_hash ?? '';
       setTxHash(hash);
-      setSuccess(`${(data.wcglt_amount ?? wCGLTAmount).toFixed(4)} wCGLT reçus sur BSC !`);
+      setSuccess(T.exc_success.replace('{amount}', (data.wcglt_amount ?? wCGLTAmount).toFixed(4)));
       setCgltBalance((b) => b !== null ? b - amountNum : b);
       setAmount('');
       setAddrHistory((prev) => {
@@ -108,7 +110,7 @@ export default function ExchangePage() {
         return next;
       });
     } catch {
-      setError('Erreur réseau, réessayez.');
+      setError(T.err_network);
     } finally {
       setLoading(false);
     }
@@ -124,7 +126,7 @@ export default function ExchangePage() {
         </Link>
         <h1 className="text-lg font-bold flex items-center gap-2 text-gray-900 dark:text-slate-100">
           <ArrowRightLeft className="text-purple-500" size={20} />
-          Échanger CGLT → wCGLT
+          {T.exc_title}
         </h1>
       </div>
 
@@ -132,18 +134,18 @@ export default function ExchangePage() {
 
         {/* Info card */}
         <div className="rounded-2xl bg-gradient-to-br from-purple-600 to-purple-800 p-5 text-white">
-          <p className="text-purple-200 text-xs font-semibold uppercase tracking-wide mb-2">Taux de conversion</p>
-          <p className="text-2xl font-bold">{CGLT_PER_WCGLT} CGLT = 1 wCGLT</p>
-          <p className="text-purple-200 text-sm mt-1">Valeur marchée ~${WCGLT_PRICE_USD} / wCGLT</p>
+          <p className="text-purple-200 text-xs font-semibold uppercase tracking-wide mb-2">{T.exc_rate_title}</p>
+          <p className="text-2xl font-bold">{T.exc_rate.replace('{n}', String(CGLT_PER_WCGLT))}</p>
+          <p className="text-purple-200 text-sm mt-1">{T.exc_market_val.replace('{price}', String(WCGLT_PRICE_USD))}</p>
           <div className="mt-3 pt-3 border-t border-purple-500/40 flex items-center justify-between">
-            <p className="text-xs text-purple-300">🔗 Livré sur BNB Chain (BSC)</p>
-            <p className="text-xs text-purple-300">Frais bridge : 0</p>
+            <p className="text-xs text-purple-300">{T.exc_delivered_bnb}</p>
+            <p className="text-xs text-purple-300">{T.exc_bridge_fee}</p>
           </div>
         </div>
 
         {/* Solde CGLT */}
         <div className="rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-purple-700 dark:text-purple-300">Solde CGLT disponible</span>
+          <span className="text-sm text-purple-700 dark:text-purple-300">{T.exc_cglt_balance}</span>
           <span className="text-sm font-bold text-purple-800 dark:text-purple-200">
             {cgltBalance !== null ? fmt(cgltBalance) : '—'} CGLT
           </span>
@@ -154,7 +156,7 @@ export default function ExchangePage() {
           {/* Montant CGLT */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-700 dark:text-slate-300">
-              Montant CGLT <span className="text-gray-400 font-normal">— min {CGLT_PER_WCGLT}, multiple de {CGLT_PER_WCGLT}</span>
+              {T.exc_amount_label} <span className="text-gray-500 font-normal">{T.exc_amount_hint.replace('{min}', String(CGLT_PER_WCGLT)).replace('{min}', String(CGLT_PER_WCGLT))}</span>
             </label>
             <input
               type="number"
@@ -172,7 +174,7 @@ export default function ExchangePage() {
           {/* Adresse BSC */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-700 dark:text-slate-300">
-              Adresse BSC (MetaMask)
+              {T.exc_addr_label}
             </label>
             <input
               type="text"
@@ -180,11 +182,11 @@ export default function ExchangePage() {
               onChange={(e) => { setBscAddress(e.target.value); localStorage.setItem('bsc_address', e.target.value); }}
               placeholder="0x..."
               required
-              className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
+              className="border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 text-base font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all"
             />
             {addrHistory.length > 0 && (
               <div className="flex flex-col gap-1.5 mt-1">
-                <p className="text-xs text-gray-400 dark:text-slate-500">Adresses récentes</p>
+                <p className="text-xs text-gray-500 dark:text-slate-500">{T.exc_recent_addrs}</p>
                 <div className="flex flex-wrap gap-2">
                   {addrHistory.map((addr) => (
                     <button
@@ -206,18 +208,18 @@ export default function ExchangePage() {
           {amountNum >= CGLT_PER_WCGLT && (
             <div className="rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 px-4 py-3 flex flex-col gap-2 text-sm">
               <div className="flex justify-between text-gray-500 dark:text-slate-400">
-                <span>Vous dépensez</span>
+                <span>{T.exc_summary_spend}</span>
                 <span>{fmt(amountNum)} CGLT</span>
               </div>
               <div className="flex justify-between text-gray-500 dark:text-slate-400">
-                <span>Frais bridge</span>
-                <span className="text-emerald-600 font-medium">Gratuit</span>
+                <span>{T.exc_summary_bridge}</span>
+                <span className="text-emerald-600 font-medium">{T.exc_summary_free}</span>
               </div>
               <div className="flex justify-between font-bold text-gray-900 dark:text-slate-100 pt-2 border-t border-gray-200 dark:border-slate-600 mt-1">
-                <span>Vous recevez</span>
+                <span>{T.exc_summary_recv}</span>
                 <span className="text-purple-600">
                   {wCGLTAmount.toFixed(4)} wCGLT
-                  <span className="text-gray-400 dark:text-slate-500 font-normal text-xs ml-1">(~${usdValue.toFixed(3)})</span>
+                  <span className="text-gray-500 dark:text-slate-500 font-normal text-xs ml-1">{T.exc_summary_usd.replace('{value}', usdValue.toFixed(3))}</span>
                 </span>
               </div>
             </div>
@@ -236,12 +238,12 @@ export default function ExchangePage() {
                   className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 hover:underline"
                 >
                   <ExternalLink size={12} />
-                  Voir sur BscScan : {txHash.slice(0, 20)}...
+                  {T.exc_bscscan} : {txHash.slice(0, 20)}...
                 </a>
               )}
               <Link href={`/${locale}/wallet`}
                 className="text-xs text-gray-500 dark:text-slate-400 underline mt-1">
-                Retour au wallet
+                {T.exc_back}
               </Link>
             </div>
           )}
@@ -252,7 +254,7 @@ export default function ExchangePage() {
             className="w-full h-[52px] bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-1"
           >
             {loading && <Spinner />}
-            {loading ? 'Échange en cours…' : 'Échanger'}
+            {loading ? T.exc_submitting : T.exc_submit}
           </button>
         </form>
 
@@ -260,7 +262,7 @@ export default function ExchangePage() {
           href={`/${locale}/wallet/exchange/wcglt-usdt`}
           className="mt-2 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl py-3 transition"
         >
-          <TrendingDown size={16} /> Vendre wCGLT → USDT (BSC)
+          <TrendingDown size={16} /> {T.exc_sell_link}
         </Link>
       </div>
     </div>

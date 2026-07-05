@@ -62,10 +62,10 @@ export default function CryptoDepositTab() {
   const fetchAddress = async () => {
     const r = await fetch('/api/wallet/deposit-address');
     if (r.status === 503) {
-      setError('Les dépôts crypto ne sont pas encore configurés sur ce serveur.');
+      setError(T.dep_crypto_not_configured);
       return;
     }
-    if (!r.ok) { setError('Impossible de charger votre adresse de dépôt.'); return; }
+    if (!r.ok) { setError(T.dep_crypto_load_error); return; }
     const d: DepositAddress = await r.json();
     setAddrData(d);
   };
@@ -128,8 +128,8 @@ export default function CryptoDepositTab() {
 
       {/* Network badge */}
       <div className="flex items-center gap-2">
-        <span className="bg-yellow-500 text-black text-xs font-bold px-2.5 py-1 rounded-full">BSC</span>
-        <span className="text-xs text-slate-400">BNB Smart Chain (BEP-20)</span>
+        <span className="bg-yellow-500 text-black text-xs font-bold px-2.5 py-1 rounded-full">{T.dep_crypto_network_badge}</span>
+        <span className="text-xs text-slate-400">{T.dep_crypto_network_name}</span>
       </div>
 
       {/* QR + address */}
@@ -148,18 +148,18 @@ export default function CryptoDepositTab() {
               type="button"
               onClick={copyAddress}
               className="flex-shrink-0 p-2.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition"
-              aria-label="Copier l'adresse"
+              aria-label={T.dep_crypto_copy_aria}
             >
               {copied ? <CheckCheck size={16} /> : <Copy size={16} />}
             </button>
           </div>
-          {copied && <p className="text-xs text-green-400 mt-1">✓ Adresse copiée !</p>}
+          {copied && <p className="text-xs text-green-400 mt-1">{T.dep_crypto_copied}</p>}
         </div>
       </div>
 
       {/* Tokens acceptés */}
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tokens acceptés</p>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{T.dep_crypto_tokens}</p>
         <div className="flex gap-2">
           {addrData.supported_tokens.map((t) => (
             <div
@@ -181,30 +181,30 @@ export default function CryptoDepositTab() {
 
       {/* Info */}
       <div className="rounded-xl border border-slate-700 bg-slate-800/40 px-4 py-3 text-xs text-slate-400 flex flex-col gap-1">
-        <p>• Minimum de dépôt : <strong className="text-slate-200">1 USDT</strong></p>
-        <p>• Les dépôts sont détectés automatiquement toutes les 15 secondes</p>
-        <p>• Le solde est crédité après confirmation on-chain</p>
-        <p>• 1 wCGLT = 0,002 USD (1/500 USDT)</p>
+        <p>• {T.dep_crypto_min_deposit} <strong className="text-slate-200">1 USDT</strong></p>
+        <p>• {T.dep_crypto_auto_detect}</p>
+        <p>• {T.dep_crypto_onchain}</p>
+        <p>• {T.dep_crypto_wcglt_rate}</p>
       </div>
 
       {/* Recent deposits */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-200">Dépôts récents</p>
+          <p className="text-sm font-semibold text-slate-200">{T.dep_crypto_recent}</p>
           <button
             type="button"
             onClick={() => fetchDeposits()}
             className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition"
           >
             <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            Actualiser
+            {T.dep_crypto_refresh}
           </button>
         </div>
 
         {deposits.length === 0 ? (
           <div className="rounded-xl border border-slate-700 bg-slate-800/40 px-4 py-6 text-center">
-            <p className="text-sm text-slate-500">Aucun dépôt crypto pour le moment.</p>
-            <p className="text-xs text-slate-600 mt-1">Envoyez de l&apos;USDT ou du wCGLT à l&apos;adresse ci-dessus.</p>
+            <p className="text-sm text-slate-500">{T.dep_crypto_empty}</p>
+            <p className="text-xs text-slate-600 mt-1">{T.dep_crypto_empty_hint}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -221,7 +221,7 @@ export default function CryptoDepositTab() {
                         ? 'bg-green-900/50 text-green-400 border border-green-700/50'
                         : 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50'
                     }`}>
-                      {d.status === 'CONFIRMED' ? '✓ Confirmé' : d.status}
+                      {d.status === 'CONFIRMED' ? T.dep_crypto_confirmed : d.status}
                     </span>
                   </div>
                   <span className="text-xs text-slate-500">{formatDate(d.created_at)}</span>
