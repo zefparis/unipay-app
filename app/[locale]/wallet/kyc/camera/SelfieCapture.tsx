@@ -137,7 +137,7 @@ export function SelfieCapture({ T, onChange }: Props) {
           onClick={handleRetake}
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
         >
-          Reprendre
+          {T.kyc_retake}
         </button>
       ) : (
         <button
@@ -157,7 +157,7 @@ export function SelfieCapture({ T, onChange }: Props) {
               <circle cx="12" cy="13" r="4" />
             </svg>
           )}
-          {ready ? T.kyc_take_photo : 'Démarrage caméra…'}
+          {ready ? T.kyc_take_photo : T.kyc_cam_starting}
         </button>
       )}
     </div>

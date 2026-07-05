@@ -5,6 +5,7 @@ import { ReflexStep } from './ReflexStep';
 import { StroopStep } from './StroopStep';
 import { DigitSpanStep } from './DigitSpanStep';
 import { VoiceStep } from './VoiceStep';
+import type { WalletDict } from '@/lib/i18n-wallet';
 
 export interface CognitiveData {
   reflex_ms: number;
@@ -16,11 +17,11 @@ export interface CognitiveData {
   vocal_quality: number;
 }
 
-type Props = { onComplete: (data: CognitiveData) => void };
+type Props = { T: WalletDict; onComplete: (data: CognitiveData) => void };
 
 type Stage = 'reflex' | 'stroop' | 'digit_span' | 'voice';
 
-export function CognitiveTestFlow({ onComplete }: Props) {
+export function CognitiveTestFlow({ T, onComplete }: Props) {
   const [stage, setStage] = useState<Stage>('reflex');
   const [data, setData] = useState<Partial<CognitiveData>>({});
 
@@ -60,6 +61,7 @@ export function CognitiveTestFlow({ onComplete }: Props) {
 
       {stage === 'reflex' && (
         <ReflexStep
+          T={T}
           onComplete={(avgMs) => {
             setData(d => ({ ...d, reflex_ms: Math.round(avgMs) }));
             setStage('stroop');
@@ -69,6 +71,7 @@ export function CognitiveTestFlow({ onComplete }: Props) {
 
       {stage === 'stroop' && (
         <StroopStep
+          T={T}
           onComplete={(accuracy, hits, rounds) => {
             setData(d => ({ ...d, stroop_accuracy: accuracy, stroop_hits: hits, stroop_rounds: rounds }));
             setStage('digit_span');
@@ -78,6 +81,7 @@ export function CognitiveTestFlow({ onComplete }: Props) {
 
       {stage === 'digit_span' && (
         <DigitSpanStep
+          T={T}
           onComplete={(score) => {
             setData(d => ({ ...d, digit_span_score: score }));
             setStage('voice');
@@ -87,6 +91,7 @@ export function CognitiveTestFlow({ onComplete }: Props) {
 
       {stage === 'voice' && (
         <VoiceStep
+          T={T}
           onComplete={(embedding, quality) => {
             const finalData: CognitiveData = {
               ...data,

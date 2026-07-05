@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { WalletDict } from '@/lib/i18n-wallet';
 
 const REFLEX_ROUNDS = 2;
 
 type Phase = 'ready' | 'wait' | 'go' | 'too_early' | 'done';
 
-type Props = { onComplete: (avgMs: number) => void };
+type Props = { T: WalletDict; onComplete: (avgMs: number) => void };
 
-export function ReflexStep({ onComplete }: Props) {
+export function ReflexStep({ T, onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [round, setRound] = useState(0);
   const [results, setResults] = useState<number[]>([]);
@@ -68,24 +69,24 @@ export function ReflexStep({ onComplete }: Props) {
     '#2563eb';
 
   const label =
-    phase === 'ready' ? 'DÉMARRER' :
-    phase === 'wait' ? 'ATTENDEZ' :
-    phase === 'go' ? 'APPUYEZ' :
-    phase === 'too_early' ? 'TROP TÔT' :
-    'Terminé';
+    phase === 'ready' ? T.kyc_cog_reflex_start :
+    phase === 'wait' ? T.kyc_cog_reflex_wait :
+    phase === 'go' ? T.kyc_cog_reflex_go :
+    phase === 'too_early' ? T.kyc_cog_reflex_too_early :
+    T.kyc_cog_reflex_done;
 
   const hint =
-    phase === 'ready' ? 'Appuyez dès que vous voyez le cercle vert.' :
-    phase === 'wait' ? 'Attendez le vert.' :
-    phase === 'go' ? 'Appuyez maintenant.' :
-    phase === 'too_early' ? 'Trop tôt. Réessayez.' :
-    'Traitement...';
+    phase === 'ready' ? T.kyc_cog_reflex_hint_ready :
+    phase === 'wait' ? T.kyc_cog_reflex_hint_wait :
+    phase === 'go' ? T.kyc_cog_reflex_hint_go :
+    phase === 'too_early' ? T.kyc_cog_reflex_hint_early :
+    T.kyc_cog_reflex_hint_done;
 
   return (
     <div className="text-center px-6 py-6">
-      <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">Test réflexe</h2>
+      <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">{T.kyc_cog_reflex_title}</h2>
       <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">
-        Tour {round + 1} sur {REFLEX_ROUNDS}
+        {T.kyc_cog_round.replace('{n}', String(round + 1)).replace('{total}', String(REFLEX_ROUNDS))}
       </p>
 
       <div className="flex justify-center gap-2 mb-4">
@@ -117,7 +118,7 @@ export function ReflexStep({ onComplete }: Props) {
 
       {lastMs !== null && phase === 'ready' && (
         <p className="mt-3 text-sm text-green-600 dark:text-green-400">
-          Dernier : {lastMs} ms
+          {T.kyc_cog_reflex_last.replace('{ms}', String(lastMs))}
         </p>
       )}
     </div>

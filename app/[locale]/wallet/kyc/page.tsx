@@ -198,6 +198,7 @@ export default function KycPage() {
             ) : (
               <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
                 <CognitiveTestFlow
+                  T={T}
                   onComplete={async (data) => {
                     setUpgrading(true);
                     setUpgradeError('');
@@ -333,7 +334,7 @@ export default function KycPage() {
           {step === 1 && <SelfieCapture T={T} onChange={setSelfieFile} />}
 
           {step === 2 && (
-            <CognitiveTestFlow onComplete={(data) => setCognitiveData(data)} />
+            <CognitiveTestFlow T={T} onComplete={(data) => setCognitiveData(data)} />
           )}
 
           <div className="mt-6 flex gap-3">
@@ -431,7 +432,7 @@ function StatusScreen({ locale, T, color, icon, badge, title, message, limits, o
                 onClick={onUpgrade}
                 className="mt-3 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
-                Compléter le test
+                {T.kyc_upgrade_cta}
               </button>
             </div>
           </div>
