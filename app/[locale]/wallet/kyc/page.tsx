@@ -238,8 +238,8 @@ export default function KycPage() {
         color="green"
         icon="✓"
         badge={T.kyc_approved_badge}
-        title={T.kyc_approved_title}
-        message={T.kyc_approved_msg}
+        title={kycLevel >= 2 ? T.kyc_approved_title_l2 : T.kyc_approved_title}
+        message={kycLevel >= 2 ? T.kyc_approved_msg_l2 : T.kyc_approved_msg}
         limits={KYC_LIMITS[kycLevel as 0 | 1 | 2] ?? KYC_LIMITS[1]}
         kycLevel={kycLevel}
         onUpgrade={kycLevel === 1 ? () => { setShowUpgradeFlow(true); setUpgradeError(''); } : undefined}
