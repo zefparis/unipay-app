@@ -1,10 +1,11 @@
 ﻿'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
 import { CognitiveTestFlow, type CognitiveData } from './cognitive/CognitiveTestFlow';
+import { SelfieCapture } from './camera/SelfieCapture';
 
 interface Submission {
   id: string;
@@ -42,46 +43,6 @@ function Spinner({ sm }: { sm?: boolean }) {
   );
 }
 
-function SelfiePicker({ T, preview, onChange }: { T: WalletDict; preview: string | null; onChange: (file: File) => void }) {
-  const ref = useRef<HTMLInputElement>(null);
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-sm font-semibold text-gray-700 dark:text-slate-300">{T.kyc_selfie}</p>
-        <p className="text-xs text-gray-500 dark:text-slate-500">{T.kyc_selfie_hint}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => ref.current?.click()}
-        className="relative flex h-56 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 text-gray-500 transition hover:border-[#00A651] hover:text-[#00A651] dark:border-slate-600 dark:text-slate-500"
-      >
-        {preview ? (
-          <img src={preview} alt="Selfie" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-9 w-9">
-              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            <span className="text-xs font-medium">{T.kyc_take_photo}</span>
-          </div>
-        )}
-      </button>
-      <input
-        ref={ref}
-        type="file"
-        name="selfie"
-        accept="image/*"
-        capture="user"
-        className="hidden"
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) onChange(file);
-        }}
-      />
-    </div>
-  );
-}
 
 export default function KycPage() {
   const router = useRouter();
@@ -369,7 +330,7 @@ export default function KycPage() {
             </div>
           )}
 
-          {step === 1 && <SelfiePicker T={T} preview={selfiePrev} onChange={setSelfieFile} />}
+          {step === 1 && <SelfieCapture T={T} onChange={setSelfieFile} />}
 
           {step === 2 && (
             <CognitiveTestFlow onComplete={(data) => setCognitiveData(data)} />
