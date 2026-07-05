@@ -33,8 +33,10 @@ function fmt(n: number) {
 }
 
 // Discreet mesh-gradient backdrop for the glassmorphism hero.
-const HERO_BG =
+const HERO_BG_DARK =
   'radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(0,200,150,0.10) 0%, transparent 50%), #0f1117';
+const HERO_BG_LIGHT =
+  'radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(0,200,150,0.06) 0%, transparent 50%), #f8fafc';
 
 // Subtle fractal-noise texture (data-URI SVG) layered over the gradient.
 const NOISE_BG =
@@ -42,7 +44,7 @@ const NOISE_BG =
 
 function Spinner() {
   return (
-    <svg className="animate-spin h-5 w-5 text-white/60 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <svg className="animate-spin h-5 w-5 text-gray-400 dark:text-white/60 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -70,6 +72,15 @@ export default function WalletHomePage() {
   const [txList, setTxList] = useState<Tx[]>([]);
   const [loadingBal, setLoadingBal] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => setIsDark(document.documentElement.classList.contains('dark'));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     fetch('/api/wallet/balance')
@@ -87,10 +98,26 @@ export default function WalletHomePage() {
       .catch(() => {});
   }, []);
 
+  const heroBg = isDark ? HERO_BG_DARK : HERO_BG_LIGHT;
+  const glassBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.65)';
+  const glassBgSubtle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.5)';
+  const glassBorder = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)';
+  const glassBorderSubtle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const glassIconBg = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
+  const glassShadow = isDark
+    ? '0 8px 32px rgba(99,102,241,0.20), 0 0 0 1px rgba(255,255,255,0.05)'
+    : '0 8px 32px rgba(99,102,241,0.10), 0 0 0 1px rgba(0,0,0,0.04)';
+  const separatorBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+  const txCardBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)';
+  const txCardBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const sendBtnBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+  const sendBtnBorder = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
+  const advancedBorder = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+
   return (
     <div
-      className="relative flex flex-col flex-1 min-h-screen text-white overflow-hidden"
-      style={{ background: HERO_BG }}
+      className="relative flex flex-col flex-1 min-h-screen text-gray-900 dark:text-white overflow-hidden"
+      style={{ background: heroBg }}
     >
       {/* Subtle noise texture over the gradient */}
       <div
@@ -106,9 +133,9 @@ export default function WalletHomePage() {
 
       {/* Push notification activation banner */}
       {showBanner && (
-        <div className="relative z-10 mx-4 mt-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3 flex items-center gap-3">
+        <div className="relative z-10 mx-4 mt-3 rounded-xl bg-black/5 dark:bg-white/10 backdrop-blur-sm border border-black/10 dark:border-white/20 px-4 py-3 flex items-center gap-3">
           <span className="text-xl shrink-0">🔔</span>
-          <p className="flex-1 text-xs text-white/90 leading-snug">
+          <p className="flex-1 text-xs text-gray-700 dark:text-white/90 leading-snug">
             {locale === 'en'
               ? 'Enable notifications to track your transactions'
               : 'Activez les notifications pour suivre vos transactions'}
@@ -125,7 +152,7 @@ export default function WalletHomePage() {
           </button>
           <button
             onClick={() => { localStorage.setItem('notif_prompted', '1'); setBannerDismissed(true); }}
-            className="shrink-0 text-white/50 hover:text-white transition text-lg leading-none"
+            className="shrink-0 text-gray-400 hover:text-gray-600 dark:text-white/50 dark:hover:text-white transition text-lg leading-none"
           >
             ×
           </button>
@@ -138,41 +165,41 @@ export default function WalletHomePage() {
           className="w-full rounded-[24px] p-6"
           style={{
             position: 'relative',
-            background: 'rgba(255,255,255,0.06)',
+            background: glassBg,
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255,255,255,0.10)',
-            boxShadow: '0 8px 32px rgba(99,102,241,0.20), 0 0 0 1px rgba(255,255,255,0.05)',
+            border: `1px solid ${glassBorder}`,
+            boxShadow: glassShadow,
           }}
         >
           <SecurityBadge />
-          <p className="text-sm text-white/60 tracking-wide">{T.balance_avail}</p>
+          <p className="text-sm text-gray-600 dark:text-white/60 tracking-wide">{T.balance_avail}</p>
           {loadingBal ? (
             <div className="h-14 mt-2"><Spinner /></div>
           ) : (
             <p className="mt-1 leading-none break-all" style={{ fontSize: 'clamp(28px, 10.5vw, 52px)', fontWeight: 800, letterSpacing: '-1px' }}>
               {balance !== null ? fmt(balance) : '—'}
-              <span className="text-xl font-normal text-white/50 ml-1">CDF</span>
+              <span className="text-xl font-normal text-gray-500 dark:text-white/50 ml-1">CDF</span>
             </p>
           )}
           {!loadingBal && (
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs opacity-60">{T.home_usd_lbl}</span>
-              <span className="text-base font-bold" style={{ color: '#6ee7b7' }}>
+              <span className="text-xs text-gray-500 dark:text-white/60">{T.home_usd_lbl}</span>
+              <span className="text-base font-bold" style={{ color: isDark ? '#6ee7b7' : '#059669' }}>
                 {usdBalance.toFixed(2)} USD
               </span>
             </div>
           )}
-          <p className="text-xs text-white/50 mt-3">{T.app_name} · RDC</p>
+          <p className="text-xs text-gray-500 dark:text-white/50 mt-3">{T.app_name} · RDC</p>
 
           {/* Subtle separator */}
-          <div className="my-5 h-px w-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
+          <div className="my-5 h-px w-full" style={{ background: separatorBg }} />
 
           {/* CGLT row */}
           {cgltBalance > 0 && (
             <div className="mb-4">
-              <p className="text-xs text-white/50">{T.home_cglt_lbl}</p>
-              <p className="text-2xl font-bold mt-0.5" style={{ color: '#a78bfa' }}>
+              <p className="text-xs text-gray-500 dark:text-white/50">{T.home_cglt_lbl}</p>
+              <p className="text-2xl font-bold mt-0.5" style={{ color: isDark ? '#a78bfa' : '#7c3aed' }}>
                 {new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cgltBalance)}
                 <span className="text-base font-semibold ml-1">CGLT</span>
               </p>
@@ -182,7 +209,7 @@ export default function WalletHomePage() {
           {/* USDT row */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-white/50">{T.home_usdt_lbl}</p>
+              <p className="text-xs text-gray-500 dark:text-white/50">{T.home_usdt_lbl}</p>
               <p className="text-2xl font-bold mt-0.5" style={{ color: '#00C896' }}>
                 {usdtBalance.toFixed(2)}
                 <span className="text-base font-semibold ml-1">USDT</span>
@@ -190,12 +217,12 @@ export default function WalletHomePage() {
             </div>
             <Link
               href={`${base}/send?tab=usdt`}
-              className="px-4 py-2 rounded-full text-sm font-semibold text-white transition active:scale-95 hover:bg-white/[0.16]"
+              className="px-4 py-2 rounded-full text-sm font-semibold text-gray-900 dark:text-white transition active:scale-95 hover:bg-black/[0.08] dark:hover:bg-white/[0.16]"
               style={{
-                background: 'rgba(255,255,255,0.1)',
+                background: sendBtnBg,
                 backdropFilter: 'blur(12px)',
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.15)',
+                border: `1px solid ${sendBtnBorder}`,
               }}
             >
               {T.home_send}
@@ -208,30 +235,30 @@ export default function WalletHomePage() {
       <div className="relative z-10 px-4 pt-6">
         <div className="flex flex-wrap justify-center gap-3">
           {([
-            { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-400" size={24} />, label: T.home_deposit },
-            { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-400"  size={24} />, label: T.home_withdraw },
-            { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-400"     size={24} />, label: T.home_send },
-            { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-400"  size={24} />, label: T.home_convert },
-            { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-400" size={24} />, label: T.home_scan },
+            { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-600 dark:text-emerald-400" size={24} />, label: T.home_deposit },
+            { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-600 dark:text-orange-400"  size={24} />, label: T.home_withdraw },
+            { href: `${base}/send`,     icon: <ArrowLeftRight  className="text-sky-600 dark:text-sky-400"     size={24} />, label: T.home_send },
+            { href: `${base}/swap`,     icon: <ArrowDownUp     className="text-indigo-600 dark:text-indigo-400"  size={24} />, label: T.home_convert },
+            { href: `${base}/scan`,     icon: <QrCode          className="text-fuchsia-600 dark:text-fuchsia-400" size={24} />, label: T.home_scan },
           ] as const).map(({ href, icon, label }) => (
             <Link
               key={label}
               href={href}
               className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
               style={{
-                background: 'rgba(255,255,255,0.06)',
+                background: glassBg,
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                border: `1px solid ${glassBorder}`,
               }}
             >
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+                style={{ background: glassIconBg, border: `1px solid ${glassBorder}` }}
               >
                 {icon}
               </div>
-              <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{label}</span>
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-white/80 text-center leading-tight break-words">{label}</span>
             </Link>
           ))}
           <a
@@ -240,19 +267,19 @@ export default function WalletHomePage() {
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
             style={{
-              background: 'rgba(255,255,255,0.06)',
+              background: glassBg,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: `1px solid ${glassBorder}`,
             }}
           >
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ background: glassIconBg, border: `1px solid ${glassBorder}` }}
             >
-              <Gamepad2 className="text-violet-400" size={24} />
+              <Gamepad2 className="text-violet-600 dark:text-violet-400" size={24} />
             </div>
-            <span className="text-[11px] font-semibold text-white/80 text-center leading-tight break-words">{T.home_gaming}</span>
+            <span className="text-[11px] font-semibold text-gray-700 dark:text-white/80 text-center leading-tight break-words">{T.home_gaming}</span>
           </a>
         </div>
 
@@ -261,8 +288,8 @@ export default function WalletHomePage() {
           <button
             type="button"
             onClick={() => setShowAdvanced((v) => !v)}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium text-white/50 hover:text-white/80 transition-all duration-200"
-            style={{ border: '1px solid rgba(255,255,255,0.12)' }}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-white/50 dark:hover:text-white/80 transition-all duration-200"
+            style={{ border: `1px solid ${advancedBorder}` }}
           >
             <span>{T.home_advanced}</span>
             <ChevronDown
@@ -280,28 +307,28 @@ export default function WalletHomePage() {
         >
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             {([
-              { href: `${base}/receive`,  icon: <Wallet     className="text-teal-400"   size={24} />, label: T.home_receive },
-              { href: `${base}/exchange`, icon: <Repeat2    className="text-amber-400"  size={24} />, label: T.home_exchange },
-              { href: `${base}/crypto`,   icon: <TrendingUp className="text-purple-400" size={24} />, label: T.home_crypto },
+              { href: `${base}/receive`,  icon: <Wallet     className="text-teal-600 dark:text-teal-400"   size={24} />, label: T.home_receive },
+              { href: `${base}/exchange`, icon: <Repeat2    className="text-amber-600 dark:text-amber-400"  size={24} />, label: T.home_exchange },
+              { href: `${base}/crypto`,   icon: <TrendingUp className="text-purple-600 dark:text-purple-400" size={24} />, label: T.home_crypto },
             ] as const).map(({ href, icon, label }) => (
               <Link
                 key={label}
                 href={href}
                 className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
+                  background: glassBgSubtle,
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  border: `1px solid ${glassBorderSubtle}`,
                 }}
               >
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                  style={{ background: glassIconBg, border: `1px solid ${glassBorderSubtle}` }}
                 >
                   {icon}
                 </div>
-                <span className="text-[11px] font-semibold text-white/60 text-center leading-tight break-words">{label}</span>
+                <span className="text-[11px] font-semibold text-gray-600 dark:text-white/60 text-center leading-tight break-words">{label}</span>
               </Link>
             ))}
           </div>
@@ -311,12 +338,12 @@ export default function WalletHomePage() {
       {/* Recent transactions */}
       <div className="relative z-10 px-4 pb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold text-white/40 uppercase tracking-widest">{T.home_recent}</h2>
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-white/40 uppercase tracking-widest">{T.home_recent}</h2>
           <Link href={`${base}/transactions`} className="text-xs font-semibold" style={{ color: '#00C896' }}>{T.home_see_all}</Link>
         </div>
 
         {txList.length === 0 && !loadingBal && (
-          <p className="text-sm text-white/40 text-center py-8">{T.home_no_tx}</p>
+          <p className="text-sm text-gray-500 dark:text-white/40 text-center py-8">{T.home_no_tx}</p>
         )}
 
         <div className="flex flex-col gap-2">
@@ -327,21 +354,21 @@ export default function WalletHomePage() {
               <div
                 key={tx.id}
                 className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ background: txCardBg, border: `1px solid ${txCardBorder}` }}
               >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  style={{ background: glassIconBg }}
                 >
-                  {isCredit && <ArrowDownCircle className="text-emerald-400" size={20} />}
-                  {tx.direction === 'payout' && <ArrowUpCircle className="text-orange-400" size={20} />}
-                  {isP2P && <ArrowLeftRight className="text-sky-400" size={20} />}
+                  {isCredit && <ArrowDownCircle className="text-emerald-600 dark:text-emerald-400" size={20} />}
+                  {tx.direction === 'payout' && <ArrowUpCircle className="text-orange-600 dark:text-orange-400" size={20} />}
+                  {isP2P && <ArrowLeftRight className="text-sky-600 dark:text-sky-400" size={20} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white/90 capitalize">{tx.operator}</p>
-                  <p className="text-xs text-white/40">{relativeDate(tx.created_at, T)}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white/90 capitalize">{tx.operator}</p>
+                  <p className="text-xs text-gray-500 dark:text-white/40">{relativeDate(tx.created_at, T)}</p>
                 </div>
-                <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-emerald-400' : isP2P ? 'text-sky-400' : 'text-orange-400'}`}>
+                <p className={`text-sm font-bold shrink-0 ${isCredit ? 'text-emerald-600 dark:text-emerald-400' : isP2P ? 'text-sky-600 dark:text-sky-400' : 'text-orange-600 dark:text-orange-400'}`}>
                   {(() => {
                     const cur = (tx.currency ?? 'CDF').toUpperCase();
                     const val = isCredit ? tx.net_amount : tx.amount;
