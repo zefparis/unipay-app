@@ -7,6 +7,9 @@ import { validatePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+// Anti-cache: session-dependent page, must never be served statically/from cache
+export const dynamic = 'force-dynamic';
+
 const T = {
   fr: {
     title:    'Connexion',

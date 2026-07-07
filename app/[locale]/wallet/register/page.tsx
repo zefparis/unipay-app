@@ -8,6 +8,9 @@ import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT } from '@/lib/i18n-wallet';
 
+// Anti-cache: session-dependent page, must never be served statically/from cache
+export const dynamic = 'force-dynamic';
+
 function Spinner() {
   return (
     <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
