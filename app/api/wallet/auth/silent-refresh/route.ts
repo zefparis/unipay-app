@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_URL, upstreamFetch } from '../../_proxy';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(request);
+  if (limited) return limited;
+
   const rawNext = request.nextUrl.searchParams.get('next') ?? '/fr/wallet';
   const next = (rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://'))
     ? rawNext

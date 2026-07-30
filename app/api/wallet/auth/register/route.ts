@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_URL, upstreamFetch } from '../../_proxy';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request);
+  if (limited) return limited;
+
   let body: unknown;
   try {
     body = await request.json();
