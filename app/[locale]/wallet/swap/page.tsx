@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, ArrowDownUp, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -46,7 +46,7 @@ export default function WalletSwapPage() {
   const [loading, setLoading]         = useState(false);
   const [loadingRate, setLoadingRate] = useState(true);
 
-  function loadRate() {
+  const loadRate = useCallback(() => {
     setLoadingRate(true);
     fetch('/api/wallet/swap/rate')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
@@ -66,7 +66,7 @@ export default function WalletSwapPage() {
       })
       .catch(() => { setUsdCdfFallback(true); })
       .finally(() => setLoadingRate(false));
-  }
+  }, [locale, router]);
 
   useEffect(() => {
     loadRate();
@@ -74,7 +74,7 @@ export default function WalletSwapPage() {
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
       .then((d) => { if (d) { setCdfBalance(Number(d.balance_cdf ?? 0)); setCgltBalance(Number(d.cglt_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); } })
       .catch(() => {});
-  }, []);
+  }, [loadRate, locale, router]);
 
   const amountNum = Number(amount) || 0;
   const isCdfCglt = mode === 'cdf_cglt';

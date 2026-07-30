@@ -102,7 +102,7 @@ export default function TransakDepositTab({ usdBalance }: { usdBalance: number }
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       }
     }, 3000);
-  }, [router, locale]);
+  }, [router, locale, T]);
 
   /* ── Auto-start polling when returning from Transak redirect ────────── */
   useEffect(() => {

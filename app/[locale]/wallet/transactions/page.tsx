@@ -75,7 +75,7 @@ export default function WalletTransactionsPage() {
       .then((d) => { if (d?.data) setTxList(d.data); else if (d) setError(T.tx_err_load); })
       .catch(() => setError(T.tx_err_net))
       .finally(() => setLoading(false));
-  }, []);
+  }, [locale, router, T]);
 
   useEffect(() => { setPage(1); }, [filter]);
 

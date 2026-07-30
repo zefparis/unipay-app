@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, CheckCheck, ExternalLink, RefreshCw } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function CryptoDepositTab() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchAddress = async () => {
+  const fetchAddress = useCallback(async () => {
     const r = await fetch('/api/wallet/deposit-address');
     if (r.status === 503) {
       setError(T.dep_crypto_not_configured);
@@ -68,7 +68,7 @@ export default function CryptoDepositTab() {
     if (!r.ok) { setError(T.dep_crypto_load_error); return; }
     const d: DepositAddress = await r.json();
     setAddrData(d);
-  };
+  }, [T]);
 
   const fetchDeposits = async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -88,7 +88,7 @@ export default function CryptoDepositTab() {
     }, 30_000);
 
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, []);
+  }, [fetchAddress]);
 
   const copyAddress = async () => {
     if (!addrData?.bsc_address) return;

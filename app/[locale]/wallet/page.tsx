@@ -95,7 +95,7 @@ export default function WalletHomePage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d?.data) setTxList(d.data); })
       .catch(() => {});
-  }, []);
+  }, [base, router]);
 
   const heroBg = isDark ? HERO_BG_DARK : HERO_BG_LIGHT;
   const glassBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.65)';

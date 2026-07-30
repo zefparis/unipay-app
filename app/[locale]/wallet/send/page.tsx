@@ -59,7 +59,7 @@ export default function WalletSendPage() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [locale, router]);
 
   /* ── Reset form when switching tabs ────────────────────────────────── */
   function switchTab(t: Tab) {

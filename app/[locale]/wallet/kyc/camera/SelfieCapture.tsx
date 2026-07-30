@@ -86,6 +86,7 @@ export function SelfieCapture({ T, onChange }: Props) {
 
       <div className="relative overflow-hidden rounded-2xl bg-black" style={{ aspectRatio: '4/3' }}>
         {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
             alt="Selfie capturé"

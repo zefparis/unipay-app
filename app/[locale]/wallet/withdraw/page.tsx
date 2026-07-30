@@ -70,7 +70,7 @@ export default function WalletWithdrawPage() {
       .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
       .catch(() => {});
 
-  }, [])
+  }, [locale, router])
 
   const isCdf  = tab === 'cdf';
   const isUsd  = tab === 'usd';

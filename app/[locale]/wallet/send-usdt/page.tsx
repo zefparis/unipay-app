@@ -9,7 +9,7 @@ export default function WalletSendUsdtPage() {
 
   useEffect(() => {
     router.replace(`/${locale}/wallet/send?tab=usdt`);
-  }, [locale]);
+  }, [locale, router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-white dark:bg-[#0f172a]">
