@@ -9,11 +9,6 @@ import { wT } from '@/lib/i18n-wallet';
 const CGLT_PER_WCGLT  = 500;
 const WCGLT_PRICE_USD = 0.109;
 
-const BLOCKED_ADDRESSES = new Set([
-  '0x7851e44d4a8b0939cf10ede3922a762722437ea5',
-  '0x2b8a431b540c41d2af83301287e5b18dd1f221cb',
-]);
-
 function Spinner() {
   return (
     <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -47,16 +42,12 @@ export default function ExchangePage() {
       .then((d: { cglt_balance?: number }) => setCgltBalance(Number(d.cglt_balance ?? 0)))
       .catch(() => {});
     const saved = localStorage.getItem('bsc_address');
-    if (saved && !BLOCKED_ADDRESSES.has(saved.toLowerCase())) {
+    if (saved) {
       setBscAddress(saved);
-    } else if (saved) {
-      localStorage.removeItem('bsc_address');
     }
     try {
       const hist = JSON.parse(localStorage.getItem('bsc_addresses_history') ?? '[]') as string[];
-      const clean = hist.filter((a) => !BLOCKED_ADDRESSES.has(a.toLowerCase()));
-      if (clean.length !== hist.length) localStorage.setItem('bsc_addresses_history', JSON.stringify(clean));
-      setAddrHistory(clean);
+      setAddrHistory(hist);
     } catch { /* ignore */ }
   }, []);
 
