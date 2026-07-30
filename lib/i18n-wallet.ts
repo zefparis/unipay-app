@@ -503,6 +503,34 @@ const dict = {
     wd_usdt_warning:        '⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).',
     wd_usdt_soon:           'Bientôt dispo',
     wd_usdt_fee_label:      'Frais {fee} USDT',
+
+    // ── Login page ───────────────────────────────────────────────────────────
+    login_title:      'Connexion',
+    login_sub:        'Accédez à votre portefeuille UniPay',
+    login_pin:        'Code PIN (6 chiffres)',
+    login_loading:    'Connexion…',
+    login_no_acct:    'Pas encore de compte ?',
+    login_err_def:    'Numéro ou PIN incorrect',
+
+    // ── Landing page ────────────────────────────────────────────────────────
+    landing_tagline:    "Le wallet financier de l'Afrique Centrale et de sa diaspora",
+    landing_subtitle:   'Envoyez, recevez et échangez — Mobile Money · Carte · Crypto',
+    landing_feat_title:  'Tout ce dont vous avez besoin',
+    landing_f1t:        "Envoyez de l'argent",
+    landing_f1d:        'Par numéro de téléphone ou QR code, instantané',
+    landing_f2t:        'Changez vos devises',
+    landing_f2d:        'CDF, USD, USDT et CGLT au meilleur taux',
+    landing_f3t:        'KYC Cognitif',
+    landing_f3d:        "Vérification d'identité par IA, résultat en 2 minutes",
+    landing_f4t:        'Blockchain Congolaise',
+    landing_f4d:       'Vos CGLT sécurisés sur la première blockchain privée de RDC',
+    landing_qr_title:   'Payez et recevez avec votre QR code personnel',
+    landing_qr_sub:     'Montrez votre QR, encaissez instantanément',
+    landing_pin_lbl:    'Code PIN',
+    landing_footer:     'UniPay Congo — Propulsé par IA-Solution & CGL',
+    landing_cgu:        'CGU',
+    landing_priv:       'Confidentialité',
+    landing_support:    'Support',
   },
 
   en: {
@@ -1007,6 +1035,34 @@ const dict = {
     wd_usdt_warning:        '⚠️ For a new address, the first withdrawal may take 24–48h (Binance security verification).',
     wd_usdt_soon:           'Coming soon',
     wd_usdt_fee_label:      'Fee {fee} USDT',
+
+    // ── Login page ───────────────────────────────────────────────────────────
+    login_title:      'Sign in',
+    login_sub:        'Access your UniPay wallet',
+    login_pin:        'PIN code (6 digits)',
+    login_loading:    'Signing in…',
+    login_no_acct:    'No account yet?',
+    login_err_def:    'Incorrect number or PIN',
+
+    // ── Landing page ────────────────────────────────────────────────────────
+    landing_tagline:    'The financial wallet of Central Africa and its diaspora',
+    landing_subtitle:   'Send, receive and exchange — Mobile Money · Card · Crypto',
+    landing_feat_title: 'Everything you need',
+    landing_f1t:        'Send money',
+    landing_f1d:        'By phone number or QR code, instantly',
+    landing_f2t:        'Exchange currencies',
+    landing_f2d:        'CDF, USD, USDT and CGLT at the best rate',
+    landing_f3t:        'Cognitive KYC',
+    landing_f3d:        'AI-powered identity verification, result in 2 minutes',
+    landing_f4t:        'Congolese Blockchain',
+    landing_f4d:        'Your CGLT secured on the first private blockchain in DRC',
+    landing_qr_title:   'Pay and receive with your personal QR code',
+    landing_qr_sub:     'Show your QR, collect instantly',
+    landing_pin_lbl:    'PIN code',
+    landing_footer:     'UniPay Congo — Powered by IA-Solution & CGL',
+    landing_cgu:        'ToS',
+    landing_priv:       'Privacy',
+    landing_support:    'Support',
   },
 } as const;
 

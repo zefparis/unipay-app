@@ -88,7 +88,7 @@ export default function ReceivePage() {
                   value={address}
                   size={200}
                   level="M"
-                  includeMargin={false}
+                  marginSize={0}
                 />
               </div>
 

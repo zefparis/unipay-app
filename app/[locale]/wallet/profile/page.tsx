@@ -328,7 +328,8 @@ export default function WalletProfilePage() {
           <div className="relative">
             <div className="w-20 h-20 rounded-full bg-[#00A651]/10 overflow-hidden flex items-center justify-center border-2 border-[#00A651]/30">
               {avatar
-                ? <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+                ? // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
                 : profile?.full_name
                   ? <span className="text-2xl font-bold text-[#00A651]">{profile.full_name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()}</span>
                   : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-9 h-9 text-[#00A651]"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

@@ -6,40 +6,10 @@ import Link from 'next/link';
 import { validatePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { wT } from '@/lib/i18n-wallet';
 
 // Anti-cache: session-dependent page, must never be served statically/from cache
 export const dynamic = 'force-dynamic';
-
-const T = {
-  fr: {
-    title:    'Connexion',
-    sub:      'Accédez à votre portefeuille UniPay',
-    phone:    'Numéro de téléphone',
-    pin:      'Code PIN (6 chiffres)',
-    btn:      'Se connecter',
-    loading:  'Connexion…',
-    no_acct:  'Pas encore de compte ?',
-    reg:      'Créer mon wallet',
-    err_phone: 'Numéro invalide. Format : 09XXXXXXXX ou +243 9X XXX XXXX',
-    err_pin:   'Le PIN doit contenir 6 chiffres.',
-    err_net:   'Erreur réseau, réessayez.',
-    err_def:   'Numéro ou PIN incorrect',
-  },
-  en: {
-    title:    'Sign in',
-    sub:      'Access your UniPay wallet',
-    phone:    'Phone number',
-    pin:      'PIN code (6 digits)',
-    btn:      'Sign in',
-    loading:  'Signing in…',
-    no_acct:  'No account yet?',
-    reg:      'Create my wallet',
-    err_phone: 'Invalid number. Format: 09XXXXXXXX or +243 9X XXX XXXX',
-    err_pin:   'PIN must be 6 digits.',
-    err_net:   'Network error, please retry.',
-    err_def:   'Incorrect number or PIN',
-  },
-};
 
 function Spinner() {
   return (
@@ -58,8 +28,7 @@ function LoginForm() {
   const next         = (rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://'))
     ? rawNext
     : `/${locale}/wallet`;
-  const lang         = locale === 'en' ? 'en' : 'fr';
-  const tt           = T[lang];
+  const tt           = wT(locale);
 
   const [phone,   setPhone]   = useState('+243');
   const [pin,     setPin]     = useState('');
@@ -74,8 +43,8 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!validatePhone(phone)) { setError(tt.err_phone); return; }
-    if (pin.length !== 6)      { setError(tt.err_pin);   return; }
+    if (!validatePhone(phone)) { setError(tt.err_phone_inv); return; }
+    if (pin.length !== 6)      { setError(tt.err_pin_length);   return; }
     setLoading(true);
     try {
       const res  = await fetch('/api/wallet/auth/login', {
@@ -84,13 +53,13 @@ function LoginForm() {
         body:    JSON.stringify({ phone, pin }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? tt.err_def); return; }
+      if (!res.ok) { setError(data.error ?? tt.login_err_def); return; }
       // PII: phone number stored in clear text for form pre-fill. Cleared on logout (see profile/page.tsx doLogout).
       localStorage.setItem('wallet_phone', phone);
       router.refresh();
       router.replace(next);
     } catch {
-      setError(tt.err_net);
+      setError(tt.err_network);
     } finally {
       setLoading(false);
     }
@@ -114,8 +83,8 @@ function LoginForm() {
               </svg>
             </div>
             <div className="text-center">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{tt.title}</h1>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{tt.sub}</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">{tt.login_title}</h1>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">{tt.login_sub}</p>
             </div>
           </div>
 
@@ -128,12 +97,12 @@ function LoginForm() {
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5">{tt.phone}</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5">{tt.reg_phone_lbl}</label>
               <PhoneInput value={phone} onChange={setPhone} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5">{tt.pin}</label>
+              <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 mb-1.5">{tt.login_pin}</label>
               <input
                 id="unipay-pin"
                 type="password"
@@ -151,15 +120,15 @@ function LoginForm() {
               disabled={loading}
               className="w-full h-[52px] flex items-center justify-center gap-2 rounded-xl bg-[#00A651] text-white font-bold text-base shadow-md hover:bg-[#008f46] transition disabled:opacity-60"
             >
-              {loading ? <><Spinner /> {tt.loading}</> : tt.btn}
+              {loading ? <><Spinner /> {tt.login_loading}</> : tt.reg_sign_in}
             </button>
           </form>
 
           {/* Register link */}
           <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-6">
-            {tt.no_acct}{' '}
+            {tt.login_no_acct}{' '}
             <Link href={`/${locale}/wallet/register`} className="text-[#00A651] font-semibold hover:underline">
-              {tt.reg}
+              {tt.reg_title}
             </Link>
           </p>
 

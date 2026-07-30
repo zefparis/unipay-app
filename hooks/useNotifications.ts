@@ -41,8 +41,37 @@ export function useNotifications() {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30_000);
-    return () => clearInterval(interval);
+
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    function startPolling() {
+      if (interval) return;
+      interval = setInterval(fetchUnreadCount, 60_000);
+    }
+
+    function stopPolling() {
+      if (interval) { clearInterval(interval); interval = null; }
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        fetchUnreadCount();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    }
+
+    if (document.visibilityState === 'visible') {
+      startPolling();
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [fetchUnreadCount]);
 
   const subscribeToPush = useCallback(async (): Promise<boolean> => {
