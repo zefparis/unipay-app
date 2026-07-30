@@ -7,7 +7,6 @@ import { ArrowDownCircle, ArrowUpCircle, ArrowLeftRight, ArrowDownUp, QrCode, Tr
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
 import { useNotifications } from '@/hooks/useNotifications';
-import { SecurityBadge } from '@/components/SecurityBadge';
 
 interface Tx {
   id: string;
@@ -172,7 +171,6 @@ export default function WalletHomePage() {
             boxShadow: glassShadow,
           }}
         >
-          <SecurityBadge />
           <p className="text-sm text-gray-600 dark:text-white/60 tracking-wide">{T.balance_avail}</p>
           {loadingBal ? (
             <div className="h-14 mt-2"><Spinner /></div>

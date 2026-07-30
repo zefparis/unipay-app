@@ -23,8 +23,3 @@ body {
     Oxygen, Ubuntu, sans-serif;
 }
 
-/* Masquer le badge flottant du widget HCS — on a notre propre SecurityBadge sur la card */
-#hcs-u7-badge,
-#hcs-u7-card {
-  display: none !important;
-}

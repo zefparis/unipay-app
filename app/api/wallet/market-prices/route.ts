@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const COIN_IDS      = ['bitcoin', 'ethereum', 'binancecoin', 'tether'];
-const WCGLT_CONTRACT = '0x6b402687B45f98913dF7409660A8f04f81752f8B';
+const WCGLT_CONTRACT = '0xBf0535d21E59E4BB026f6848cc71Db971B120374';
 
 export const revalidate = 60; // Next.js 60 s cache
 
