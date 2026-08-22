@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HYBRID_VECTOR_API_URL, getWorkerAuthHeaders } from './sensitive-session';
+import { HYBRID_VECTOR_API_URL, getWorkerAuthHeaders, isWorkerSecretConfigured } from './sensitive-session';
 
 /**
  * Server-side guard for sensitive session enforcement.
@@ -14,8 +14,24 @@ import { HYBRID_VECTOR_API_URL, getWorkerAuthHeaders } from './sensitive-session
  * session ID. If the header is missing, the transaction is rejected
  * (fail-closed for financial actions).
  *
+ * ─── Fail modes (IMPORTANT distinction) ───────────────────────────
+ *
+ * 1. HCS_WORKER_SHARED_SECRET missing/empty → FAIL-CLOSED (503)
+ *    A deployment misconfiguration must NEVER silently disable the
+ *    sensitive session protection. This is a critical error that
+ *    must be detected and surfaced, not hidden as a transient
+ *    network issue. The boot-time check in sensitive-session.ts
+ *    also logs a CRITICAL error at startup.
+ *
+ * 2. Network error / timeout / 5xx from hybrid-vector-api → FAIL-OPEN
+ *    A transient infrastructure outage should not block financial
+ *    transactions (the upstream unipay-api still has its own KYC
+ *    limits and authentication). The error is logged for monitoring
+ *    but the transaction proceeds.
+ *
  * @returns null if the session is active (transaction may proceed),
- *          or a NextResponse with 403 if the session is not active.
+ *          or a NextResponse with 403/503 if the session is not active
+ *          or the guard is misconfigured.
  */
 export async function guardSensitiveSession(
   request: NextRequest,
@@ -32,14 +48,43 @@ export async function guardSensitiveSession(
     );
   }
 
+  // ── Case 1: HCS_WORKER_SHARED_SECRET not configured → FAIL-CLOSED ──
+  // This is a deployment misconfiguration, not a transient error.
+  // Block the transaction and surface a clear error so the operator
+  // fixes the config. Never silently disable security.
+  if (!isWorkerSecretConfigured()) {
+    console.error(
+      '[guardSensitiveSession] CRITICAL: HCS_WORKER_SHARED_SECRET is not set — ' +
+      'blocking transaction (fail-closed). Configure it in Vercel project settings.',
+    );
+    return NextResponse.json(
+      {
+        error: 'Server misconfigured',
+        code: 'WORKER_SECRET_MISSING',
+        message: 'La protection de session sensible est mal configurée. Contactez l\'administrateur.',
+      },
+      { status: 503 },
+    );
+  }
+
   let headers: Record<string, string>;
   try {
     headers = getWorkerAuthHeaders();
   } catch {
-    // If worker auth is not configured, fail-open (don't block transactions
-    // due to misconfiguration — but log the error)
-    console.error('[guardSensitiveSession] HCS_WORKER_SHARED_SECRET not set — failing open');
-    return null;
+    // Defensive: isWorkerSecretConfigured() should have caught this,
+    // but if getWorkerAuthHeaders throws for another reason, fail-closed.
+    console.error(
+      '[guardSensitiveSession] CRITICAL: getWorkerAuthHeaders() threw — ' +
+      'blocking transaction (fail-closed).',
+    );
+    return NextResponse.json(
+      {
+        error: 'Server misconfigured',
+        code: 'WORKER_AUTH_ERROR',
+        message: 'La protection de session sensible est mal configurée. Contactez l\'administrateur.',
+      },
+      { status: 503 },
+    );
   }
 
   const controller = new AbortController();
@@ -53,8 +98,13 @@ export async function guardSensitiveSession(
     const data = await res.json();
 
     if (!res.ok) {
-      // If the status check fails, fail-open (network error shouldn't block)
-      console.error('[guardSensitiveSession] Status check failed:', data.error);
+      // ── Case 2: hybrid-vector-api returned non-200 → FAIL-OPEN ──
+      // This could be a 500 from HV-API or a transient issue.
+      // Log for monitoring but don't block the financial transaction.
+      console.error(
+        '[guardSensitiveSession] Status check returned non-200 (fail-open):',
+        res.status, data.error,
+      );
       return null;
     }
 
@@ -78,8 +128,14 @@ export async function guardSensitiveSession(
       { status: 403 },
     );
   } catch (err) {
-    // Network error — fail-open (don't block transactions due to infra issues)
-    console.error('[guardSensitiveSession] Status check error:', err);
+    // ── Case 2: network error / timeout → FAIL-OPEN ──
+    // Transient infrastructure issue — don't block financial transactions.
+    // The upstream unipay-api still has its own KYC limits and auth.
+    const isTimeout = err instanceof Error && err.name === 'AbortError';
+    console.error(
+      '[guardSensitiveSession] Status check network error (fail-open):',
+      isTimeout ? 'TIMEOUT' : err instanceof Error ? err.message : String(err),
+    );
     return null;
   } finally {
     clearTimeout(timer);

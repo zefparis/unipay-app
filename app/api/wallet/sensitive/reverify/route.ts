@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HYBRID_VECTOR_API_URL, getWorkerAuthHeaders, validateCognitiveData } from '@/lib/sensitive-session';
+import { HYBRID_VECTOR_API_URL, getWorkerAuthHeaders, validateCognitiveData, isWorkerSecretConfigured } from '@/lib/sensitive-session';
 
 /**
  * POST /api/wallet/sensitive/reverify
@@ -53,10 +53,19 @@ export async function POST(request: NextRequest) {
   }
 
   let headers: Record<string, string>;
+  if (!isWorkerSecretConfigured()) {
+    return NextResponse.json(
+      { error: 'Server misconfigured', code: 'WORKER_SECRET_MISSING' },
+      { status: 503 },
+    );
+  }
   try {
     headers = getWorkerAuthHeaders();
   } catch {
-    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Server misconfigured', code: 'WORKER_AUTH_ERROR' },
+      { status: 503 },
+    );
   }
 
   const controller = new AbortController();

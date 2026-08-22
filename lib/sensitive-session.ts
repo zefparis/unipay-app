@@ -18,6 +18,37 @@ export const HCS_WORKER_SHARED_SECRET = process.env.HCS_WORKER_SHARED_SECRET ?? 
 export const SENSITIVE_SESSION_TOLERANCE_MS = 30_000;
 
 /**
+ * Check if the worker secret is configured (non-empty).
+ * Used by guardSensitiveSession() to distinguish a deployment
+ * misconfiguration (fail-closed) from a transient network error
+ * (fail-open).
+ */
+export function isWorkerSecretConfigured(): boolean {
+  return HCS_WORKER_SHARED_SECRET.length > 0;
+}
+
+// ─── Boot-time CRITICAL check ────────────────────────────────────────
+// Log a CRITICAL error at module load time if the secret is missing.
+// This runs once when the Next.js server starts (or when the module
+// is first imported in a serverless function), NOT on every request.
+// The goal is to make the misconfiguration visible in logs immediately,
+// not only when a user attempts a sensitive action.
+if (!isWorkerSecretConfigured()) {
+  console.error(
+    '┌──────────────────────────────────────────────────────────────────┐\n' +
+    '│ CRITICAL: HCS_WORKER_SHARED_SECRET is not set!                  │\n' +
+    '│                                                                  │\n' +
+    '│ Sensitive session protection is DISABLED. Financial actions      │\n' +
+    '│ (withdraw, deposit, send) will be BLOCKED with 503 until the    │\n' +
+    '│ secret is configured in Vercel project settings.                │\n' +
+    '│                                                                  │\n' +
+    '│ Set HCS_WORKER_SHARED_SECRET to the same value as in the        │\n' +
+    '│ hybrid-vector-api Render service environment variables.         │\n' +
+    '└──────────────────────────────────────────────────────────────────┘',
+  );
+}
+
+/**
  * Required fields in cognitive test data for re-verification.
  * The server checks that these are present and non-empty before
  * resetting the session. This mirrors the PulseGuard pattern where
