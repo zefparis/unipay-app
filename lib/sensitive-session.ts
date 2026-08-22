@@ -1,0 +1,71 @@
+/**
+ * Sensitive Session — Server-side helpers
+ *
+ * Proxy configuration for the PulseGuard sensitive session endpoints
+ * in hybrid-vector-api. The worker auth secret is NEVER exposed to the
+ * client — all calls go through Next.js API routes that inject the
+ * X-Worker-Auth header server-side.
+ *
+ * @copyright (c) 2026 Benjamin BARRERE / IA SOLUTION
+ * Patents Pending FR2514274 | FR2514546
+ */
+
+export const HYBRID_VECTOR_API_URL =
+  process.env.HYBRID_VECTOR_API_URL ?? 'https://hybrid-vector-api-owc4.onrender.com';
+
+export const HCS_WORKER_SHARED_SECRET = process.env.HCS_WORKER_SHARED_SECRET ?? '';
+
+export const SENSITIVE_SESSION_TOLERANCE_MS = 30_000;
+
+/**
+ * Required fields in cognitive test data for re-verification.
+ * The server checks that these are present and non-empty before
+ * resetting the session. This mirrors the PulseGuard pattern where
+ * the cognitive test results ARE the proof of identity.
+ *
+ * These field names match the CognitiveData interface in
+ * app/[locale]/wallet/kyc/cognitive/CognitiveTestFlow.tsx.
+ */
+export const REQUIRED_COGNITIVE_FIELDS = [
+  'reflex_ms',
+  'stroop_accuracy',
+  'digit_span_score',
+] as const;
+
+/**
+ * Validate that cognitive test data contains real test results
+ * (not just an empty object that a client could craft to bypass
+ * re-verification).
+ */
+export function validateCognitiveData(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const obj = data as Record<string, unknown>;
+  for (const field of REQUIRED_COGNITIVE_FIELDS) {
+    const v = obj[field];
+    if (v === null || v === undefined) return false;
+    if (typeof v === 'number' && !Number.isFinite(v)) return false;
+    // reflex_ms must be > 0 (a real reaction time)
+    // stroop_accuracy must be >= 0 (0% is valid but unusual)
+    // digit_span_score must be >= 0
+    if (field === 'reflex_ms' && typeof v === 'number' && v <= 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Extract wallet_id from the JWT cookie. We don't decode the JWT
+ * (that's the upstream's job) — we use the wallet_id from the balance
+ * endpoint response instead. For the sensitive session, we just need
+ * a stable user identifier, so we use the wallet_token cookie's
+ * presence as proof of authentication and derive a user ID from
+ * the request.
+ */
+export function getWorkerAuthHeaders(): Record<string, string> {
+  if (!HCS_WORKER_SHARED_SECRET) {
+    throw new Error('HCS_WORKER_SHARED_SECRET is not set');
+  }
+  return {
+    'Content-Type': 'application/json',
+    'X-Worker-Auth': HCS_WORKER_SHARED_SECRET,
+  };
+}

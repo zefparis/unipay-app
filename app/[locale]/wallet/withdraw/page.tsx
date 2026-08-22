@@ -7,6 +7,8 @@ import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
+import { useSensitiveSession } from '@/hooks/useSensitiveSession';
+import { SensitiveReverifyOverlay } from '@/components/SensitiveReverifyOverlay';
 
 const CDF_OPERATORS = [
   { key: 'orange',     label: 'Orange Money', color: 'bg-orange-500', active: 'ring-orange-500' },
@@ -61,6 +63,9 @@ export default function WalletWithdrawPage() {
   const [success, setSuccess]         = useState('');
   const [loading, setLoading]         = useState(false);
 
+  // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
+  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'withdraw' });
+
   useEffect(() => {
     const saved = localStorage.getItem('wallet_phone');
     if (saved) setPhone(saved);
@@ -109,7 +114,7 @@ export default function WalletWithdrawPage() {
     try {
       const res = await fetch('/api/wallet/crypto-withdraw', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
         body: JSON.stringify({ amount: usdtGross, network, destination_address: destAddress }),
       });
       const data = await res.json() as { error?: string; withdrawal_id?: string; net_amount?: number; fee?: number };
@@ -156,7 +161,7 @@ export default function WalletWithdrawPage() {
       if (isCdf) {
         res = await fetch('/api/wallet/withdraw', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
         });
         const data = await res.json();
@@ -167,7 +172,7 @@ export default function WalletWithdrawPage() {
       } else {
         res = await fetch('/api/wallet/unipesa/withdraw', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ phone: normalizePhone(phone), operator, amount: amountNum }),
         });
         const data = await res.json();
@@ -274,7 +279,7 @@ export default function WalletWithdrawPage() {
                 className="flex-1 h-[48px] rounded-xl border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-semibold">
                 Annuler
               </button>
-              <button type="button" onClick={handleUsdtWithdraw} disabled={loading}
+              <button type="button" onClick={handleUsdtWithdraw} disabled={loading || !canSubmit}
                 className="flex-1 h-[48px] rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-semibold transition disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <Spinner />}
                 {loading ? T.wd_loading : T.wd_usdt_confirm_btn}
@@ -434,7 +439,7 @@ export default function WalletWithdrawPage() {
         )}
 
         <button type="submit"
-          disabled={loading || !!success || (isUsdt ? !usdtCanSubmit : overBudget)}
+          disabled={loading || !!success || !canSubmit || (isUsdt ? !usdtCanSubmit : overBudget)}
           className={`w-full h-[52px] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2 ${
             isUsdt ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-orange-500 hover:bg-orange-600'
           }`}>
@@ -442,6 +447,25 @@ export default function WalletWithdrawPage() {
           {loading ? T.wd_processing : isUsdt ? T.wd_usdt_cta : T.wd_cta}
         </button>
       </form>
+
+      {/* ── Sensitive session re-verification overlay ── */}
+      {reverifyRequired && (
+        <SensitiveReverifyOverlay
+          T={T}
+          action="withdraw"
+          onReverify={reverify}
+          onCancel={() => router.push(`/${locale}/wallet`)}
+        />
+      )}
+
+      {/* ── Sensitive session blocked banner ── */}
+      {!canSubmit && !reverifyRequired && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 px-4 py-3 text-center text-xs font-medium text-amber-700 dark:text-amber-400 shadow-lg">
+            Session de sécurité en cours de vérification...
+          </div>
+        </div>
+      )}
     </div>
   );
 }

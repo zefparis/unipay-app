@@ -5,7 +5,9 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import Link from 'next/link';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
-import { wT } from '@/lib/i18n-wallet';
+import { wT, type WalletDict } from '@/lib/i18n-wallet';
+import { useSensitiveSession } from '@/hooks/useSensitiveSession';
+import { SensitiveReverifyOverlay } from '@/components/SensitiveReverifyOverlay';
 
 type Tab = 'cdf' | 'usdt';
 
@@ -38,6 +40,9 @@ export default function WalletSendPage() {
   const [success, setSuccess]               = useState('');
   const [loading, setLoading]               = useState(false);
   const [showModal, setShowModal]           = useState(false);
+
+  // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
+  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'send' });
 
   /* ── Init tab from ?tab=usdt query param ────────────────────────────── */
   useEffect(() => {
@@ -110,7 +115,7 @@ export default function WalletSendPage() {
       if (isCdf) {
         const res  = await fetch('/api/wallet/send', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ recipient_phone: normalizePhone(recipientPhone), amount: amountNum, note: note || undefined }),
         });
         const data = await res.json();
@@ -121,7 +126,7 @@ export default function WalletSendPage() {
       } else {
         const res  = await fetch('/api/wallet/send-usdt', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ phone: normalizePhone(recipientPhone), amount: amountNum, note: note || undefined }),
         });
         const data = await res.json();
@@ -265,7 +270,7 @@ export default function WalletSendPage() {
         )}
 
         <button type="submit"
-          disabled={loading || !!success || overBudget}
+          disabled={loading || !!success || !canSubmit || overBudget}
           className={`w-full h-[52px] ${btnBg} text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2`}
         >
           {loading && <Spinner />}
@@ -320,6 +325,25 @@ export default function WalletSendPage() {
                 {T.confirm}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sensitive session re-verification overlay ── */}
+      {reverifyRequired && (
+        <SensitiveReverifyOverlay
+          T={T as WalletDict}
+          action="send"
+          onReverify={reverify}
+          onCancel={() => router.push(`/${locale}/wallet`)}
+        />
+      )}
+
+      {/* ── Sensitive session blocked banner ── */}
+      {!canSubmit && !reverifyRequired && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 px-4 py-3 text-center text-xs font-medium text-amber-700 dark:text-amber-400 shadow-lg">
+            Session de sécurité en cours de vérification...
           </div>
         </div>
       )}

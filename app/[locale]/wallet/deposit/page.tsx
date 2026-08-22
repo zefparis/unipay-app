@@ -8,6 +8,8 @@ import { ArrowLeft, ArrowDownCircle } from 'lucide-react';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 import { wT } from '@/lib/i18n-wallet';
+import { useSensitiveSession } from '@/hooks/useSensitiveSession';
+import { SensitiveReverifyOverlay } from '@/components/SensitiveReverifyOverlay';
 
 const StripeDepositTab   = dynamic(() => import('./StripeDepositTab'),   { ssr: false });
 const CryptoDepositTab   = dynamic(() => import('./CryptoDepositTab'),   { ssr: false });
@@ -55,6 +57,9 @@ export default function WalletDepositPage() {
   const [polling, setPolling]       = useState(false);
   const [usdBalance, setUsdBalance] = useState(0);
   const [isDRC, setIsDRC]           = useState(true);
+
+  // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
+  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'deposit' });
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -138,7 +143,7 @@ export default function WalletDepositPage() {
       if (isCdf) {
         res = await fetch('/api/wallet/deposit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
         });
         const data = await res.json();
@@ -149,7 +154,7 @@ export default function WalletDepositPage() {
       } else {
         res = await fetch('/api/wallet/unipesa/deposit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
           body: JSON.stringify({ phone: normalizePhone(phone), operator, amount: amountNum }),
         });
         const data = await res.json();
@@ -298,13 +303,32 @@ export default function WalletDepositPage() {
 
         <button
           type="submit"
-          disabled={submitting || !!success}
+          disabled={submitting || !!success || !canSubmit}
           className="w-full h-[52px] bg-[#00A651] hover:bg-[#008f45] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2 text-base mt-2"
         >
           {loading && <Spinner />}
           {loading ? T.dep_loading : polling ? T.dep_polling : T.dep_cta}
         </button>
       </form>}
+
+      {/* ── Sensitive session re-verification overlay ── */}
+      {reverifyRequired && (
+        <SensitiveReverifyOverlay
+          T={T}
+          action="deposit"
+          onReverify={reverify}
+          onCancel={() => router.push(`/${locale}/wallet`)}
+        />
+      )}
+
+      {/* ── Sensitive session blocked banner ── */}
+      {!canSubmit && !reverifyRequired && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+          <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 px-4 py-3 text-center text-xs font-medium text-amber-700 dark:text-amber-400 shadow-lg">
+            Session de sécurité en cours de vérification...
+          </div>
+        </div>
+      )}
     </div>
   );
 }
