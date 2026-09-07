@@ -3,12 +3,13 @@ import { API_URL, upstreamFetch } from '../../../../_proxy';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const walletToken = request.cookies.get('wallet_token')?.value;
   if (!walletToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const result = await upstreamFetch(`${API_URL}/v1/wallet/support/conversations/${params.id}/messages`, {
+  const { id } = await params;
+  const result = await upstreamFetch(`${API_URL}/v1/wallet/support/conversations/${id}/messages`, {
     headers: { Authorization: `Bearer ${walletToken}` },
     cache: 'no-store',
   });
