@@ -550,8 +550,8 @@ export default function WalletProfilePage() {
 
         {/* ── Section 5 : Assistance ── */}
         <Card title={T.prof_support}>
-          <a href="mailto:support@unipaycongo.com">
-            <Row icon={<IcMail />} label={T.prof_support_email} value="support@unipaycongo.com" />
+          <a href={`/${locale}/wallet/support`}>
+            <Row icon={<IcMail />} label={T.prof_support_email} value="" />
           </a>
           <a href={`/${locale}/legal`}>
             <Row icon={<IcDoc />} label={T.prof_tos} value="" />
