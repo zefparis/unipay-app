@@ -513,7 +513,7 @@ const dict = {
     wd_usdt_gross:          'Montant brut',
     wd_usdt_net_fee:        'Frais réseau {network}',
     wd_usdt_cta:            'Retirer USDT',
-    wd_usdt_warning:        '⚠️ Pour une nouvelle adresse, le premier retrait peut prendre 24–48h (vérification sécurité Binance).',
+    wd_usdt_warning:        '⚠️ Pour une nouvelle adresse, le premier retrait peut nécessiter une confirmation on-chain (généralement rapide).',
     wd_usdt_soon:           'Bientôt dispo',
     wd_usdt_fee_label:      'Frais {fee} USDT',
 
@@ -1058,7 +1058,7 @@ const dict = {
     wd_usdt_gross:          'Gross amount',
     wd_usdt_net_fee:        'Network fee {network}',
     wd_usdt_cta:            'Withdraw USDT',
-    wd_usdt_warning:        '⚠️ For a new address, the first withdrawal may take 24–48h (Binance security verification).',
+    wd_usdt_warning:        '⚠️ For a new address, the first withdrawal may require on-chain confirmation (generally fast).',
     wd_usdt_soon:           'Coming soon',
     wd_usdt_fee_label:      'Fee {fee} USDT',
 
