@@ -23,7 +23,7 @@ export default function WalletBottomNav({ isLoggedIn = false }: { isLoggedIn?: b
   const { unreadCount } = useNotifications();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] flex items-center z-50 transition-colors duration-200">
+    <nav className="lg:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-[#334155] flex items-center z-50 transition-colors duration-200">
       {NAV_KEYS.map(({ key, segment, Icon, labelKey }) => {
         const href = key === 'home' ? homeHref : `/${locale}/wallet${segment}`;
         const isActive =

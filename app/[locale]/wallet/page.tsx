@@ -231,7 +231,7 @@ export default function WalletHomePage() {
 
       {/* Action grid — 6 main tiles */}
       <div className="relative z-10 px-4 pt-6">
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3 lg:gap-4 lg:justify-start">
           {([
             { href: `${base}/deposit`,  icon: <ArrowDownCircle className="text-emerald-600 dark:text-emerald-400" size={24} />, label: T.home_deposit },
             { href: `${base}/withdraw`, icon: <ArrowUpCircle   className="text-orange-600 dark:text-orange-400"  size={24} />, label: T.home_withdraw },
@@ -242,7 +242,7 @@ export default function WalletHomePage() {
             <Link
               key={label}
               href={href}
-              className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+              className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] lg:basis-[calc(16.666%-0.875rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
               style={{
                 background: glassBg,
                 backdropFilter: 'blur(16px)',
@@ -263,7 +263,7 @@ export default function WalletHomePage() {
             href="https://congogaming.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+            className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] lg:basis-[calc(16.666%-0.875rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
             style={{
               background: glassBg,
               backdropFilter: 'blur(16px)',
@@ -312,7 +312,7 @@ export default function WalletHomePage() {
               <Link
                 key={label}
                 href={href}
-                className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
+                className="flex flex-col items-center gap-2.5 rounded-2xl p-4 basis-[calc(33.333%-0.5rem)] lg:basis-[calc(16.666%-0.875rem)] active:scale-95 hover:scale-[1.03] transition-all duration-200"
                 style={{
                   background: glassBgSubtle,
                   backdropFilter: 'blur(16px)',

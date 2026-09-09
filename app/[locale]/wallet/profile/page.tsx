@@ -299,7 +299,7 @@ export default function WalletProfilePage() {
 
       {/* Logout modal */}
       {logoutModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end justify-center px-4 pt-4 pb-32">
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-end justify-center px-4 pt-4 pb-32 sm:items-center sm:py-4 sm:pb-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
             <p className="text-base font-bold text-gray-900 dark:text-white text-center">{T.prof_logout_title}</p>
             <p className="text-sm text-gray-500 dark:text-slate-400 text-center">{T.prof_logout_sub}</p>

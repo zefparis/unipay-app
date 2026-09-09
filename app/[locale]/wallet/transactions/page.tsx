@@ -140,69 +140,149 @@ export default function WalletTransactionsPage() {
         )}
 
         {!loading && !error && paginated.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {paginated.map((tx) => {
-              const isCredit = tx.direction === 'collect';
-              const isP2P    = tx.direction === 'p2p';
-              const isUsdt   = tx.direction === 'p2p_usdt';
-              const isGameDebit  = tx.direction === 'cglt_gaming_debit';
-              const isGameCredit = tx.direction === 'cglt_gaming_credit';
-              const isGaming = isGameDebit || isGameCredit;
-              const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
-              const label    = isGaming
-                ? (isGameCredit ? T.tx_gain_cglt : T.tx_mise_cglt)
-                : isUsdt ? (usdtIn ? T.tx_usdt_in : T.tx_usdt_out) : tx.operator;
-              return (
-                <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xl ${
-                    isGaming ? 'bg-purple-50 dark:bg-purple-900/20' : isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
-                  }`}>
-                    {isGaming  && <span aria-hidden>🎮</span>}
-                    {!isGaming && isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={20} />}
-                    {!isGaming && !isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
-                    {!isGaming && !isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
-                    {!isGaming && !isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{label}</p>
-                      <StatusBadge status={tx.status} />
+          <>
+            {/* Mobile: card list (< lg) */}
+            <div className="flex flex-col gap-2 lg:hidden">
+              {paginated.map((tx) => {
+                const isCredit = tx.direction === 'collect';
+                const isP2P    = tx.direction === 'p2p';
+                const isUsdt   = tx.direction === 'p2p_usdt';
+                const isGameDebit  = tx.direction === 'cglt_gaming_debit';
+                const isGameCredit = tx.direction === 'cglt_gaming_credit';
+                const isGaming = isGameDebit || isGameCredit;
+                const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
+                const label    = isGaming
+                  ? (isGameCredit ? T.tx_gain_cglt : T.tx_mise_cglt)
+                  : isUsdt ? (usdtIn ? T.tx_usdt_in : T.tx_usdt_out) : tx.operator;
+                return (
+                  <div key={tx.id} className="flex items-center gap-3 p-3 bg-white dark:bg-[#1e293b] rounded-xl shadow-sm border border-gray-50 dark:border-[#334155] transition-all duration-200">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xl ${
+                      isGaming ? 'bg-purple-50 dark:bg-purple-900/20' : isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
+                    }`}>
+                      {isGaming  && <span aria-hidden>🎮</span>}
+                      {!isGaming && isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={20} />}
+                      {!isGaming && !isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={20} />}
+                      {!isGaming && !isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={20} />}
+                      {!isGaming && !isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={20} />}
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5">{fmtDate(tx.created_at)}</p>
-                  </div>
 
-                  <div className="text-right shrink-0">
-                    {isGaming ? (
-                      <p className={`text-sm font-bold whitespace-nowrap ${isGameCredit ? 'text-[#00A651]' : 'text-purple-500'}`}>
-                        {isGameCredit ? '+' : '−'}{fmt(tx.amount)} CGLT
-                      </p>
-                    ) : isUsdt ? (
-                      <p className={`text-sm font-bold whitespace-nowrap ${usdtIn ? 'text-emerald-500' : 'text-orange-500'}`}>
-                        {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
-                      </p>
-                    ) : (() => {
-                      const cur = (tx.currency ?? 'CDF').toUpperCase();
-                      const isUsd = cur === 'USD';
-                      const val = isCredit ? tx.net_amount : tx.amount;
-                      const display = isUsd ? val.toFixed(2) : fmt(val);
-                      const gross = isUsd ? tx.amount.toFixed(2) : fmt(tx.amount);
-                      return (
-                        <>
-                          <p className={`text-sm font-bold whitespace-nowrap ${
-                            isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
-                          }`}>
-                            {isCredit ? '+' : '−'}{display} {cur}
-                          </p>
-                          {!isCredit && <p className="text-[10px] text-gray-500 dark:text-slate-500">{gross} {T.tx_gross}</p>}
-                        </>
-                      );
-                    })()}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-800 dark:text-slate-200 capitalize">{label}</p>
+                        <StatusBadge status={tx.status} />
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-slate-500 mt-0.5">{fmtDate(tx.created_at)}</p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      {isGaming ? (
+                        <p className={`text-sm font-bold whitespace-nowrap ${isGameCredit ? 'text-[#00A651]' : 'text-purple-500'}`}>
+                          {isGameCredit ? '+' : '−'}{fmt(tx.amount)} CGLT
+                        </p>
+                      ) : isUsdt ? (
+                        <p className={`text-sm font-bold whitespace-nowrap ${usdtIn ? 'text-emerald-500' : 'text-orange-500'}`}>
+                          {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
+                        </p>
+                      ) : (() => {
+                        const cur = (tx.currency ?? 'CDF').toUpperCase();
+                        const isUsd = cur === 'USD';
+                        const val = isCredit ? tx.net_amount : tx.amount;
+                        const display = isUsd ? val.toFixed(2) : fmt(val);
+                        const gross = isUsd ? tx.amount.toFixed(2) : fmt(tx.amount);
+                        return (
+                          <>
+                            <p className={`text-sm font-bold whitespace-nowrap ${
+                              isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'
+                            }`}>
+                              {isCredit ? '+' : '−'}{display} {cur}
+                            </p>
+                            {!isCredit && <p className="text-[10px] text-gray-500 dark:text-slate-500">{gross} {T.tx_gross}</p>}
+                          </>
+                        );
+                      })()}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: dense table (lg+) */}
+            <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-100 dark:border-[#334155]">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-slate-800/50 text-gray-500 dark:text-slate-400 uppercase text-[11px] tracking-wider">
+                  <tr>
+                    <th className="text-left font-semibold px-4 py-3">Type</th>
+                    <th className="text-left font-semibold px-4 py-3">Date</th>
+                    <th className="text-left font-semibold px-4 py-3">Statut</th>
+                    <th className="text-right font-semibold px-4 py-3">Montant net</th>
+                    <th className="text-right font-semibold px-4 py-3">Montant brut</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-[#334155]">
+                  {paginated.map((tx) => {
+                    const isCredit = tx.direction === 'collect';
+                    const isP2P    = tx.direction === 'p2p';
+                    const isUsdt   = tx.direction === 'p2p_usdt';
+                    const isGameDebit  = tx.direction === 'cglt_gaming_debit';
+                    const isGameCredit = tx.direction === 'cglt_gaming_credit';
+                    const isGaming = isGameDebit || isGameCredit;
+                    const usdtIn   = isUsdt && Number(tx.usdt_amount ?? 0) >= 0;
+                    const label    = isGaming
+                      ? (isGameCredit ? T.tx_gain_cglt : T.tx_mise_cglt)
+                      : isUsdt ? (usdtIn ? T.tx_usdt_in : T.tx_usdt_out) : tx.operator;
+                    return (
+                      <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                              isGaming ? 'bg-purple-50 dark:bg-purple-900/20' : isUsdt ? 'bg-emerald-50 dark:bg-emerald-900/20' : isCredit ? 'bg-green-50 dark:bg-green-900/20' : isP2P ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'
+                            }`}>
+                              {isGaming  && <span aria-hidden className="text-sm">🎮</span>}
+                              {!isGaming && isUsdt    && <ArrowRightLeft  className="text-emerald-500" size={16} />}
+                              {!isGaming && !isUsdt && isCredit  && <ArrowDownCircle  className="text-[#00A651]"  size={16} />}
+                              {!isGaming && !isUsdt && tx.direction === 'payout' && <ArrowUpCircle   className="text-orange-500" size={16} />}
+                              {!isGaming && !isUsdt && isP2P     && <ArrowLeftRight   className="text-blue-500"   size={16} />}
+                            </div>
+                            <span className="font-medium text-gray-800 dark:text-slate-200 capitalize">{label}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-slate-400 whitespace-nowrap">{fmtDate(tx.created_at)}</td>
+                        <td className="px-4 py-3"><StatusBadge status={tx.status} /></td>
+                        <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
+                          {isGaming ? (
+                            <span className={isGameCredit ? 'text-[#00A651]' : 'text-purple-500'}>
+                              {isGameCredit ? '+' : '−'}{fmt(tx.amount)} CGLT
+                            </span>
+                          ) : isUsdt ? (
+                            <span className={usdtIn ? 'text-emerald-500' : 'text-orange-500'}>
+                              {usdtIn ? '+' : '−'}{fmt(Math.abs(Number(tx.usdt_amount ?? tx.amount)))} USDT
+                            </span>
+                          ) : (() => {
+                            const cur = (tx.currency ?? 'CDF').toUpperCase();
+                            const isUsd = cur === 'USD';
+                            const val = isCredit ? tx.net_amount : tx.amount;
+                            const display = isUsd ? val.toFixed(2) : fmt(val);
+                            return (
+                              <span className={isCredit ? 'text-[#00A651]' : isP2P ? 'text-blue-500' : 'text-orange-500'}>
+                                {isCredit ? '+' : '−'}{display} {cur}
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-500 dark:text-slate-400 whitespace-nowrap text-xs">
+                          {isGaming ? '—' : isUsdt ? '—' : (() => {
+                            const cur = (tx.currency ?? 'CDF').toUpperCase();
+                            const isUsd = cur === 'USD';
+                            return isUsd ? `${tx.amount.toFixed(2)} ${cur}` : `${fmt(tx.amount)} ${cur}`;
+                          })()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
 
         {/* Pagination */}
