@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { API_URL, upstreamFetch } from '../_proxy';
+import { guardSensitiveSession } from '@/lib/guardSensitiveSession';
 
 export async function POST(request: NextRequest) {
   const walletToken = request.cookies.get('wallet_token')?.value;
   if (!walletToken) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // ── Sensitive session guard (server-side enforcement) ──
+  const guardResult = await guardSensitiveSession(request);
+  if (guardResult) return guardResult;
 
   let body: unknown;
   try {
