@@ -37,7 +37,11 @@ const withPWAConfig = withPWA({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  // aggressiveFrontEndNavCaching disabled — it pre-caches pages during
+  // frontend navigation without checking if a newer version exists, which
+  // can serve stale content after a deploy. The update toast + skipWaiting
+  // handle the update flow instead.
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   customWorkerSrc: 'worker',
   // Custom rules are registered BEFORE the plugin's defaults (first match wins in

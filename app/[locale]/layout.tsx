@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import ThemeProvider from '@/components/ThemeProvider';
+import { ServiceWorkerUpdateToast } from '@/components/ServiceWorkerUpdateToast';
 import '../globals.css';
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider>
             {children}
+            <ServiceWorkerUpdateToast />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
