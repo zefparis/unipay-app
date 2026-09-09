@@ -42,7 +42,7 @@ export default function WalletSendPage() {
   const [showModal, setShowModal]           = useState(false);
 
   // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
-  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'send' });
+  const { sessionId, canSubmit, reverifyRequired, reactivate } = useSensitiveSession({ action: 'send' });
 
   /* ── Init tab from ?tab=usdt query param ────────────────────────────── */
   useEffect(() => {
@@ -332,9 +332,8 @@ export default function WalletSendPage() {
       {/* ── Sensitive session re-verification overlay ── */}
       {reverifyRequired && (
         <SensitiveReverifyOverlay
-          T={T as WalletDict}
           action="send"
-          onReverify={reverify}
+          onReactivate={reactivate}
           onCancel={() => router.push(`/${locale}/wallet`)}
         />
       )}

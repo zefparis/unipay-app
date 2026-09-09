@@ -59,7 +59,7 @@ export default function WalletDepositPage() {
   const [isDRC, setIsDRC]           = useState(true);
 
   // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
-  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'deposit' });
+  const { sessionId, canSubmit, reverifyRequired, reactivate } = useSensitiveSession({ action: 'deposit' });
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -314,9 +314,8 @@ export default function WalletDepositPage() {
       {/* ── Sensitive session re-verification overlay ── */}
       {reverifyRequired && (
         <SensitiveReverifyOverlay
-          T={T}
           action="deposit"
-          onReverify={reverify}
+          onReactivate={reactivate}
           onCancel={() => router.push(`/${locale}/wallet`)}
         />
       )}

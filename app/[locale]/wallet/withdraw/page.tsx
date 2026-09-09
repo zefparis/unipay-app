@@ -64,7 +64,7 @@ export default function WalletWithdrawPage() {
   const [loading, setLoading]         = useState(false);
 
   // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
-  const { sessionId, canSubmit, reverifyRequired, reverify } = useSensitiveSession({ action: 'withdraw' });
+  const { sessionId, canSubmit, reverifyRequired, reactivate } = useSensitiveSession({ action: 'withdraw' });
 
   useEffect(() => {
     const saved = localStorage.getItem('wallet_phone');
@@ -451,9 +451,8 @@ export default function WalletWithdrawPage() {
       {/* ── Sensitive session re-verification overlay ── */}
       {reverifyRequired && (
         <SensitiveReverifyOverlay
-          T={T}
           action="withdraw"
-          onReverify={reverify}
+          onReactivate={reactivate}
           onCancel={() => router.push(`/${locale}/wallet`)}
         />
       )}

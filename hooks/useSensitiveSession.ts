@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * Sensitive Session Status
  * - 'active': session is valid, submit allowed
  * - 'suspended': user left the app, within tolerance window
- * - 'invalidated': tolerance expired, re-verification required
+ * - 'invalidated': tolerance expired, PIN re-authentication required
  * - 'loading': initial state, not yet checked
  */
 export type SensitiveSessionStatus =
@@ -29,15 +29,15 @@ interface UseSensitiveSessionReturn {
   canSubmit: boolean;
   /** True when re-verification is required (status === 'invalidated') */
   reverifyRequired: boolean;
-  /** Submit cognitive test results to re-verify the session */
-  reverify: (cognitiveData: unknown) => Promise<boolean>;
+  /** Re-activate the session by verifying the wallet PIN */
+  reactivate: (pin: string) => Promise<boolean>;
   /** Manually refresh status from server */
   refreshStatus: () => Promise<void>;
 }
 
 /**
- * useSensitiveSession — manages a PulseGuard-style sensitive session
- * for a financial action page (withdraw, deposit, send).
+ * useSensitiveSession — manages a sensitive session for a financial action
+ * page (withdraw, deposit, send).
  *
  * On mount:
  *   - Generates a unique session ID
@@ -45,19 +45,20 @@ interface UseSensitiveSessionReturn {
  *
  * On visibilitychange → hidden:
  *   - POST /api/wallet/sensitive/session-visibility { event: 'blur' }
- *   - Server creates/suspends the session, starts 30s tolerance timer
+ *   - Server suspends the session, starts 30s tolerance
  *
  * On visibilitychange → visible:
  *   - POST /api/wallet/sensitive/session-visibility { event: 'focus' }
  *   - GET /api/wallet/sensitive/session-status
- *   - If 'invalidated': block submit, show re-verify UI
+ *   - If 'invalidated': block submit, show PIN re-auth UI
  *   - If 'active': submit allowed again
  *
- * Re-verification:
- *   - Client runs CognitiveTestFlow
- *   - Results submitted via reverify() → POST /api/wallet/sensitive/reverify
- *   - Server validates cognitive data, resets session to 'active'
- *   - Only works if status is 'invalidated' (conditional UPDATE server-side)
+ * Re-activation:
+ *   - Client shows a PIN input (SensitiveReverifyOverlay)
+ *   - PIN submitted via reactivate() → POST /api/wallet/sensitive/reactivate
+ *   - Server verifies PIN against wallet_users.pin_hash (bcrypt)
+ *   - If valid AND status === 'invalidated', resets to 'active'
+ *   - Rate-limited to 5 attempts/minute/wallet_id on the backend
  */
 export function useSensitiveSession({
   action,
@@ -100,8 +101,6 @@ export function useSensitiveSession({
     // Initial status check — no session record means 'active'
     refreshStatus();
 
-    let blurTimer: ReturnType<typeof setTimeout> | null = null;
-
     async function sendVisibilityEvent(event: 'blur' | 'focus') {
       try {
         await fetch('/api/wallet/sensitive/session-visibility', {
@@ -121,10 +120,6 @@ export function useSensitiveSession({
         setStatus('suspended');
       } else if (document.visibilityState === 'visible') {
         // User returned — send focus event, then check status
-        if (blurTimer) {
-          clearTimeout(blurTimer);
-          blurTimer = null;
-        }
         sendVisibilityEvent('focus').then(() => {
           refreshStatus();
         });
@@ -156,17 +151,16 @@ export function useSensitiveSession({
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('blur', onBlur);
-      if (blurTimer) clearTimeout(blurTimer);
     };
   }, [sessionId, refreshStatus]);
 
-  const reverify = useCallback(
-    async (cognitiveData: unknown): Promise<boolean> => {
+  const reactivate = useCallback(
+    async (pin: string): Promise<boolean> => {
       try {
-        const res = await fetch('/api/wallet/sensitive/reverify', {
+        const res = await fetch('/api/wallet/sensitive/reactivate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, cognitiveData }),
+          body: JSON.stringify({ sessionId, pin }),
         });
         if (!res.ok) return false;
         const data = (await res.json()) as { ok: boolean; status: string };
@@ -187,7 +181,7 @@ export function useSensitiveSession({
     sessionId,
     canSubmit: status === 'active',
     reverifyRequired: status === 'invalidated',
-    reverify,
+    reactivate,
     refreshStatus,
   };
 }
