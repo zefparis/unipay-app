@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { validatePhone } from '@/lib/phone';
+import { validateDRCPhone, normalizePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT } from '@/lib/i18n-wallet';
@@ -38,7 +38,8 @@ export default function WalletRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!validatePhone(phone)) { setError(T.err_phone_inv);  return; }
+    if (!validateDRCPhone(phone)) { setError(T.err_phone_inv);  return; }
+    const normalizedPhone = normalizePhone(phone);
     if (pin.length !== 6)      { setError(T.err_pin_length); return; }
     if (pin !== pinConfirm)    { setError(T.err_pin_match);  return; }
 
@@ -48,7 +49,7 @@ export default function WalletRegisterPage() {
       const res = await fetch('/api/wallet/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, full_name: fullName || undefined, pin, email: email.trim() || undefined, lang: locale === 'en' ? 'en' : 'fr' }),
+        body: JSON.stringify({ phone: normalizedPhone, full_name: fullName || undefined, pin, email: email.trim() || undefined, lang: locale === 'en' ? 'en' : 'fr' }),
       });
 
       const data = await res.json();
@@ -58,7 +59,7 @@ export default function WalletRegisterPage() {
         return;
       }
 
-      localStorage.setItem('wallet_phone', phone);
+      localStorage.setItem('wallet_phone', normalizedPhone);
       router.push(`/${locale}/wallet/login`);
     } catch {
       setError(T.err_network);

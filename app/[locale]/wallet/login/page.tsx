@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { validatePhone } from '@/lib/phone';
+import { validateDRCPhone, normalizePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT } from '@/lib/i18n-wallet';
@@ -43,19 +43,19 @@ function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!validatePhone(phone)) { setError(tt.err_phone_inv); return; }
+    if (!validateDRCPhone(phone)) { setError(tt.err_phone_inv); return; }
     if (pin.length !== 6)      { setError(tt.err_pin_length);   return; }
     setLoading(true);
     try {
       const res  = await fetch('/api/wallet/auth/login', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ phone, pin }),
+        body:    JSON.stringify({ phone: normalizePhone(phone), pin }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? tt.login_err_def); return; }
       // PII: phone number stored in clear text for form pre-fill. Cleared on logout (see profile/page.tsx doLogout).
-      localStorage.setItem('wallet_phone', phone);
+      localStorage.setItem('wallet_phone', normalizePhone(phone));
       router.refresh();
       router.replace(next);
     } catch {

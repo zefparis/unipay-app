@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { validatePhone } from '@/lib/phone';
+import { validateDRCPhone, normalizePhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT } from '@/lib/i18n-wallet';
@@ -97,18 +97,18 @@ export default function LandingPage() {
     e.preventDefault();
     setError('');
 
-    if (!validatePhone(phone)) { setError(T.err_phone_inv); return; }
+    if (!validateDRCPhone(phone)) { setError(T.err_phone_inv); return; }
     if (pin.length !== 6)        { setError(T.err_pin_length);   return; }
     setLoading(true);
     try {
       const res  = await fetch('/api/wallet/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, pin }),
+        body: JSON.stringify({ phone: normalizePhone(phone), pin }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? T.login_err_def); return; }
-      localStorage.setItem('wallet_phone', phone);
+      localStorage.setItem('wallet_phone', normalizePhone(phone));
       router.refresh();
       router.push(`/${locale}/wallet`);
     } catch {

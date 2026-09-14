@@ -26,10 +26,44 @@ export const AFRICAN_PREFIXES = [
   '+260', '+27',
 ] as const;
 
+/**
+ * Strip a redundant country dial code that the user may have typed in the
+ * local-number field even though the dial-code selector already provides it.
+ *
+ * For example, with dialCode '+243' the user might type:
+ *   "243853315944"  → strip the leading "243" → "853315944"
+ *   "0243853315944" → strip leading "0" then "243" → "853315944"
+ *   "0853315944"    → strip leading "0"            → "853315944"
+ *   "853315944"     → already clean               → "853315944"
+ *
+ * This prevents the double-prefix bug (e.g. "+243243853315944").
+ */
+function stripRedundantDialCode(dialCode: string, localDigits: string): string {
+  const ccDigits = dialCode.replace(/\D/g, ''); // e.g. "243"
+  if (ccDigits && localDigits.startsWith(ccDigits)) {
+    localDigits = localDigits.slice(ccDigits.length);
+  }
+  // Also strip a leading "0" (local trunk prefix)
+  localDigits = localDigits.replace(/^0+/, '');
+  return localDigits;
+}
+
 export function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, '');
+
+  // +243XXXXXXXXX (E.164, 12 digits) → already correct
   if (digits.startsWith('243') && digits.length === 12) return `+${digits}`;
+
+  // 0XXXXXXXXX (local with leading 0, 10 digits) → +243XXXXXXXXX
   if (digits.startsWith('0') && digits.length === 10) return `+243${digits.slice(1)}`;
+
+  // 243243XXXXXXXXX (double-prefix bug, 15 digits) → strip first 243, keep 9 digits
+  if (digits.startsWith('243243') && digits.length === 15) return `+243${digits.slice(6)}`;
+
+  // 243XXXXXXXXX without + but exactly 12 digits → +243XXXXXXXXX (already handled above)
+  // Bare 9 digits starting with 8 or 9 → DRC local
+  if (digits.length === 9 && /^[89]/.test(digits)) return `+243${digits}`;
+
   if (raw.trimStart().startsWith('+')) return raw.replace(/\s/g, '');
   return `+${digits}`;
 }
@@ -44,6 +78,6 @@ export function validatePhone(phone: string): boolean {
 }
 
 export function buildE164(dialCode: string, local: string): string {
-  const localDigits = local.replace(/\D/g, '').replace(/^0+/, '');
+  const localDigits = stripRedundantDialCode(dialCode, local.replace(/\D/g, ''));
   return `${dialCode}${localDigits}`;
 }
