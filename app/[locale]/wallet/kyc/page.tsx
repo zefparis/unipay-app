@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
-import { CognitiveTestFlow, type CognitiveData } from './cognitive/CognitiveTestFlow';
 import { SelfieCapture } from './camera/SelfieCapture';
 
 interface Submission {
@@ -61,10 +60,6 @@ export default function KycPage() {
   const [docNumber, setDocNumber] = useState('');
   const [selfie, setSelfie] = useState<File | null>(null);
   const [selfiePrev, setSelfiePrev] = useState<string | null>(null);
-  const [cognitiveData, setCognitiveData] = useState<CognitiveData | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
-  const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
-  const [upgradeError, setUpgradeError] = useState('');
 
   useEffect(() => {
     fetch('/api/wallet/kyc/status')
@@ -92,10 +87,7 @@ export default function KycPage() {
     if (step === 0) {
       return fullName.trim().length >= 2 && birthDate.length > 0 && docType.length > 0 && docNumber.trim().length > 0;
     }
-    if (step === 1) {
-      return !!selfie;
-    }
-    return !!cognitiveData;
+    return !!selfie;
   }
 
   async function handleSubmit() {
@@ -113,10 +105,6 @@ export default function KycPage() {
     fd.append('birth_date', birthDate);
     fd.append('doc_number', docNumber.trim());
     fd.append('selfie', selfie, 'selfie.jpg');
-
-    if (cognitiveData) {
-      fd.append('cognitive_data', JSON.stringify(cognitiveData));
-    }
 
     const res = await fetch('/api/wallet/kyc/submit', { method: 'POST', body: fd });
     const data = await res.json();
@@ -167,71 +155,6 @@ export default function KycPage() {
   if (status === 'approved' || (kycStatus && kycStatus.kyc_level >= 1)) {
     const kycLevel = kycStatus?.kyc_level ?? 1;
 
-    if (showUpgradeFlow) {
-      return (
-        <div className="min-h-screen bg-gray-50 pb-28 dark:bg-slate-900">
-          <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-4 pb-4 pt-12 dark:border-slate-800 dark:bg-slate-900">
-            <button
-              onClick={() => { setShowUpgradeFlow(false); setUpgradeError(''); }}
-              className="rounded-full p-2 transition hover:bg-gray-100 dark:hover:bg-slate-800"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-gray-600 dark:text-slate-400"><polyline points="15 18 9 12 15 6" /></svg>
-            </button>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">Upgrade KYC 2</h1>
-              <p className="text-xs text-gray-500 dark:text-slate-500">Tests cognitifs de sécurité</p>
-            </div>
-          </div>
-
-          <div className="mx-auto max-w-md px-4 pt-6">
-            {upgradeError && (
-              <div className="mb-4 rounded-xl bg-red-50 p-4 text-sm font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                {upgradeError}
-              </div>
-            )}
-
-            {upgrading ? (
-              <div className="flex flex-col items-center justify-center gap-4 py-20">
-                <Spinner />
-                <p className="text-sm text-gray-500 dark:text-slate-400">Analyse de sécurité en cours...</p>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
-                <CognitiveTestFlow
-                  T={T}
-                  onComplete={async (data) => {
-                    setUpgrading(true);
-                    setUpgradeError('');
-                    try {
-                      const res = await fetch('/api/wallet/kyc/upgrade-cognitive', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ cognitive_data: data }),
-                      });
-                      const result = await res.json();
-                      setUpgrading(false);
-
-                      if (res.ok && result.success) {
-                        const statusRes = await fetch('/api/wallet/kyc/status');
-                        const newStatus = await statusRes.json();
-                        if (newStatus) setKycStatus(newStatus);
-                        setShowUpgradeFlow(false);
-                      } else {
-                        setUpgradeError(result.error ?? "Échec de l'upgrade. Réessayez.");
-                      }
-                    } catch {
-                      setUpgrading(false);
-                      setUpgradeError('Erreur réseau. Réessayez.');
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
     return (
       <StatusScreen
         locale={locale}
@@ -243,7 +166,6 @@ export default function KycPage() {
         message={kycLevel >= 2 ? T.kyc_approved_msg_l2 : T.kyc_approved_msg}
         limits={KYC_LIMITS[kycLevel as 0 | 1 | 2] ?? KYC_LIMITS[1]}
         kycLevel={kycLevel}
-        onUpgrade={kycLevel === 1 ? () => { setShowUpgradeFlow(true); setUpgradeError(''); } : undefined}
       />
     );
   }
@@ -277,34 +199,32 @@ export default function KycPage() {
 
       <div className="mx-auto max-w-md space-y-5 px-4 pt-6">
         <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white dark:border-slate-700 dark:bg-slate-800">
-          <div className="grid grid-cols-4 text-center">
+          <div className="grid grid-cols-3 text-center">
             <div className="bg-gray-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:bg-slate-700/50 dark:text-slate-400" />
             <div className="border-x border-gray-100 bg-amber-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-amber-600 dark:border-slate-700 dark:bg-amber-900/20 dark:text-amber-400">{T.kyc_lvl0}</div>
             <div className="bg-green-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-green-600 dark:bg-green-900/20 dark:text-green-400">{T.kyc_lvl1}</div>
-            <div className="bg-blue-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">KYC 2</div>
           </div>
           {[
-            { label: T.kyc_dep_day, l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit, l2: KYC_LIMITS[2].deposit },
-            { label: T.kyc_wd_day, l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw, l2: KYC_LIMITS[2].withdraw },
-            { label: T.kyc_p2p_max, l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p, l2: KYC_LIMITS[2].p2p },
-          ].map(({ label, l0, l1, l2 }) => (
-            <div key={label} className="grid grid-cols-4 border-t border-gray-50 text-center dark:border-slate-700">
+            { label: T.kyc_dep_day, l0: KYC_LIMITS[0].deposit, l1: KYC_LIMITS[1].deposit },
+            { label: T.kyc_wd_day, l0: KYC_LIMITS[0].withdraw, l1: KYC_LIMITS[1].withdraw },
+            { label: T.kyc_p2p_max, l0: KYC_LIMITS[0].p2p, l1: KYC_LIMITS[1].p2p },
+          ].map(({ label, l0, l1 }) => (
+            <div key={label} className="grid grid-cols-3 border-t border-gray-50 text-center dark:border-slate-700">
               <div className="px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-slate-400">{label}</div>
               <div className="border-x border-gray-50 px-3 py-3 text-xs text-gray-500 dark:border-slate-700 dark:text-slate-500">{l0}</div>
-              <div className="border-r border-gray-50 px-3 py-3 text-xs font-semibold text-green-600 dark:border-slate-700 dark:text-green-400">{l1}</div>
-              <div className="px-3 py-3 text-xs font-bold text-blue-600 dark:text-blue-400">{l2}</div>
+              <div className="px-3 py-3 text-xs font-semibold text-green-600 dark:text-green-400">{l1}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
           <div className="mb-6 flex items-center gap-2">
-            {[0, 1, 2].map((item) => (
+            {[0, 1].map((item) => (
               <div key={item} className="flex flex-1 items-center gap-2">
                 <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item <= step ? 'bg-[#00A651] text-white' : 'bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-500'}`}>
                   {item < step ? '✓' : item + 1}
                 </div>
-                {item < 2 && <div className={`h-0.5 flex-1 ${step > item ? 'bg-[#00A651]' : 'bg-gray-100 dark:bg-slate-700'}`} />}
+                {item < 1 && <div className={`h-0.5 flex-1 ${step > item ? 'bg-[#00A651]' : 'bg-gray-100 dark:bg-slate-700'}`} />}
               </div>
             ))}
           </div>
@@ -333,22 +253,18 @@ export default function KycPage() {
 
           {step === 1 && <SelfieCapture T={T} onChange={setSelfieFile} />}
 
-          {step === 2 && (
-            <CognitiveTestFlow T={T} onComplete={(data) => setCognitiveData(data)} />
-          )}
-
           <div className="mt-6 flex gap-3">
             {step > 0 && (
               <button onClick={() => setStep(step - 1)} className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700">
                 {T.kyc_back}
               </button>
             )}
-            {step < 2 ? (
+            {step < 1 ? (
               <button onClick={() => setStep(step + 1)} disabled={!canProceed()} className="flex-1 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
                 {T.kyc_continue}
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={submitting || !cognitiveData} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
+              <button onClick={handleSubmit} disabled={submitting || !selfie} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#00A651] py-3 text-sm font-semibold text-white transition disabled:opacity-50">
                 {submitting ? <><Spinner sm /> {T.kyc_submitting}</> : T.kyc_submit}
               </button>
             )}
@@ -368,7 +284,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StatusScreen({ locale, T, color, icon, badge, title, message, limits, onRetry, kycLevel, onUpgrade }: {
+function StatusScreen({ locale, T, color, icon, badge, title, message, limits, onRetry, kycLevel }: {
   locale: string;
   T: WalletDict;
   color: 'amber' | 'green' | 'red';
@@ -379,7 +295,6 @@ function StatusScreen({ locale, T, color, icon, badge, title, message, limits, o
   limits?: { deposit: string; withdraw: string; p2p: string };
   onRetry?: () => void;
   kycLevel?: number;
-  onUpgrade?: () => void;
 }) {
   const colors = {
     amber: { bg: 'bg-amber-50 dark:bg-amber-900/10', border: 'border-amber-200 dark:border-amber-800/40', text: 'text-amber-700 dark:text-amber-400', badge: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
@@ -418,24 +333,6 @@ function StatusScreen({ locale, T, color, icon, badge, title, message, limits, o
           <button onClick={onRetry} className="rounded-xl bg-[#00A651] px-6 py-3 text-sm font-semibold text-white">
             {T.kyc_retry}
           </button>
-        )}
-        {onUpgrade && kycLevel === 1 && (
-          <div className="w-full max-w-xs space-y-3">
-            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-center dark:border-blue-800/40 dark:bg-blue-900/10">
-              <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">
-                Passez au niveau 2 pour supprimer toutes les limites
-              </p>
-              <p className="mt-1 text-xs text-blue-600 dark:text-blue-500">
-                Complétez un test rapide de sécurité supplémentaire (réflexe, couleur, mémoire, voix)
-              </p>
-              <button
-                onClick={onUpgrade}
-                className="mt-3 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                {T.kyc_upgrade_cta}
-              </button>
-            </div>
-          </div>
         )}
         {kycLevel === 2 && (
           <div className="rounded-full bg-blue-100 px-4 py-1.5 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
