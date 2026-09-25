@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const API_URL = process.env.API_URL ?? 'https://unipay-api.onrender.com';
+export const API_URL = process.env.API_URL ?? 'https://api.unipaycongo.com';
 
 const TIMEOUT_MS = 10_000;
 
