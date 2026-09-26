@@ -36,15 +36,20 @@ export const AFRICAN_PREFIXES = [
  *   "0853315944"    → strip leading "0"            → "853315944"
  *   "853315944"     → already clean               → "853315944"
  *
+ * The strip is iterative: a trunk "0" may precede the country code
+ * ("0243853315944") and the code may be duplicated ("243243853315944").
  * This prevents the double-prefix bug (e.g. "+243243853315944").
  */
 function stripRedundantDialCode(dialCode: string, localDigits: string): string {
   const ccDigits = dialCode.replace(/\D/g, ''); // e.g. "243"
-  if (ccDigits && localDigits.startsWith(ccDigits)) {
-    localDigits = localDigits.slice(ccDigits.length);
-  }
-  // Also strip a leading "0" (local trunk prefix)
-  localDigits = localDigits.replace(/^0+/, '');
+  let prev: string;
+  do {
+    prev = localDigits;
+    localDigits = localDigits.replace(/^0+/, '');
+    if (ccDigits && localDigits.startsWith(ccDigits)) {
+      localDigits = localDigits.slice(ccDigits.length);
+    }
+  } while (localDigits !== prev);
   return localDigits;
 }
 
@@ -77,7 +82,29 @@ export function validatePhone(phone: string): boolean {
   return /^\+[1-9][0-9]{7,14}$/.test(phone.replace(/\s/g, ''));
 }
 
+/**
+ * Build the final E.164 number from the composite input (dial-code selector +
+ * local field). A leading "+" typed by the user wins over the selector —
+ * the input is treated as a complete international number, which prevents
+ * double prefixes like "+24333758060556" (selector +243, user typed "+33…").
+ */
 export function buildE164(dialCode: string, local: string): string {
+  if (local.trimStart().startsWith('+')) {
+    let digits = local.replace(/\D/g, '');
+    const cc = dialCode.replace(/\D/g, '');
+    // "+243 243 853…" — the typed number itself repeats the selected code.
+    if (cc && digits.startsWith(cc + cc)) {
+      digits = digits.slice(cc.length);
+    }
+    return `+${digits}`;
+  }
   const localDigits = stripRedundantDialCode(dialCode, local.replace(/\D/g, ''));
   return `${dialCode}${localDigits}`;
+}
+
+/**
+ * Strict E.164 validation: "+" followed by 8–15 digits, first digit non-zero.
+ */
+export function isValidE164(phone: string): boolean {
+  return /^\+[1-9][0-9]{7,14}$/.test(phone);
 }

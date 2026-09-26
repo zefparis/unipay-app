@@ -1,8 +1,19 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { isValidPhoneNumber } from 'libphonenumber-js/min';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { isValidPhoneNumber, AsYouType } from 'libphonenumber-js/min';
 import { DIAL_CODES, buildE164 } from '@/lib/phone';
+
+/** Concrete local-format examples shown as placeholders (no dial code). */
+const PLACEHOLDER_BY_DIAL: Record<string, string> = {
+  '+243': '853 315 944',
+  '+242': '06 123 4567',
+  '+237': '6 12 34 56 78',
+  '+33':  '6 12 34 56 78',
+  '+32':  '470 12 34 56',
+  '+44':  '7400 123456',
+  '+1':   '555 123 4567',
+};
 
 interface Props {
   value: string;
@@ -72,6 +83,17 @@ export default function PhoneInput({
 
   const selected = DIAL_CODES.find((d) => d.code === dialCode) ?? DIAL_CODES[0];
 
+  // A "+" typed in the local field means a full international number — it
+  // overrides the selector, so we surface what will actually be sent.
+  const typedIntl = local.trimStart().startsWith('+');
+
+  const preview = useMemo(() => {
+    if (!local.trim()) return '';
+    const e164 = buildE164(dialCode, local);
+    const formatted = new AsYouType().input(e164);
+    return formatted || e164;
+  }, [local, dialCode]);
+
   return (
     <div className="flex w-full gap-2 min-w-0">
 
@@ -111,17 +133,31 @@ export default function PhoneInput({
         )}
       </div>
 
-      {/* Phone number input */}
-      <input
-        type="tel"
-        value={local}
-        onChange={(e) => handleLocalChange(e.target.value)}
-        disabled={disabled}
-        placeholder={placeholder ?? (dialCode === '+243' ? '9X XXX XXXX' : 'N° local')}
-        style={inputStyle}
-        className={`min-w-0 flex-1 border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
-        aria-label="Numero de telephone"
-      />
+      {/* Phone number input + live E.164 preview */}
+      <div className="min-w-0 flex-1 flex flex-col">
+        <input
+          type="tel"
+          value={local}
+          onChange={(e) => handleLocalChange(e.target.value)}
+          disabled={disabled}
+          placeholder={placeholder ?? (PLACEHOLDER_BY_DIAL[dialCode] ?? 'N° local')}
+          autoComplete="off"
+          inputMode="tel"
+          style={inputStyle}
+          className={`min-w-0 w-full border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
+          aria-label="Numero de telephone"
+        />
+        {preview && (
+          <p className="mt-1.5 px-1 text-xs text-gray-500 dark:text-slate-400">
+            Sera enregistré comme : <span className="font-semibold text-gray-700 dark:text-slate-300">{preview}</span>
+          </p>
+        )}
+        {typedIntl && (
+          <p className="mt-1 px-1 text-xs text-amber-600 dark:text-amber-400">
+            Indicatif déjà sélectionné ci-contre — saisissez uniquement le numéro local.
+          </p>
+        )}
+      </div>
 
     </div>
   );
