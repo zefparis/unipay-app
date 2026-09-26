@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { validateDRCPhone, normalizePhone } from '@/lib/phone';
+import { normalizePhone, isValidIntlPhone } from '@/lib/phone';
 import PhoneInput from '@/components/PhoneInput';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { wT } from '@/lib/i18n-wallet';
@@ -38,7 +38,7 @@ export default function WalletRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!validateDRCPhone(phone)) { setError(T.err_phone_inv);  return; }
+    if (!isValidIntlPhone(phone)) { setError(T.err_phone_inv);  return; }
     const normalizedPhone = normalizePhone(phone);
     if (pin.length !== 6)      { setError(T.err_pin_length); return; }
     if (pin !== pinConfirm)    { setError(T.err_pin_match);  return; }

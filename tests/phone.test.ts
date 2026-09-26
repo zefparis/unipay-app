@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { buildE164, isValidE164, normalizePhone, validateDRCPhone } from '@/lib/phone';
+import {
+  buildE164,
+  detectDialCode,
+  exampleLocalNumber,
+  isValidE164,
+  isValidIntlPhone,
+  normalizePhone,
+  validateDRCPhone,
+} from '@/lib/phone';
 
 describe('buildE164 — saisie robuste anti double-indicatif', () => {
   it.each<[string, string, string]>([
@@ -64,5 +72,66 @@ describe('validateDRCPhone — gate inscription (RDC uniquement)', () => {
 
   it('rejette les numéros non-RDC (le backend impose +243 + 9 chiffres)', () => {
     expect(validateDRCPhone('+33758060556')).toBe(false);
+  });
+});
+
+describe('buildE164 — multi-pays', () => {
+  it.each<[string, string, string]>([
+    ['612345678', '+33', '+33612345678'],
+    ['853315944', '+243', '+243853315944'],
+    ['+33 6 12 34 56 78', '+243', '+33612345678'], // le "+" gagne, sélecteur corrigé
+    ['0612345678', '+33', '+33612345678'],
+    ['0243853315944', '+243', '+243853315944'],
+    ['0707070707', '+225', '+2250707070707'],
+    ['77 123 45 67', '+221', '+221771234567'],
+    ['470123456', '+32', '+32470123456'],
+  ])('buildE164(%j, %j) → %j', (local, dial, expected) => {
+    expect(buildE164(dial, local)).toBe(expected);
+  });
+});
+
+describe('isValidIntlPhone — validation par pays via libphonenumber', () => {
+  it.each([
+    ['+33612345678'],
+    ['+243853315944'],
+    ['+2250707070707'],
+    ['+32470123456'],
+    ['+12024561414'],
+  ])('accepte %j', (phone) => {
+    expect(isValidIntlPhone(phone)).toBe(true);
+  });
+
+  it.each([
+    ['+33123', false],           // trop court pour la France
+    ['+2431234', false],         // trop court pour la RDC
+    ['+999999999999', false],    // indicatif inexistant
+    ['abc', false],
+    ['', false],
+  ])('%j → %j', (phone, expected) => {
+    expect(isValidIntlPhone(phone)).toBe(expected);
+  });
+});
+
+describe('detectDialCode — sélecteur suit le "+" tapé', () => {
+  it.each<[string, string | null]>([
+    ['+33612345678', '+33'],
+    ['+33 6 12', '+33'],
+    ['+243853315944', '+243'],
+    ['+22507', '+225'],
+    ['612345678', null],   // pas de "+"
+    ['+999', null],        // indicatif inconnu
+  ])('detectDialCode(%j) → %j', (input, expected) => {
+    expect(detectDialCode(input)).toBe(expected);
+  });
+});
+
+describe('exampleLocalNumber — placeholder par pays', () => {
+  it('fournit un exemple national sans indicatif', () => {
+    const fr = exampleLocalNumber('+33');
+    const cd = exampleLocalNumber('+243');
+    expect(fr).toMatch(/^[0-9 .-]+$/);
+    expect(cd).toMatch(/^[0-9 .-]+$/);
+    expect(fr).not.toContain('+33');
+    expect(cd).not.toContain('+243');
   });
 });

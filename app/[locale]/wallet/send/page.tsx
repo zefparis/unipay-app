@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import Link from 'next/link';
-import { normalizePhone, validateDRCPhone } from '@/lib/phone';
+import { normalizePhone, isValidIntlPhone } from '@/lib/phone';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
 import { useSensitiveSession } from '@/hooks/useSensitiveSession';
 import { SensitiveReverifyOverlay } from '@/components/SensitiveReverifyOverlay';
@@ -86,7 +86,7 @@ export default function WalletSendPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!validateDRCPhone(recipientPhone)) {
+    if (!isValidIntlPhone(recipientPhone)) {
       setError(T.err_send_phone);
       return;
     }

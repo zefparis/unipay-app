@@ -2,18 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { isValidPhoneNumber, AsYouType } from 'libphonenumber-js/min';
-import { DIAL_CODES, buildE164 } from '@/lib/phone';
-
-/** Concrete local-format examples shown as placeholders (no dial code). */
-const PLACEHOLDER_BY_DIAL: Record<string, string> = {
-  '+243': '853 315 944',
-  '+242': '06 123 4567',
-  '+237': '6 12 34 56 78',
-  '+33':  '6 12 34 56 78',
-  '+32':  '470 12 34 56',
-  '+44':  '7400 123456',
-  '+1':   '555 123 4567',
-};
+import { DIAL_CODES, buildE164, detectDialCode, exampleLocalNumber } from '@/lib/phone';
 
 interface Props {
   value: string;
@@ -76,7 +65,12 @@ export default function PhoneInput({
 
   function handleLocalChange(raw: string) {
     setLocal(raw);
-    const e164 = buildE164(dialCode, raw);
+    // If the user types "+<code>", follow the detected country in the
+    // selector instead of silently ignoring it.
+    const detected = detectDialCode(raw);
+    const effectiveDial = detected ?? dialCode;
+    if (detected && detected !== dialCode) setDialCode(detected);
+    const e164 = buildE164(effectiveDial, raw);
     onChange(e164);
     onValid?.(raw.length > 4 && isValidPhoneNumber(e164));
   }
@@ -140,7 +134,7 @@ export default function PhoneInput({
           value={local}
           onChange={(e) => handleLocalChange(e.target.value)}
           disabled={disabled}
-          placeholder={placeholder ?? (PLACEHOLDER_BY_DIAL[dialCode] ?? 'N° local')}
+          placeholder={placeholder ?? (exampleLocalNumber(dialCode) || 'N° local')}
           autoComplete="off"
           inputMode="tel"
           style={inputStyle}
