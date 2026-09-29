@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
@@ -9,6 +9,7 @@ import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
 import { useSensitiveSession } from '@/hooks/useSensitiveSession';
+import { interpretWithdrawError, interpretWithdrawResponse, newIdempotencyKey } from '@/lib/withdraw-submit';
 import { SensitiveReverifyOverlay } from '@/components/SensitiveReverifyOverlay';
 
 const CDF_OPERATORS = [
@@ -62,7 +63,13 @@ export default function WalletWithdrawPage() {
   const [withdrawalId, setWithdrawalId] = useState('');
   const [error, setError]             = useState('');
   const [success, setSuccess]         = useState('');
+  const [pendingNotice, setPendingNotice] = useState('');
   const [loading, setLoading]         = useState(false);
+
+  // One Idempotency-Key per CDF submission. Kept while the outcome is
+  // ambiguous (network error, 202, unreadable body) so a retry is the SAME
+  // withdrawal for the API; rotated after any definitive answer.
+  const cdfIdemKey = useRef<string>(newIdempotencyKey());
 
   // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
   const { sessionId, canSubmit, reverifyRequired, reactivate } = useSensitiveSession({ action: 'withdraw' });
@@ -139,6 +146,7 @@ export default function WalletWithdrawPage() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setPendingNotice('');
 
     if (isUsdt) {
       if (!usdtAddrValid || destAddress === '') { setError(`Adresse ${network} invalide.`); return; }
@@ -157,31 +165,63 @@ export default function WalletWithdrawPage() {
     if (overBudget) { setError(`Solde insuffisant. Coût total (montant + frais) : ${isCdf ? fmt(totalCost) : totalCost.toFixed(2)} ${isCdf ? 'CDF' : 'USD'}.`); return; }
     setLoading(true);
 
-    try {
-      let res: Response;
-      if (isCdf) {
-        res = await fetch('/api/wallet/withdraw', {
+    if (isCdf) {
+      const copy = { amountLabel: `${fmt(amountNum)} CDF`, totalLabel: `${fmt(totalCost)} CDF`, operatorLabel: operator };
+      let outcome;
+      try {
+        const res = await fetch('/api/wallet/withdraw', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-sensitive-session-id': sessionId,
+            'Idempotency-Key': cdfIdemKey.current,
+          },
           body: JSON.stringify({ operator, phone_mm: normalizePhone(phone), amount: amountNum }),
         });
-        const data = await res.json();
-        if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? 'Retrait échoué'); return; }
-        setSuccess(`Retrait de ${fmt(amountNum)} CDF initié. ${fmt(totalCost)} CDF débités, vous recevrez ${fmt(amountNum)} CDF sur votre compte ${operator}.`);
-        setTimeout(() => router.push(`/${locale}/wallet`), 5000);
-      } else {
-        res = await fetch('/api/wallet/unipesa/withdraw', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
-          body: JSON.stringify({ phone: normalizePhone(phone), operator, amount: amountNum }),
-        });
-        const data = await res.json();
-        if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
-        if (!res.ok) { setError(data.error ?? 'Retrait USD échoué'); return; }
-        setSuccess(`Retrait de ${amountNum.toFixed(2)} USD initié. ${totalCost.toFixed(2)} USD débités, vous recevrez ${amountNum.toFixed(2)} USD sur votre compte ${operator}.`);
-        setTimeout(() => router.push(`/${locale}/wallet`), 5000);
+        const data = await res.json().catch(() => null) as Record<string, unknown> | null;
+        outcome = interpretWithdrawResponse(res.status, data, copy);
+      } catch (err) {
+        outcome = interpretWithdrawError(err, typeof navigator === 'undefined' ? true : navigator.onLine);
+      } finally {
+        setLoading(false);
       }
+
+      if (!outcome.keepKey) cdfIdemKey.current = newIdempotencyKey();
+
+      switch (outcome.kind) {
+        case 'unauthorized':
+          router.replace(`/${locale}/wallet/login`);
+          return;
+        case 'initiated':
+          setWithdrawalId(outcome.transactionId ?? '');
+          setSuccess(outcome.message);
+          setTimeout(() => router.push(`/${locale}/wallet`), 5000);
+          return;
+        case 'pending':
+          // Provider outcome unknown: no "initié", no amount promised.
+          setWithdrawalId(outcome.transactionId ?? '');
+          setPendingNotice(outcome.message);
+          return;
+        case 'already_failed':
+        case 'rejected':
+        case 'ambiguous':
+          setError(outcome.message);
+          return;
+      }
+    }
+
+    // ── USD branch (unchanged behaviour) ──
+    try {
+      const res = await fetch('/api/wallet/unipesa/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-sensitive-session-id': sessionId },
+        body: JSON.stringify({ phone: normalizePhone(phone), operator, amount: amountNum }),
+      });
+      const data = await res.json();
+      if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
+      if (!res.ok) { setError(data.error ?? 'Retrait USD échoué'); return; }
+      setSuccess(`Retrait de ${amountNum.toFixed(2)} USD initié. ${totalCost.toFixed(2)} USD débités, vous recevrez ${amountNum.toFixed(2)} USD sur votre compte ${operator}.`);
+      setTimeout(() => router.push(`/${locale}/wallet`), 5000);
     } catch {
       setError('Erreur réseau, réessayez.');
     } finally {
@@ -431,6 +471,17 @@ export default function WalletWithdrawPage() {
 
 
         {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl px-4 py-3">{error}</p>}
+        {pendingNotice && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 flex flex-col gap-1">
+            <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">⏳ {pendingNotice}</p>
+            {withdrawalId && (
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-mono">ID : {withdrawalId}</p>
+            )}
+            <Link href={`/${locale}/wallet/transactions`} className="text-xs text-amber-800 dark:text-amber-300 underline">
+              Voir l’historique
+            </Link>
+          </div>
+        )}
         {success && (
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl px-4 py-3 flex flex-col gap-1">
             <p className="text-sm text-green-800 dark:text-green-300 font-medium">✓ {success}</p>

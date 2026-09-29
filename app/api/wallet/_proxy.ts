@@ -9,7 +9,8 @@ type FetchFailure = { ok: false; errorResponse: NextResponse };
 
 export async function upstreamFetch(
   url: string,
-  init: RequestInit = {}
+  init: RequestInit = {},
+  timeoutMs: number = TIMEOUT_MS
 ): Promise<FetchSuccess | FetchFailure> {
   if (process.env.NODE_ENV === 'production' && !process.env.API_URL) {
     return {
@@ -21,7 +22,7 @@ export async function upstreamFetch(
     };
   }
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { ...init, signal: ctrl.signal });
     const data: unknown = await res.json().catch(() => ({}));
