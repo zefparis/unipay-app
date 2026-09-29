@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowDownCircle } from 'lucide-react';
+import { FEE_RATE } from '@/lib/fees';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 import { wT } from '@/lib/i18n-wallet';
@@ -26,7 +27,6 @@ const USD_OPERATORS = [
   { key: 'orange',   label: 'Orange USD',   color: 'bg-orange-500', active: 'ring-orange-500' },
 ] as const;
 
-const FEE_RATE = 0.04;
 const MIN_CDF_AMOUNT = 500;
 const MIN_USD_AMOUNT = 1;
 
@@ -56,6 +56,7 @@ export default function WalletDepositPage() {
   const [loading, setLoading]       = useState(false);
   const [polling, setPolling]       = useState(false);
   const [usdBalance, setUsdBalance] = useState(0);
+  const [feeRate, setFeeRate]       = useState(FEE_RATE);
   const [isDRC, setIsDRC]           = useState(true);
 
   // ── Sensitive session (blur/focus, 30s tolerance, re-verification) ──
@@ -74,7 +75,7 @@ export default function WalletDepositPage() {
 
     fetch('/api/wallet/balance')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: WalletBalance | null) => { if (d) setUsdBalance(Number(d.usd_balance ?? 0)); })
+      .then((d: WalletBalance | null) => { if (d) { setUsdBalance(Number(d.usd_balance ?? 0)); if (typeof d.fee_rate === 'number') setFeeRate(d.fee_rate); } })
       .catch(() => {});
 
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
@@ -86,7 +87,7 @@ export default function WalletDepositPage() {
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
   const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
   const amountNum  = Number(amount);
-  const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
+  const fee        = amountNum > 0 ? Math.round(amountNum * feeRate * 100) / 100 : 0;
   const net        = amountNum > 0 ? Math.round((amountNum - fee) * 100) / 100 : 0;
 
   function switchTab(t: 'cdf' | 'usd' | 'card' | 'bsc') {
@@ -283,7 +284,7 @@ export default function WalletDepositPage() {
         {amountNum >= minAmt && (
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             <div className="flex justify-between text-gray-500 dark:text-slate-400">
-              <span>{T.fee_pct}</span>
+              <span>{T.fee_pct.replace('{pct}', String(feeRate * 100))}</span>
               <span>−{isCdf ? fmt(fee) : fee.toFixed(2)} {isCdf ? 'CDF' : 'USD'}</span>
             </div>
             <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1">

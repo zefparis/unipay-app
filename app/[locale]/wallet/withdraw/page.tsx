@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpCircle } from 'lucide-react';
+import { FEE_RATE } from '@/lib/fees';
 import { normalizePhone, validateDRCPhone } from '@/lib/phone';
 import type { WalletBalance } from '@/lib/wallet-types';
 import { wT, type WalletDict } from '@/lib/i18n-wallet';
@@ -22,7 +23,6 @@ const USD_OPERATORS = [
   { key: 'orange',   label: 'Orange USD',   color: 'bg-orange-500', active: 'ring-orange-500' },
 ] as const;
 
-const FEE_RATE       = 0.03;
 const MIN_CDF_AMOUNT = 100;
 const MIN_USD_AMOUNT = 1;
 type Tab = 'cdf' | 'usd' | 'usdt';
@@ -50,6 +50,7 @@ export default function WalletWithdrawPage() {
 
   const [tab, setTab]                 = useState<Tab>('cdf');
   const [balance, setBalance]         = useState<number | null>(null);
+  const [feeRate, setFeeRate]         = useState(FEE_RATE);
   const [usdBalance, setUsdBalance]   = useState<number | null>(null);
   const [operator, setOperator]       = useState<string>('orange');
   const [phone, setPhone]             = useState('');
@@ -72,7 +73,7 @@ export default function WalletWithdrawPage() {
 
     fetch('/api/wallet/balance')
       .then((r) => { if (r.status === 401) { router.replace(`/${locale}/wallet/login`); return null; } return r.json(); })
-      .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); } })
+      .then((d: WalletBalance | null) => { if (d) { setBalance(Number(d.balance_cdf ?? 0)); setUsdBalance(Number(d.usd_balance ?? 0)); setUsdtBalance(Number(d.usdt_balance ?? 0)); if (typeof d.fee_rate === 'number') setFeeRate(d.fee_rate); } })
       .catch(() => {});
 
   }, [locale, router])
@@ -84,10 +85,10 @@ export default function WalletWithdrawPage() {
   const operators  = isCdf ? CDF_OPERATORS : USD_OPERATORS;
   const minAmt     = isCdf ? MIN_CDF_AMOUNT : MIN_USD_AMOUNT;
   const amountNum  = Number(amount);
-  const fee        = amountNum > 0 ? Math.round(amountNum * FEE_RATE * 100) / 100 : 0;
+  const fee        = amountNum > 0 ? Math.round(amountNum * feeRate * 100) / 100 : 0;
   const totalCost  = amountNum > 0 ? Math.round((amountNum + fee) * 100) / 100 : 0;
   const activeBal  = isCdf ? balance : isUsd ? usdBalance : usdtBalance;
-  const overBudget = activeBal !== null && amountNum > 0 && amountNum > activeBal;
+  const overBudget = activeBal !== null && amountNum > 0 && totalCost > activeBal;
 
   const netFee        = NETWORK_FEE[network];
   const usdtGross     = Number(amount) || 0;
@@ -167,7 +168,7 @@ export default function WalletWithdrawPage() {
         const data = await res.json();
         if (res.status === 401) { router.replace(`/${locale}/wallet/login`); return; }
         if (!res.ok) { setError(data.error ?? 'Retrait échoué'); return; }
-        setSuccess(`Retrait de ${fmt(amountNum)} CDF initié. Vous recevrez ${fmt(amountNum - fee)} CDF sur votre compte ${operator}.`);
+        setSuccess(`Retrait de ${fmt(amountNum)} CDF initié. ${fmt(totalCost)} CDF débités, vous recevrez ${fmt(amountNum)} CDF sur votre compte ${operator}.`);
         setTimeout(() => router.push(`/${locale}/wallet`), 5000);
       } else {
         res = await fetch('/api/wallet/unipesa/withdraw', {
@@ -413,14 +414,15 @@ export default function WalletWithdrawPage() {
           <div className="bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-xl px-4 py-3 flex flex-col gap-1.5 text-sm">
             {isCdf ? (
               <>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct}</span><span>−{fmt(fee)} CDF</span></div>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_total}</span><span>{fmt(totalCost)} CDF</span></div>
-                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>{T.you_receive}</span><span className="text-orange-500">{fmt(amountNum - fee)} CDF</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_amount}</span><span>{fmt(amountNum)} CDF</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct.replace('{pct}', String(feeRate * 100))}</span><span>+{fmt(fee, 2)} CDF</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_total_debit}</span><span>{fmt(totalCost, 2)} CDF</span></div>
+                <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>{T.you_receive}</span><span className="text-orange-500">{fmt(amountNum)} CDF</span></div>
               </>
             ) : (
               <>
                 <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.wd_you_send}</span><span>{amountNum.toFixed(2)} USD</span></div>
-                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct}</span><span>+{fee.toFixed(2)} USD</span></div>
+                <div className="flex justify-between text-gray-500 dark:text-slate-400"><span>{T.fee_pct.replace('{pct}', String(feeRate * 100))}</span><span>+{fee.toFixed(2)} USD</span></div>
                 <div className="flex justify-between font-bold text-gray-800 dark:text-slate-200 pt-1 border-t border-gray-200 dark:border-slate-600 mt-1"><span>{T.wd_total}</span><span className="text-orange-500">{totalCost.toFixed(2)} USD</span></div>
               </>
             )}

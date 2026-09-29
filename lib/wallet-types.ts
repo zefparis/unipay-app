@@ -6,6 +6,7 @@ export interface WalletBalance {
   cglt_balance: number;
   usdt_balance: number;
   usd_balance:  number;
+  fee_rate?:    number;
   currency:     Currency;
   kyc_level:    number;
 }

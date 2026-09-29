@@ -16,7 +16,7 @@ const dict = {
     optional:         '(optionnel)',
     balance_avail:    'Solde disponible',
     min_amount:       'min',
-    fee_pct:          'Frais (4%)',
+    fee_pct:          'Frais ({pct}%)',
     you_receive:      'Vous recevez',
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ const dict = {
     wd_phone:         'Numéro Mobile Money',
     wd_bsc:           'Adresse réseau BNB (MetaMask — votre portefeuille externe)',
     wd_amount:        'Montant',
-    wd_fee:           'Frais (3%)',
+    wd_fee:           'Frais ({pct}%)',
     wd_total:         'Coût total prélevé',
     wd_you_receive:   'Vous recevez',
     wd_cta:           'Retirer',
@@ -561,7 +561,7 @@ const dict = {
     optional:         '(optional)',
     balance_avail:    'Available balance',
     min_amount:       'min',
-    fee_pct:          'Fee (4%)',
+    fee_pct:          'Fee ({pct}%)',
     you_receive:      'You receive',
 
     // ── Register ────────────────────────────────────────────────────────────
@@ -623,7 +623,7 @@ const dict = {
     wd_phone:         'Mobile Money number',
     wd_bsc:           'BNB network address (MetaMask — your external wallet)',
     wd_amount:        'Amount',
-    wd_fee:           'Fee (3%)',
+    wd_fee:           'Fee ({pct}%)',
     wd_total:         'Total charged',
     wd_you_receive:   'You receive',
     wd_cta:           'Withdraw',
