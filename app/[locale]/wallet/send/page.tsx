@@ -340,7 +340,7 @@ export default function WalletSendPage() {
 
       {/* ── Sensitive session blocked banner ── */}
       {!canSubmit && !reverifyRequired && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
+        <div className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-50 max-w-md w-full px-4">
           <div className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 px-4 py-3 text-center text-xs font-medium text-amber-700 dark:text-amber-400 shadow-lg">
             Session de sécurité en cours de vérification...
           </div>

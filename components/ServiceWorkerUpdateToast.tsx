@@ -107,7 +107,7 @@ export function ServiceWorkerUpdateToast() {
   if (!showUpdate) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4">
+    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4">
       <div className="rounded-2xl bg-white dark:bg-slate-800 shadow-2xl border border-gray-100 dark:border-slate-700 p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00A651]/10 shrink-0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 text-[#00A651]">

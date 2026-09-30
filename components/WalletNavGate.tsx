@@ -42,7 +42,7 @@ export default function WalletNavGate({
       {/* Mobile (< lg): centered column with bottom padding for tab bar.
           Desktop (lg+): full-width with left padding for sidebar. */}
       <div
-        className={`w-full mx-auto min-h-screen flex flex-col max-w-md lg:max-w-4xl${
+        className={`w-full mx-auto min-h-dvh flex flex-col max-w-md lg:max-w-4xl${
           showNav ? ' lg:pl-64 pb-16 lg:pb-0' : ''
         }`}
       >

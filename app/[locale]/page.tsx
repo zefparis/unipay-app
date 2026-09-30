@@ -119,25 +119,25 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden" style={{ background: BG }}>
+    <div className="flex flex-col min-h-dvh overflow-x-hidden" style={{ background: BG }}>
 
       {/* ════════════════════════════════════════════
           HERO
       ════════════════════════════════════════════ */}
-      <section className="relative z-10 flex flex-col text-center pt-10 pb-16">
+      <section className="relative z-10 flex flex-col text-center pt-10 pb-16 w-full max-w-3xl mx-auto">
         {/* Language switcher — absolute top-right */}
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
           <div style={{ backdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', border: '1px solid rgba(255,255,255,0.15)' }}>
             <LanguageSwitcher />
           </div>
         </div>
 
-        {/* Logo — full viewport width, no container, no padding */}
+        {/* Logo — capped width, centred on wide screens */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/logodark.png"
           alt="UniPay Congo"
-          style={{ width: '100%', display: 'block', objectFit: 'cover' }}
+          className="w-full max-w-xs mx-auto block object-cover"
         />
 
         {/* Hero text + CTAs — padded & centred */}
@@ -151,12 +151,12 @@ export default function LandingPage() {
 
           <div className="flex flex-col gap-3 w-full max-w-[280px]">
             <Link href={`/${locale}/wallet/register`}
-              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-[#070f1a] text-base shadow-lg"
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-[#070f1a] text-base shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C896] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1e]"
               style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 24px rgba(0,200,150,0.45)' }}>
               {T.reg_title}
             </Link>
             <button type="button" onClick={scrollToLogin}
-              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-white text-base border transition-all"
+              className="h-[52px] flex items-center justify-center rounded-xl font-bold text-white text-base border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C896] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1e]"
               style={{ borderColor: 'rgba(0,200,150,0.5)', background: 'rgba(0,200,150,0.08)', backdropFilter: 'blur(8px)' }}>
               {T.reg_sign_in}
             </button>
@@ -177,11 +177,11 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════
           FEATURES  2×2
       ════════════════════════════════════════════ */}
-      <section className="relative z-10 px-4 pb-12">
+      <section className="relative z-10 px-4 pb-12 w-full max-w-md sm:max-w-2xl mx-auto">
         <FadeIn className="text-center mb-5">
           <h2 className="text-base font-bold text-white/70 uppercase tracking-widest">{T.landing_feat_title}</h2>
         </FadeIn>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {FEATURES.map(({ icon, tk, dk }, i) => (
             <FadeIn key={tk} delay={i * 80}>
               <div className="rounded-2xl p-4 h-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}>
@@ -197,7 +197,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════
           QR SECTION
       ════════════════════════════════════════════ */}
-      <section className="relative z-10 px-4 pb-14">
+      <section className="relative z-10 px-4 pb-14 w-full max-w-md mx-auto">
         <FadeIn>
           <div className="rounded-2xl p-6 flex flex-col items-center text-center" style={{ background: 'rgba(0,200,150,0.06)', border: '1px solid rgba(0,200,150,0.18)', backdropFilter: 'blur(12px)' }}>
             <div className="mb-4 p-3 rounded-2xl" style={{ background: 'rgba(0,200,150,0.08)', border: '1px solid rgba(0,200,150,0.2)' }}>
@@ -212,7 +212,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════
           LOGIN FORM
       ════════════════════════════════════════════ */}
-      <section ref={loginRef} className="relative z-10 px-4 pb-10">
+      <section ref={loginRef} className="relative z-10 px-4 pb-10 w-full max-w-md mx-auto">
         <FadeIn>
           <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
             <div className="flex flex-col items-center mb-5">
@@ -235,7 +235,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-white/60 uppercase tracking-widest">
-                  {T.landing_pin_lbl} <span className="text-white/30 normal-case font-normal">{pin.length}/6</span>
+                  {T.landing_pin_lbl} <span className="text-white/60 normal-case font-normal">{pin.length}/6</span>
                 </label>
                 <input
                   type="password"
@@ -255,7 +255,7 @@ export default function LandingPage() {
               )}
 
               <button type="submit" disabled={loading}
-                className="h-[52px] flex items-center justify-center gap-2 rounded-xl font-bold text-[#070f1a] text-base disabled:opacity-60 transition-all"
+                className="h-[52px] flex items-center justify-center gap-2 rounded-xl font-bold text-[#070f1a] text-base disabled:opacity-60 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C896] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0f1e]"
                 style={{ background: 'linear-gradient(135deg,#00C896,#00f5b8)', boxShadow: '0 4px 20px rgba(0,200,150,0.35)' }}>
                 {loading && <Spinner />}
                 {loading ? T.login_loading : T.reg_sign_in}
@@ -275,12 +275,13 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════
           FOOTER
       ════════════════════════════════════════════ */}
-      <footer className="relative z-10 px-4 pb-8 pt-2 flex flex-col items-center gap-3">
-        <p className="text-[11px] text-white/25 text-center">{T.landing_footer}</p>
+      <footer className="relative z-10 px-4 pb-8 pt-2 flex flex-col items-center gap-3 w-full max-w-md mx-auto"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)' }}>
+        <p className="text-[11px] text-white/60 text-center">{T.landing_footer}</p>
         <div className="flex gap-4">
-          <Link href={`/${locale}/terms`} className="text-[11px] text-white/30 hover:text-white/60 transition">{T.landing_cgu}</Link>
-          <Link href={`/${locale}/privacy`} className="text-[11px] text-white/30 hover:text-white/60 transition">{T.landing_priv}</Link>
-          <a href="mailto:support@unipaycongo.com" className="text-[11px] text-white/30 hover:text-white/60 transition">{T.landing_support}</a>
+          <Link href={`/${locale}/terms`} className="text-[11px] text-white/60 hover:text-white/80 transition">{T.landing_cgu}</Link>
+          <Link href={`/${locale}/privacy`} className="text-[11px] text-white/60 hover:text-white/80 transition">{T.landing_priv}</Link>
+          <a href="mailto:support@unipaycongo.com" className="text-[11px] text-white/60 hover:text-white/80 transition">{T.landing_support}</a>
         </div>
       </footer>
 
