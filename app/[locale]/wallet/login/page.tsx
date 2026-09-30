@@ -111,7 +111,7 @@ function LoginForm() {
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="••••••"
-                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-sm outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 transition"
+                className="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-base placeholder:text-gray-400 dark:placeholder:text-slate-500 outline-none focus:border-[#00A651] focus:ring-2 focus:ring-[#00A651]/20 transition"
               />
             </div>
 

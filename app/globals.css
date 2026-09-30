@@ -23,3 +23,45 @@ body {
     Oxygen, Ubuntu, sans-serif;
 }
 
+/* Native controls (select, date pickers, autofill) follow the theme */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+/* Chrome/Safari paint autofilled fields with a forced light surface and
+   ignore background-color — counter it with an inset shadow + text fill. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #111827;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  caret-color: #111827;
+  transition: background-color 9999s ease-in-out 0s;
+}
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f1f5f9;
+  -webkit-box-shadow: 0 0 0 1000px #1e293b inset;
+  caret-color: #f1f5f9;
+}
+/* Landing login card: always-dark surface (page background is dark
+   regardless of the theme class) */
+.landing-form input:-webkit-autofill,
+.landing-form input:-webkit-autofill:hover,
+.landing-form input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px #15222e inset;
+  caret-color: #ffffff;
+}
+
+/* Explicit option colors so native <select> popups stay readable in both
+   themes (browsers otherwise inherit platform colors) */
+select option {
+  color: #111827;
+  background: #ffffff;
+}
+.dark select option {
+  color: #f1f5f9;
+  background: #1e293b;
+}
+

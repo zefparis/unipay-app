@@ -21,8 +21,8 @@ export default function PhoneInput({
   onChange,
   onValid,
   placeholder,
-  inputClassName = '',
-  selectClassName = '',
+  inputClassName = 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500',
+  selectClassName = 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100',
   inputStyle,
   selectStyle,
   disabled = false,
@@ -98,12 +98,13 @@ export default function PhoneInput({
           disabled={disabled}
           onClick={() => setOpen((v) => !v)}
           style={selectStyle}
-          className={`flex items-center gap-1.5 h-full px-2.5 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all ${selectClassName}`}
+          className={`flex items-center gap-1.5 h-full px-2.5 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all ${selectClassName}`}
           aria-label="Indicatif pays"
           aria-expanded={open}
         >
-          <span className="text-sm font-semibold text-gray-900 dark:text-slate-100 whitespace-nowrap">
-            {dialCode} · {selected.name}
+          <span className="text-sm font-semibold whitespace-nowrap">
+            {dialCode}
+            <span className="hidden sm:inline"> · {selected.name}</span>
           </span>
         </button>
 
@@ -138,7 +139,7 @@ export default function PhoneInput({
           autoComplete="off"
           inputMode="tel"
           style={inputStyle}
-          className={`min-w-0 w-full border rounded-xl px-4 py-3.5 text-base bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder:text-gray-500 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all border-gray-200 dark:border-slate-600 ${inputClassName}`}
+          className={`min-w-0 w-full border rounded-xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all ${inputClassName}`}
           aria-label="Numero de telephone"
         />
         {preview && (

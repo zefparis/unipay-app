@@ -214,7 +214,7 @@ export default function LandingPage() {
       ════════════════════════════════════════════ */}
       <section ref={loginRef} className="relative z-10 px-4 pb-10 w-full max-w-md mx-auto">
         <FadeIn>
-          <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)' }}>
+          <div className="landing-form rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(16px)', colorScheme: 'dark' }}>
             <div className="flex flex-col items-center mb-5">
               <h2 className="text-lg font-extrabold text-white">{T.login_title}</h2>
               <p className="text-xs text-white/45 mt-1">{T.login_sub}</p>
@@ -226,7 +226,7 @@ export default function LandingPage() {
                 <PhoneInput
                   value={phone}
                   onChange={setPhone}
-                  inputClassName="text-white placeholder:text-white/25"
+                  inputClassName="text-white placeholder:text-white/60"
                   selectClassName="text-white"
                   inputStyle={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)' }}
                   selectStyle={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.18)' }}
@@ -245,7 +245,7 @@ export default function LandingPage() {
                   placeholder="••••••"
                   maxLength={6}
                   required
-                  className="rounded-xl px-4 py-3.5 text-base text-white tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all"
+                  className="rounded-xl px-4 py-3.5 text-base text-white placeholder:text-white/60 tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-[#00C896] transition-all"
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
                 />
               </div>
